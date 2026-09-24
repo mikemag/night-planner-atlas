@@ -1,0 +1,30 @@
+# macOS and editors
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Node toolchain (not used yet)
+node_modules/
+dist/
+coverage/
+.vite/
+*.log
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Hosting CLIs
+.firebase/
+
+# Test and screenshot output
+test-results/
+playwright-report/
+tmp/
+
+# Claude Code per-user settings
+.claude/settings.local.json

@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.png binary
+site/vendor/** linguist-vendored
+*.min.js -diff
