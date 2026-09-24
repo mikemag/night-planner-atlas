@@ -1,8 +1,9 @@
 # Night model
 
 How the site computes a night. The views depend on this contract; change it deliberately, and
-update this document in the same change as the code. The code lives in `site/scripts/atlas.js`,
-in the "time zone helpers" and "ephemeris" sections.
+update this document in the same change as the code. The code lives in `src/model/`: `time.ts`
+(local clock time in a zone), `night.ts` (one night), and `range.ts` (the loaded range and the
+structures the views share). It has no DOM, so its unit tests run in Node.
 
 ## Site and time
 
@@ -27,12 +28,12 @@ in the "time zone helpers" and "ephemeris" sections.
 Found with Astronomy Engine's `SearchAltitude` for the Sun's center, searching forward 24 hours
 from local noon:
 
-| Events | Sun altitude |
-| --- | --- |
-| Sunset, sunrise | −0.833° (refraction and the Sun's semi-diameter) |
-| Civil dusk, civil dawn | −6° |
-| Nautical dusk, nautical dawn | −12° |
-| Astronomical dusk, astronomical dawn | −18° |
+| Events                               | Sun altitude                                     |
+| ------------------------------------ | ------------------------------------------------ |
+| Sunset, sunrise                      | −0.833° (refraction and the Sun's semi-diameter) |
+| Civil dusk, civil dawn               | −6°                                              |
+| Nautical dusk, nautical dawn         | −12°                                             |
+| Astronomical dusk, astronomical dawn | −18°                                             |
 
 If an event doesn't happen (the Sun never gets that low, or never sets), it is absent, along with
 the bands that depend on it. The views label such nights, for example "No true dark".
@@ -78,9 +79,15 @@ From astronomical dusk to astronomical dawn. Absent when the Sun doesn't reach �
 - Sun events come from Astronomy Engine's root search, far more precise than a minute. Real sunsets
   vary by a minute or more with atmospheric refraction. The 10-minute sampling limits moon
   crossings to about a minute.
+- The unit tests check sun events against an independent low-precision solar model (the
+  Astronomical Almanac's formulas). Across three sites and five dates the two agree to within 3
+  seconds; the tests allow 30.
+- Golden files in `src/model/testdata/` pin every number above for three sites (Seattle,
+  Edinburgh and Sydney) under all three threshold settings. They were captured from the original
+  prototype, so the TypeScript model reproduces it exactly.
 - Expect small differences from AllSky's Swift planner, mostly in moonrise and moonset. That
   planner uses the SwiftAA ephemeris, 5-minute crossing scans and its own moon altitude definition.
-- Computing the 14-month range, about 425 nights, takes well under a second in a modern browser.
-  Each night needs 8 sun searches and 242 altitude samples. The work runs in 24 ms slices so the
-  page stays responsive, and repeats when the site or range changes. Changing a threshold only
-  re-derives the numbers; it doesn't recompute positions.
+- Computing the 14-month range, about 425 nights, takes about half a second. Each night needs 8
+  sun searches and 242 altitude samples. The work runs in 24 ms slices so the page stays
+  responsive, and repeats when the site or range changes. Changing a threshold only re-derives
+  the numbers; it doesn't recompute positions.

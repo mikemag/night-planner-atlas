@@ -1,0 +1,126 @@
+import { expect, test, type Page } from '@playwright/test';
+import path from 'node:path';
+
+// A fixed "now" (Sep 23, 2026, 8 PM in Seattle, the default site) keeps tonight and the
+// loaded range the same on every run.
+const NOW = new Date('2026-09-24T03:00:00Z');
+
+const VIEWS = [
+  { id: 'river', tab: 'River' },
+  { id: 'calendar', tab: 'Calendar' },
+  { id: 'lunations', tab: 'Lunations' },
+  { id: 'table', tab: 'Table' },
+  { id: 'notes', tab: 'Notes' },
+] as const;
+
+/** Open the site with the clock fixed; returns the page errors seen so far (and later). */
+async function open(page: Page): Promise<string[]> {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  await page.clock.setFixedTime(NOW);
+  await page.goto('./');
+  await page.waitForFunction(() => (window.__npa?.nights.length ?? 0) > 0);
+  await expect(page.locator('#loading')).toBeHidden();
+  return errors;
+}
+
+/** Distinct colors across a grid of canvas samples: a blank canvas has one. */
+async function canvasColors(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const cv = document.getElementById('cv') as HTMLCanvasElement;
+    const data = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height).data;
+    const seen = new Set<number>();
+    for (let y = 0; y < cv.height; y += 9)
+      for (let x = 0; x < cv.width; x += 9) {
+        const i = (y * cv.width + x) * 4;
+        seen.add((data[i] << 16) | (data[i + 1] << 8) | data[i + 2]);
+      }
+    return seen.size;
+  });
+}
+
+const insDate = (page: Page) => page.locator('#insDate');
+
+for (const view of VIEWS) {
+  test(`${view.tab} view renders`, async ({ page }, info) => {
+    const errors = await open(page);
+    await page.locator('#viewSeg').getByRole('button', { name: view.tab, exact: true }).click();
+    await expect(page.locator('#viewTitle')).toHaveText(view.tab);
+    if (view.id === 'table') {
+      await expect(page.locator('#tableView tbody tr')).toHaveCount(30);
+    } else if (view.id === 'notes') {
+      await expect(
+        page.getByRole('heading', { name: 'Three ways to plan a month of nights' }),
+      ).toBeVisible();
+    } else {
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+      expect(await canvasColors(page)).toBeGreaterThan(8);
+    }
+    await expect(insDate(page)).toHaveText('Wed Sep 23 → Thu Sep 24');
+    if (process.env.SCREENSHOTS) {
+      await page.screenshot({
+        path: path.join('test-results', 'screenshots', `${info.project.name}-${view.id}.png`),
+      });
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
+test('keys, the inspector list and Tonight move the selection', async ({ page }) => {
+  const errors = await open(page);
+  await page.keyboard.press('ArrowRight');
+  await expect(insDate(page)).toHaveText('Thu Sep 24 → Fri Sep 25');
+  await page.keyboard.press('ArrowDown');
+  await expect(insDate(page)).toHaveText('Thu Oct 1 → Fri Oct 2');
+  await page.locator('#insWeekends button').first().click();
+  await expect(insDate(page)).toHaveText('Fri Oct 9 → Sat Oct 10');
+  await expect(page.locator('#insBig')).toHaveText('9h 24m');
+  await page.getByRole('button', { name: 'Tonight' }).click();
+  await expect(insDate(page)).toHaveText('Wed Sep 23 → Thu Sep 24');
+  expect(errors).toEqual([]);
+});
+
+test('clicking a night on the canvas selects it', async ({ page }) => {
+  const errors = await open(page);
+  // River, Month zoom: 30 px axis band, then 20 px rows; tonight opens as the fourth row, so the
+  // eighth row down is four nights later.
+  const box = (await page.locator('#cv').boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + 30 + 7 * 20 + 10);
+  await expect(insDate(page)).toHaveText('Sun Sep 27 → Mon Sep 28');
+  expect(errors).toEqual([]);
+});
+
+test('a new site recomputes every night', async ({ page }) => {
+  const errors = await open(page);
+  await page.locator('#siteBtn').click();
+  await page.locator('#siteName').fill('Edinburgh');
+  await page.locator('#siteLat').fill('55.95');
+  await page.locator('#siteLon').fill('-3.19');
+  await page.locator('#siteTz').fill('Europe/London');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#siteBtn')).toContainText('Edinburgh · 55.95°N 3.19°W');
+  await expect(page.locator('#insSub')).toHaveText('Night 2026-09-23 · Edinburgh');
+  await expect(page.locator('#loading')).toBeHidden();
+  expect(errors).toEqual([]);
+});
+
+test('an unknown time zone is refused with a message', async ({ page }) => {
+  await open(page);
+  await page.locator('#siteBtn').click();
+  await page.locator('#siteTz').fill('Mars/Olympus_Mons');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#siteErr')).toHaveText(
+    '“Mars/Olympus_Mons” is not a time zone name. Try America/Los_Angeles.',
+  );
+  await expect(page.locator('#siteBtn')).toContainText('Seattle');
+});
+
+test('the page follows the system color scheme', async ({ page }, info) => {
+  await open(page);
+  const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const dark = info.project.use.colorScheme === 'dark';
+  expect(bg).toBe(dark ? 'rgb(7, 9, 14)' : 'rgb(233, 237, 242)');
+});

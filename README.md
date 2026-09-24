@@ -26,8 +26,8 @@ All views share one visual language and the same controls: new-moon focus (±N n
 moon counts as up, and whether to ignore a thin crescent. Click any night for its altitude chart
 and stage times; the side panel also lists the darkest weekends ahead.
 
-| Year at a glance (River) | Calendar | Lunations |
-| --- | --- | --- |
+| Year at a glance (River)                        | Calendar                                           | Lunations                                          |
+| ----------------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
 | ![River, Year zoom](docs/images/river-year.png) | ![Calendar, month](docs/images/calendar-month.png) | ![Lunations, ±5 nights](docs/images/lunations.png) |
 
 - [docs/design.md](docs/design.md): the views, the shared visual language, and the reasoning
@@ -36,35 +36,52 @@ and stage times; the side panel also lists the darkest weekends ahead.
 
 ## Running it
 
-The site is plain HTML, CSS and JavaScript with no build step:
+You need Node 24.11 (see `.node-version`; `fnm` or `nvm` will pick it up) and npm.
 
 ```bash
-scripts/serve.sh
+npm install
+npm run dev
 ```
 
-That serves `site/` at <http://localhost:8000/> (pass a port to change it). Any static file server
-works. Sun and moon positions are computed in the browser; your site is saved only in the
-browser's local storage and never sent anywhere.
+`npm run dev` serves the site at <http://localhost:5173/> with hot reload. `npm run build` writes
+the deployable static site to `dist/`, and `npm run preview` serves that build. Sun and moon
+positions are computed in the browser; your site is saved only in the browser's local storage and
+never sent anywhere.
+
+| Command               | What it does                                                                      |
+| --------------------- | --------------------------------------------------------------------------------- |
+| `npm run check`       | Lint, format check, type check, unit tests and build: what CI runs first          |
+| `npm test`            | Unit tests for the night model (Vitest)                                           |
+| `npm run test:e2e`    | Browser smoke tests of the built site in Chromium and WebKit (Playwright)         |
+| `npm run screenshots` | The smoke tests, saving a screenshot of every view to `test-results/screenshots/` |
+| `npm run format`      | Format everything with Prettier                                                   |
+
+The first time you run the browser tests, install their browsers with
+`npx playwright install chromium webkit`.
 
 ## Layout
 
 ```text
-site/                   the deployable static site
-  index.html
+index.html              the page (Vite entry)
+src/
+  model/                the night model: time zones, nights, ranges, formatting (no DOM)
+  app/                  settings, shared state, and the shell that ties views together
+  views/                River, Calendar, Lunations and Table
+  render/               canvas surface, theme colors, drawing one night
+  ui/                   inspector, tooltip, controls
   styles/atlas.css      theme tokens, layout, components
-  scripts/atlas.js      the whole app, for now
-  vendor/               pinned third-party code (Astronomy Engine)
+public/                 files served as-is (favicon)
+e2e/                    browser smoke tests
 docs/                   design notes, night model, screenshots
-scripts/serve.sh        local server
 AGENTS.md               guidance for coding agents working in this repo
 ```
 
 ## Status
 
-A working prototype. Work is tracked in GitHub issues. First up: a build toolchain with tests,
-checking the numbers against reference tables, and hosting on Google Cloud. After that come the
-features: shareable links, choosing the metrics each view shows, and accounts to save sites and
-preferences.
+A working prototype with a real toolchain: TypeScript, Vite, unit and browser tests, and CI on
+every push and pull request. Work is tracked in GitHub issues. Next up: checking the numbers
+against reference tables and hosting on Google Cloud, then shareable links, choosing the metrics
+each view shows, and accounts to save sites and preferences.
 
 ## Credits
 

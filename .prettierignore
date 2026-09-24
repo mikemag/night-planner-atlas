@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+playwright-report
+test-results
+tmp
+package-lock.json
+docs/images
+# Golden files are compared byte for byte; the test writes them.
+src/model/testdata/*.json

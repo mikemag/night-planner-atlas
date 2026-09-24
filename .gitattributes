@@ -1,4 +1,4 @@
 * text=auto eol=lf
 *.png binary
-site/vendor/** linguist-vendored
-*.min.js -diff
+package-lock.json linguist-generated=true
+src/model/testdata/*.json linguist-generated=true
