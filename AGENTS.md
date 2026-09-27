@@ -6,9 +6,11 @@ views. It is Mike's project, developed with agents. It is private for now and wi
 
 ## Orientation
 
-- `site/` is the deployable site, with no build step yet. `site/scripts/atlas.js` is the whole app:
-  one IIFE, sectioned by comments. `site/styles/atlas.css` holds the styles and theme tokens, and
-  `site/vendor/` holds pinned third-party code.
+- `index.html` and `src/` are the site: TypeScript built with Vite into static files in `dist/`.
+  `src/model/` is the night model and has no DOM; `src/app/` holds settings, shared state and the
+  shell; `src/views/` the River, Calendar, Lunations and Table views; `src/render/` the canvas and
+  theme colors; `src/ui/` the inspector, tooltip and controls. `src/styles/atlas.css` holds the
+  styles and theme tokens.
 - `docs/design.md` describes the views, their shared visual language and the reasoning behind
   them.
 - `docs/night-model.md` defines how a night is computed. Treat it as the contract, and update it
@@ -28,20 +30,24 @@ views. It is Mike's project, developed with agents. It is private for now and wi
 
 ## Checking changes
 
-- `scripts/serve.sh` serves `site/` at <http://localhost:8000/>.
+- Use Node 24.11 from `.node-version`. `npm run dev` serves the site at <http://localhost:5173/>.
+- `npm run check` runs lint, the format check, the type check, the unit tests and the build. Run
+  it before every commit; CI runs the same steps plus the browser tests.
+- The unit tests pin the night model two ways. Golden files in `src/model/testdata/`, first
+  captured from the original prototype, must match exactly. Sun events must also agree with an
+  independent solar model to within 30 s. After an intentional change to the model, regenerate the
+  golden files with `npx vitest run -u` and explain the diff in the commit.
+- `npm run test:e2e` runs the Playwright smoke tests against the production build in Chromium
+  (light and dark) and WebKit. `npm run screenshots` also saves every view to
+  `test-results/screenshots/`, which is the quickest way to look at a change at full resolution.
 - Look at what you changed in both light and dark themes. Check desktop size (about 1500×900) and
-  phone width (about 390 px, with no horizontal page scroll). A syntax check such as
-  `node --check site/scripts/atlas.js` is not a UI check.
+  phone width (about 390 px, with no horizontal page scroll). Type checks and unit tests are not
+  UI checks.
 - The app exposes `window.__npa` (state and actions) and dispatches `npa-ready` on `window` once
-  nights are computed; use them to drive views in tests. Settings persist in localStorage under
-  `npa:` keys.
-- Headless Chrome gives full-resolution screenshots without the browser pane:
-  `"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new
-  --screenshot=out.png --window-size=1512,920 --virtual-time-budget=6000 <url>`. It writes the
-  file and then hangs, so poll for the file and kill the process. It can't render narrower than
-  about 500 px.
-- When the night model changes, spot-check a few nights against a reference such as USNO or NOAA
-  sun and twilight tables, and say what you checked.
+  nights are computed; tests use them, plus Playwright's clock to fix "now". Settings persist in
+  localStorage under `npa:` keys.
+- When the night model changes, also spot-check a few nights against a reference such as USNO or
+  NOAA sun and twilight tables, and say what you checked.
 
 ## Product rules
 
@@ -60,8 +66,9 @@ views. It is Mike's project, developed with agents. It is private for now and wi
 
 - Prefer permissive licenses such as MIT, BSD and Apache-2.0. Copyleft or unknown licenses need
   Mike's approval.
-- Credit third-party code in `THIRD_PARTY_NOTICES.md` and in the site's visible credits. Keep
-  upstream license files next to vendored code.
+- Credit third-party code that ships in the site in `THIRD_PARTY_NOTICES.md` and in the site's
+  visible credits, and keep its license header in the bundle (`vite.config.ts` preserves legal
+  comments). Check licenses of new dependencies, including transitive ones, before adding them.
 
 ## Git and GitHub
 

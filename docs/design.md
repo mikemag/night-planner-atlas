@@ -32,7 +32,7 @@ One encoding everywhere, so a night looks the same in every view and in the sing
   and **tonight and now** are blue.
 - **Time** is the site's local clock time, including daylight saving time. The one-hour jump on a
   clock-change night is real, and the River labels it.
-- Both themes are designed. Canvas colors come from the theme tokens in `site/styles/atlas.css`,
+- Both themes are designed. Canvas colors come from the theme tokens in `src/styles/atlas.css`,
   and the sky ramp is tuned per theme so the day band doesn't glare in dark mode. Labels drawn on
   sky colors pick white or ink by the background's luminance.
 
@@ -54,10 +54,10 @@ flattened.
   minimap of the whole range sits at the right edge; click or drag it to move.
 - **Hover** shows a crosshair with the clock time and a tooltip: the night's moon-free total and
   window, sun and moon times, and the sky at the pointer ("True dark · moon up 6°").
-- *Best at* showing the shape: the moon leaving the evening dark after full, the whole night open
+- _Best at_ showing the shape: the moon leaving the evening dark after full, the whole night open
   at new moon, the dark sliding to the mornings as the moon waxes. It also shows the seasonal
   hourglass and clock changes.
-- *Weak at* weekday structure, since it is a list and not a grid, and at keeping your place in a
+- _Weak at_ weekday structure, since it is a list and not a grid, and at keeping your place in a
   long scroll. The minimap and Year zoom help with the second.
 
 ### Calendar
@@ -76,8 +76,8 @@ the moon-free total, and the window.
 - **New-moon focus** dims nights outside ±N and squashes weeks that contain none.
 - **Year** zoom shows mini months with a small night column per day, weekend columns tinted, and
   monthly totals: the calendar app's year view, with data.
-- *Best at* familiarity: weekends are a column, and every cell carries its headline number.
-- *Weak at* continuity: week wrapping breaks the moon's motion every seven days, and a readable
+- _Best at_ familiarity: weekends are a column, and every cell carries its headline number.
+- _Weak at_ continuity: week wrapping breaks the moon's motion every seven days, and a readable
   month fills a screen, so a year means paging rather than scanning.
 
 ### Lunations
@@ -90,8 +90,8 @@ Calendar's Time ↓.
   compare straight down the page.
 - The row header gives the new moon's date and the moon-free total in the window. The right column
   names the best Friday–Saturday pair in the window, which is also bracketed under its cells.
-- *Best at* the trip question: which new moon, and which weekend.
-- *Weak at* dates: weekdays land in different columns on every row, and full-moon nights are
+- _Best at_ the trip question: which new moon, and which weekend.
+- _Weak at_ dates: weekdays land in different columns on every row, and full-moon nights are
   deliberately left out.
 
 ### Table
@@ -106,8 +106,8 @@ twin of the charts.
   altitude over the phase bands, with moon-free time hatched green. Below it: stage start times
   and durations for evening and morning, moon phase with rise and set, and **Dark weekends
   ahead**, the best Friday–Saturday pair near each upcoming new moon.
-- **Planning thresholds.** *Moon counts once above* (0°–15°) allows for a tree line or hills.
-  *Ignore a moon under* (10–30% lit) is for people who don't mind a thin crescent. Both change
+- **Planning thresholds.** _Moon counts once above_ (0°–15°) allows for a tree line or hills.
+  _Ignore a moon under_ (10–30% lit) is for people who don't mind a thin crescent. Both change
   every number and the weekend picks, not just the drawing.
 - **Site.** Name, latitude, longitude and IANA time zone, saved only in the browser. The default is
   Seattle.
@@ -137,11 +137,11 @@ Rationale that isn't obvious from the result:
   near late nautical twilight's brightness.
 - **Marking moon-free time.** The single-night chart hatches moon-free time green. At month scale
   hatching turns into noise, so the month views use black plus a thin green edge. The River's
-  *Black only* toggle lets you compare.
+  _Black only_ toggle lets you compare.
 - **Altitude curves.** Curves in every calendar cell were unreadable at cell size, so they appear
   only in Week zoom, expanded weeks and the inspector.
 - **Clock time versus elapsed time.** The month views use clock time, which is what you plan with.
   The inspector's chart uses elapsed time, like AllSky's Swift chart, so the repeated hour on a
   fall-back night doesn't fold the curves.
 - **Considered and not built.** A radial year clock was pretty, but it made times hard to read and
-  nights hard to compare. A plain heat-map calendar loses *when* in the night the dark falls.
+  nights hard to compare. A plain heat-map calendar loses _when_ in the night the dark falls.
