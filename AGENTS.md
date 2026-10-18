@@ -32,7 +32,7 @@ views. It is Mike's project, developed with agents. It is private for now and wi
 
 - Use Node 24.11 from `.node-version`. `npm run dev` serves the site at <http://localhost:5173/>.
 - `npm run check` runs lint, the format check, the type check, the unit tests and the build. Run
-  it before every commit; CI runs the same steps plus the browser tests.
+  it before every commit. Tests run locally; there is no GitHub CI workflow.
 - The unit tests pin the night model two ways. Golden files in `src/model/testdata/`, first
   captured from the original prototype, must match exactly. Sun events must also agree with an
   independent solar model to within 30 s. After an intentional change to the model, regenerate the

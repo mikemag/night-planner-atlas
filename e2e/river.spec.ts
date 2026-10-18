@@ -85,8 +85,8 @@ async function openRiver(page: Page): Promise<void> {
   });
   await page.clock.setFixedTime(new Date('2026-09-24T03:00:00Z'));
   await page.goto('./');
-  await expect(page.locator('#loading')).toBeHidden();
   await page.waitForFunction(() => (window.__npa?.nights.length ?? 0) > 0);
+  await expect(page.locator('#loading')).toBeHidden();
   await painted(page);
 }
 

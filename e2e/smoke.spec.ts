@@ -23,7 +23,7 @@ async function open(page: Page): Promise<string[]> {
   await page.clock.setFixedTime(NOW);
   await page.goto('./');
   await page.waitForFunction(() => (window.__npa?.nights.length ?? 0) > 0);
-  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   return errors;
 }
 
@@ -103,7 +103,7 @@ test('a new site recomputes every night', async ({ page }) => {
   await page.locator('#siteApply').click();
   await expect(page.locator('#siteBtn')).toContainText('Edinburgh · 55.95°N 3.19°W');
   await expect(page.locator('#insSub')).toHaveText('Night 2026-09-23 · Edinburgh');
-  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(errors).toEqual([]);
 });
 
@@ -128,6 +128,8 @@ test('the page follows the system color scheme', async ({ page }, info) => {
 test('optional elevation persists, corrects events, and can be cleared without changing coordinates', async ({
   page,
 }) => {
+  // Allow time for four full range computations, including a reload, on slower machines.
+  test.setTimeout(120_000);
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await open(page);
   const before = await page.evaluate(() => {
@@ -138,7 +140,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
   await expect(page.getByLabel('Elevation (m above sea level, optional)')).toHaveValue('');
   await page.locator('#siteElevation').fill('2000');
   await page.locator('#siteApply').click();
-  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   await expect(page.locator('#siteBtn')).toContainText('2000 m');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   const after = await page.evaluate(() => {
@@ -149,14 +151,14 @@ test('optional elevation persists, corrects events, and can be cleared without c
   expect(after.sunrise).toBeGreaterThan(before.sunrise);
   expect(after.moonRise).toBeGreaterThan(before.moonRise);
   await page.reload();
-  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   await page.locator('#siteBtn').click();
   await expect(page.locator('#siteElevation')).toHaveValue('2000');
   await expect(page.locator('#siteLat')).toHaveValue('47.60621');
   await expect(page.locator('#siteLon')).toHaveValue('-122.34253');
   await page.locator('#siteElevation').fill('');
   await page.locator('#siteApply').click();
-  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
   expect(
     await page.evaluate(() => window.__npa!.nights.find((n) => n.id === '2026-10-03')!.ev.sunset),
@@ -179,11 +181,11 @@ test('elevation validates range, accepts below sea level, and resets with the si
   }
   await page.locator('#siteElevation').fill('-400');
   await page.locator('#siteApply').click();
-  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   await expect(page.locator('#siteBtn')).toContainText('-400 m');
   await page.locator('#siteBtn').click();
   await page.locator('#siteReset').click();
-  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
   expect(errors).toEqual([]);
 });

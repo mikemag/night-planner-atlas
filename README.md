@@ -51,14 +51,16 @@ automatic terrain lookup.
 
 | Command               | What it does                                                                      |
 | --------------------- | --------------------------------------------------------------------------------- |
-| `npm run check`       | Lint, format check, type check, unit tests and build: what CI runs first          |
+| `npm run check`       | Lint, format check, type check, unit tests and build                              |
 | `npm test`            | Unit tests for the night model (Vitest)                                           |
 | `npm run test:e2e`    | Browser smoke tests of the built site in Chromium and WebKit (Playwright)         |
 | `npm run screenshots` | The smoke tests, saving a screenshot of every view to `test-results/screenshots/` |
 | `npm run format`      | Format everything with Prettier                                                   |
 
 The first time you run the browser tests, install their browsers with
-`npx playwright install chromium webkit`.
+`npx playwright install chromium webkit`. All checks run locally; GitHub does not run tests on
+pushes or pull requests. Browser tests build and start their own preview server on port 4174 and
+fail if that port is already occupied, so they cannot accidentally test a different server.
 
 ## Layout
 
@@ -79,8 +81,8 @@ AGENTS.md               guidance for coding agents working in this repo
 
 ## Status
 
-A working prototype with a real toolchain: TypeScript, Vite, unit and browser tests, and CI on
-every push and pull request. Work is tracked in GitHub issues. The night model has been checked
+A working prototype with TypeScript, Vite, and local unit and browser tests.
+Work is tracked in GitHub issues. The night model has been checked
 against USNO tables; see the measured accuracy and sampling limits in
 [the night model](docs/night-model.md#reference-verification-and-accuracy). Next up is polishing
 the River, Calendar and Lunations views and assessing usability before hosting and launch.
