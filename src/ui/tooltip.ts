@@ -30,7 +30,7 @@ export function showTip(i: number, hh: number | null | undefined, px: number, py
   );
   if (hh != null) {
     const alt = moonAltAt(n, hh);
-    const moon = alt == null ? '' : alt > 0 ? ` · moon up ${Math.round(alt)}°` : ' · moon down';
+    const moon = alt == null ? '' : ` · moon center ${Math.round(alt)}°`;
     add('t4', `At ${fmtClock(hh)}: ${phaseAt(n, hh)}${moon}`);
   }
   tip.hidden = false;

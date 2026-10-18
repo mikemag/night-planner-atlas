@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Site } from './night';
 import { captureGolden, serializeGolden } from './testdata/golden';
 
-// The golden files were captured from the original prototype at this instant
+// The golden files use the original prototype capture instant
 // (Sep 23, 2026, 8 PM in Seattle), so "tonight" and the loaded range are fixed.
 const NOW = Date.UTC(2026, 8, 24, 3, 0, 0);
 

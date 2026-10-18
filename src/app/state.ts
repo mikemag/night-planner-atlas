@@ -10,6 +10,8 @@ export interface UiState {
   /** Key of the expanded calendar week, if any. */
   expandedWeek: string | null;
   hover: Hit | null;
+  /** Show the selected night's River summary after a tap, click or keyboard navigation. */
+  riverReadoutSelected: boolean;
 }
 
 export type AppState = Settings & UiState;
@@ -23,6 +25,7 @@ export const S: AppState = {
   sel: -1,
   expandedWeek: null,
   hover: null,
+  riverReadoutSelected: false,
 };
 
 /**

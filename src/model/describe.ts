@@ -2,7 +2,7 @@ import { fmtClock, fmtClockS } from './format';
 import { NS, STEP, wallH, type Night } from './night';
 import { MS_H, MS_M } from './time';
 
-/** Moon phase name from illumination and phase angle, with AllSky's thresholds. */
+/** Moon phase name from illumination and waxing/waning phase angle. */
 export function phaseName(n: Night): string {
   const a = n.phase;
   if (n.illum < 0.03) return 'New moon';

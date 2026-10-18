@@ -44,7 +44,7 @@
           </span>
         </span>
         <label class="ctl" for="moonAltSel"
-          >Moon counts once above
+          >Moon’s upper edge above
           <select id="moonAltSel">
             <option value="0">0° (horizon)</option>
             <option value="5">5°</option>
@@ -81,7 +81,7 @@
               <span><i class="sw" style="background: var(--sky-naut)"></i>Nautical</span>
               <span><i class="sw" style="background: var(--sky-astro)"></i>Astronomical</span>
               <span><i class="sw" style="background: var(--sky-dark)"></i>True dark</span>
-              <span><i class="sw" id="moonSw"></i>Moon up (brighter = fuller)</span>
+              <span><i class="sw" id="moonSw"></i>Moon up (upper edge; brighter = fuller)</span>
               <span
                 ><i class="sw line" style="background: var(--good)"></i>Moon-free true dark</span
               >
@@ -95,6 +95,13 @@
             ></canvas>
             <div class="sizer" id="sizer"></div>
           </div>
+          <div
+            class="river-readout"
+            id="riverReadout"
+            role="group"
+            aria-label="River readout"
+            hidden
+          ></div>
           <div class="table-wrap" id="tableView" hidden></div>
           <div class="doc" id="notesView" hidden></div>
           <div class="loading" id="loading">
@@ -110,6 +117,21 @@
             <label for="siteLon"
               >Longitude (°E, negative = west)<input id="siteLon" inputmode="decimal"
             /></label>
+            <label for="siteElevation"
+              >Elevation (m above sea level, optional)
+              <input
+                id="siteElevation"
+                type="number"
+                inputmode="decimal"
+                min="-500"
+                max="10000"
+                step="any"
+                aria-describedby="siteElevationHint"
+              />
+            </label>
+            <p id="siteElevationHint">
+              Blank uses sea level. A level horizon is assumed; no terrain lookup.
+            </p>
             <label for="siteTz">Time zone (IANA)<input id="siteTz" autocomplete="off" /></label>
             <p>Saved only in this browser; it is never sent anywhere. The default is Seattle.</p>
             <p class="err" id="siteErr" hidden></p>
@@ -154,9 +176,8 @@
     <template id="notesTpl">
       <h2>Three ways to plan a month of nights</h2>
       <p>
-        Every view here is built from the same per-night data the Timeline&rsquo;s night planner
-        already computes: the eight sun events, moonrise and moonset, and moon-free true dark. The
-        ephemeris is real, computed in your browser with
+        Every view uses the same per-night data: the eight sun events, moonrise and moonset, and
+        moon-free true dark. The ephemeris is real, computed in your browser with
         <a href="https://github.com/cosinekitty/astronomy">Astronomy Engine</a> by Don Cross (MIT
         license). The default site is Seattle. Use the site button in the header to try your own
         coordinates; they stay in this browser.
@@ -186,7 +207,7 @@
               <td>
                 Shows the shape. The moon&rsquo;s nightly 50-minute march becomes diagonal stripes,
                 the seasons become an hourglass, and clock changes show as steps. Uses the same
-                left-to-right clock time as today&rsquo;s chart, so a row <em>is</em> that chart,
+                left-to-right clock time as the single-night chart, so a row <em>is</em> that chart,
                 flattened. One continuous scroll covers the whole year.
               </td>
               <td>
@@ -195,9 +216,9 @@
               </td>
               <td>
                 Row height is the zoom. Year (the whole range on one screen), Month (20&nbsp;px
-                rows) and Week (rows tall enough for times and the moon&rsquo;s altitude track).
-                New-moon focus is a fisheye: nights near new moon open up with window times, and
-                moonlit nights squash to thin context lines.
+                rows) and Week (48&nbsp;px rows with larger window times, dates and duration
+                totals). New-moon focus is a fisheye: nights near new moon open up with window
+                times, and moonlit nights squash to thin context lines.
               </td>
             </tr>
             <tr>
@@ -217,7 +238,7 @@
                 Month and Year zooms. The chevron expands one week with times, moonrise and moonset.
                 New-moon focus dims and squashes weeks away from new moon.
                 <em>Time &darr;</em> makes each week a small river (cells abut, so the slide shows);
-                <em>Time &rarr;</em> matches today&rsquo;s chart and reads numbers more easily.
+                <em>Time &rarr;</em> matches the single-night chart and reads numbers more easily.
               </td>
             </tr>
             <tr>
@@ -259,14 +280,14 @@
         <li>
           <strong>One mental model from a year down to a single night.</strong> Only the row height
           changes between Year, Month and Week, and a row already looks like the chart people know
-          from the Timeline.
+          in the inspector.
         </li>
         <li>
           <strong>&ldquo;Expand around new moons&rdquo; costs nothing.</strong> It is just taller
           rows, so there is no mode switch and no new layout to learn.
         </li>
         <li>
-          <strong>It suits a native build.</strong> One Canvas in a ScrollView, drawing only the
+          <strong>It stays responsive.</strong> One canvas in a scrolling view, drawing only the
           visible rows, with a fixed axis so live updates never shift layout.
         </li>
       </ul>
@@ -285,13 +306,13 @@
           crescent barely lifts the black.
         </li>
         <li>
-          <strong>Green fill for moon-free dark</strong>, as in today&rsquo;s chart. At month scale
-          the hatching turned into noise. Black already means dark, so a thin green edge
+          <strong>Green fill for moon-free dark</strong>, as in the single-night chart. At month
+          scale the hatching turned into noise. Black already means dark, so a thin green edge
           disambiguates thin crescents. You can compare with <em>Black only</em> in the River.
         </li>
         <li>
           <strong>Altitude curves in every calendar cell.</strong> They were unreadable at cell
-          size, so they now appear only in Week zoom and expanded weeks.
+          size, so they now appear in expanded Calendar weeks and the selected-night inspector.
         </li>
         <li>
           <strong>Considered and not built:</strong> a radial year clock (pretty, but hard to read
@@ -303,15 +324,12 @@
       <h3>If we build it</h3>
       <ul>
         <li>
-          Calling today&rsquo;s per-night <code>NightPlanner.plan</code> for 365 nights means
-          several thousand altitude evaluations per night. That comes from separate 5-minute
-          crossing scans for each event, which works out to about 1.4 million for a year. A month or
-          year view wants one pass over a shared time grid per site and year, computed off the main
-          actor with the visible month first. The result is a rebuildable cache keyed by site and
-          year. This prototype computes 14 months in under a second that way.
+          The site computes sun and moon positions in this browser and yields between short
+          computation slices. The four Moon horizon thresholds are precomputed so switching between
+          them updates the planning numbers immediately.
         </li>
         <li>
-          The planning thresholds in the header (moon counts once above N&deg;, ignore a moon under
+          The planning thresholds in the header (Moon’s upper edge above N&deg;, ignore a moon under
           N% lit) matter for real trips with a tree line or a thin crescent. They change the
           headline numbers, so they belong in settings, not buried in code.
         </li>

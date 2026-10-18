@@ -1,13 +1,10 @@
 import { Observer } from 'astronomy-engine';
 import { describe, expect, it } from 'vitest';
-import { moonAltAt, phaseName } from './describe';
+import { phaseName } from './describe';
 import {
-  STEP,
   SUN_EVENTS,
   computeNight,
-  crossings,
   deriveNight,
-  intervalsAbove,
   subtract,
   wallH,
   type Night,
@@ -16,6 +13,7 @@ import {
   type Thresholds,
 } from './night';
 import { findCrossing, sunAltitude } from './testdata/reference-sun';
+import { moonUpperLimb, moonHorizonAltitude } from './moon';
 import { MS_H, MS_M, TimeZone } from './time';
 
 const SEATTLE: Site = {
@@ -110,7 +108,7 @@ describe('clock changes', () => {
 });
 
 describe('nights without true dark', () => {
-  it('Edinburgh at midsummer never gets past civil twilight', () => {
+  it('Edinburgh at midsummer never gets past nautical twilight', () => {
     const n = night(EDINBURGH, '2027-06-20');
     expect(n.ev.sunset).not.toBeNull();
     expect(n.ev.civilDusk).not.toBeNull();
@@ -147,18 +145,6 @@ describe('moon-free intervals', () => {
     expect(subtract([0, H], [[2 * H, 3 * H]])).toEqual([[0, H]]);
   });
 
-  it('crossings and intervalsAbove interpolate between samples', () => {
-    const S0 = 1_000_000;
-    expect(crossings([-1, 1, 1, -1], S0, 0)).toEqual([
-      { t: S0 + 0.5 * STEP, rising: true },
-      { t: S0 + 2.5 * STEP, rising: false },
-    ]);
-    expect(intervalsAbove([-1, 1, 1, -1], S0, 0)).toEqual([[S0 + 0.5 * STEP, S0 + 2.5 * STEP]]);
-    expect(intervalsAbove([1, -1], S0, 0)).toEqual([[S0, S0 + 0.5 * STEP]]);
-    expect(intervalsAbove([-1, 1], S0, 0)).toEqual([[S0 + 0.5 * STEP, S0 + STEP]]);
-    expect(intervalsAbove([3, 13, 3], S0, 10)).toEqual([[S0 + 0.7 * STEP, S0 + 1.3 * STEP]]);
-  });
-
   it('a new-moon night is moon-free for all of its true dark', () => {
     const n = night(SEATTLE, '2026-10-09');
     expect(phaseName(n)).toBe('New moon');
@@ -188,7 +174,11 @@ describe('planning thresholds', () => {
     const ten = night(SEATTLE, '2026-10-03', { moonAlt: 10, crescent: 0 });
     expect(ten.mfMs).toBeGreaterThan(strict.mfMs + 45 * MS_M);
     const end = ten.mf[ten.mf.length - 1][1];
-    expect(moonAltAt(ten, wallH(end, ten))).toBeCloseTo(10, 0);
+    expect(
+      Math.abs(
+        moonUpperLimb(new Observer(SEATTLE.lat, SEATTLE.lon, 0), end) - moonHorizonAltitude(10),
+      ),
+    ).toBeLessThan(0.0001);
   });
 
   it('a thin crescent below the cutoff is ignored', () => {

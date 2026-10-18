@@ -1,8 +1,8 @@
 import { atlas } from '../app/state';
 import { fmtClockS } from '../model/format';
 import { NS, STEP, wallH, type Night } from '../model/night';
-import { C, inkOn, moonAlpha } from './colors';
-import { ctx, snap, text } from './surface';
+import { C, moonAlpha } from './colors';
+import { ctx, snap, text, tw } from './surface';
 
 export interface NightDrawOptions {
   /** Mark moon-free true dark with the green edge (default on). */
@@ -13,6 +13,10 @@ export interface NightDrawOptions {
   curve?: boolean;
   /** Baseline for window labels when time runs across. */
   labelY?: number | null;
+  /** Quieter window labels on ordinary River weekdays. */
+  labelWeight?: number;
+  /** Font size for horizontal window labels; fit uses the same measured size. */
+  labelSize?: number;
   dim?: boolean;
 }
 
@@ -106,14 +110,16 @@ export function drawNight(
   }
   ctx.globalAlpha = 1;
   if (opt.labels && n.mfH.length) {
+    const weight = opt.labelWeight ?? 600;
+    const px = opt.labelSize ?? 10.5;
     for (const [a, b] of n.mfH) {
       const p0 = Math.max(0, P(a)),
         p1 = Math.min(L, P(b));
       if (o === 'h') {
-        if (p1 - p0 < 84) continue;
+        if (p1 - p0 < tw(fmtClockS(a), px, weight) + tw(fmtClockS(b), px, weight) + 18) continue;
         const cy = opt.labelY != null ? opt.labelY : y + h / 2 - 1;
-        text(fmtClockS(a), x + p0 + 5, cy, 10.5, '#ffffff', 'left', 600);
-        text(fmtClockS(b), x + p1 - 5, cy, 10.5, '#ffffff', 'right', 600);
+        text(fmtClockS(a), x + p0 + 5, cy, px, '#ffffff', 'left', weight);
+        text(fmtClockS(b), x + p1 - 5, cy, px, '#ffffff', 'right', weight);
       } else {
         if (p1 - p0 < 34 || w < 36) continue;
         text(fmtClockS(a), x + w / 2 + 1, y + p0 + 8, 10, '#ffffff', 'center', 600);
@@ -133,55 +139,6 @@ export function skyColorAt(n: Night, hh: number): string {
   if (inside(E.civilDusk, E.civilDawn)) return C.naut;
   if (inside(E.sunset, E.sunrise)) return C.civil;
   return C.day;
-}
-
-/**
- * Sunset and sunrise labels on the day color, plus moonrise and moonset when they fall inside
- * the night and aren't already a window edge. Time runs across.
- */
-export function eventLabelsH(
-  n: Night,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  horizonY: number,
-): void {
-  const { ax } = atlas();
-  const span = ax.end - ax.start;
-  const X = (hh: number) => x + ((hh - ax.start) / span) * w;
-  const dayInk = inkOn(C.day),
-    cy = y + h - 10;
-  const E = n.evH;
-  if (E.sunset != null)
-    text(`sunset ${fmtClockS(E.sunset)}`, X(E.sunset) - 5, cy, 10, dayInk, 'right', 600);
-  if (E.sunrise != null)
-    text(`sunrise ${fmtClockS(E.sunrise)}`, X(E.sunrise) + 5, cy, 10, dayInk, 'left', 600);
-  const edges = n.mfH.flat();
-  const moonEvents: Array<[number | null, 'moonrise' | 'moonset']> = [
-    [n.moonRise, 'moonrise'],
-    [n.moonSet, 'moonset'],
-  ];
-  for (const [t, lab] of moonEvents) {
-    if (t == null || E.sunset == null || E.sunrise == null) continue;
-    const hh = wallH(t, n);
-    if (hh < E.sunset || hh > E.sunrise || edges.some((e) => Math.abs(e - hh) < 0.1)) continue;
-    const mx = X(hh);
-    ctx.fillStyle = `rgb(${C.moon})`;
-    ctx.beginPath();
-    ctx.arc(mx, horizonY, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    const rise = lab === 'moonrise';
-    text(
-      `${lab} ${fmtClockS(hh)}`,
-      mx + (rise ? -6 : 6),
-      horizonY - 8,
-      10,
-      inkOn(skyColorAt(n, hh)),
-      rise ? 'right' : 'left',
-      600,
-    );
-  }
 }
 
 /** A moon at `phase` degrees (0 new, 180 full), lit side on the right while waxing. */

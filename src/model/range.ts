@@ -268,7 +268,7 @@ export interface ComputeOptions {
 
 function setup(site: Site, shift: number, now: number) {
   const tz = new TimeZone(site.tz);
-  const observer = new Observer(site.lat, site.lon, 0);
+  const observer = new Observer(site.lat, site.lon, site.elevation ?? 0);
   const spec = rangeStart(now, tz, shift);
   return { tz, observer, spec, list: nightDates(spec) };
 }

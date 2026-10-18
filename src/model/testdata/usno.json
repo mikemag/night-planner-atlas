@@ -1,0 +1,385 @@
+{
+  "source": "USNO annual rise/set and twilight tables; UTC, minute precision",
+  "retrieved": "2026-10-16",
+  "sources": [
+    {
+      "site": "Seattle",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=0&lat=47.60621&lon=-122.34253&label=Seattle&tz=0&tz_sign=1",
+      "table": "sun"
+    },
+    {
+      "site": "Seattle",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=1&lat=47.60621&lon=-122.34253&label=Seattle&tz=0&tz_sign=1",
+      "table": "moon"
+    },
+    {
+      "site": "Seattle",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=2&lat=47.60621&lon=-122.34253&label=Seattle&tz=0&tz_sign=1",
+      "table": "civil"
+    },
+    {
+      "site": "Seattle",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=3&lat=47.60621&lon=-122.34253&label=Seattle&tz=0&tz_sign=1",
+      "table": "nautical"
+    },
+    {
+      "site": "Seattle",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=4&lat=47.60621&lon=-122.34253&label=Seattle&tz=0&tz_sign=1",
+      "table": "astronomical"
+    },
+    {
+      "site": "Edinburgh",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=0&lat=55.95&lon=-3.19&label=Edinburgh&tz=0&tz_sign=1",
+      "table": "sun"
+    },
+    {
+      "site": "Edinburgh",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=1&lat=55.95&lon=-3.19&label=Edinburgh&tz=0&tz_sign=1",
+      "table": "moon"
+    },
+    {
+      "site": "Edinburgh",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=2&lat=55.95&lon=-3.19&label=Edinburgh&tz=0&tz_sign=1",
+      "table": "civil"
+    },
+    {
+      "site": "Edinburgh",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=3&lat=55.95&lon=-3.19&label=Edinburgh&tz=0&tz_sign=1",
+      "table": "nautical"
+    },
+    {
+      "site": "Edinburgh",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=4&lat=55.95&lon=-3.19&label=Edinburgh&tz=0&tz_sign=1",
+      "table": "astronomical"
+    },
+    {
+      "site": "Sydney",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=0&lat=-33.87&lon=151.21&label=Sydney&tz=0&tz_sign=1",
+      "table": "sun"
+    },
+    {
+      "site": "Sydney",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=1&lat=-33.87&lon=151.21&label=Sydney&tz=0&tz_sign=1",
+      "table": "moon"
+    },
+    {
+      "site": "Sydney",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=2&lat=-33.87&lon=151.21&label=Sydney&tz=0&tz_sign=1",
+      "table": "civil"
+    },
+    {
+      "site": "Sydney",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=3&lat=-33.87&lon=151.21&label=Sydney&tz=0&tz_sign=1",
+      "table": "nautical"
+    },
+    {
+      "site": "Sydney",
+      "url": "https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=4&lat=-33.87&lon=151.21&label=Sydney&tz=0&tz_sign=1",
+      "table": "astronomical"
+    }
+  ],
+  "cases": [
+    {
+      "site": {
+        "name": "Seattle",
+        "lat": 47.60621,
+        "lon": -122.34253,
+        "tz": "America/Los_Angeles"
+      },
+      "night": "2026-10-03",
+      "utcDays": [
+        {
+          "date": "2026-10-02",
+          "sun": "1410 0148",
+          "moon": "0424 2148",
+          "civil": "1339 0219",
+          "nautical": "1304 0255",
+          "astronomical": "1227 0331"
+        },
+        {
+          "date": "2026-10-03",
+          "sun": "1411 0146",
+          "moon": "0530 2237",
+          "civil": "1341 0217",
+          "nautical": "1305 0253",
+          "astronomical": "1229 0329"
+        },
+        {
+          "date": "2026-10-04",
+          "sun": "1413 0144",
+          "moon": "0647 2314",
+          "civil": "1342 0215",
+          "nautical": "1306 0251",
+          "astronomical": "1230 0327"
+        },
+        {
+          "date": "2026-10-05",
+          "sun": "1414 0142",
+          "moon": "0808 2341",
+          "civil": "1344 0213",
+          "nautical": "1308 0249",
+          "astronomical": "1232 0325"
+        }
+      ]
+    },
+    {
+      "site": {
+        "name": "Seattle",
+        "lat": 47.60621,
+        "lon": -122.34253,
+        "tz": "America/Los_Angeles"
+      },
+      "night": "2026-10-09",
+      "utcDays": [
+        {
+          "date": "2026-10-08",
+          "sun": "1418 0136",
+          "moon": "1205 0020",
+          "civil": "1348 0207",
+          "nautical": "1312 0243",
+          "astronomical": "1236 0319"
+        },
+        {
+          "date": "2026-10-09",
+          "sun": "1420 0134",
+          "moon": "1320 0037",
+          "civil": "1349 0205",
+          "nautical": "1313 0241",
+          "astronomical": "1238 0317"
+        },
+        {
+          "date": "2026-10-10",
+          "sun": "1421 0132",
+          "moon": "1434 0053",
+          "civil": "1350 0203",
+          "nautical": "1315 0239",
+          "astronomical": "1239 0315"
+        },
+        {
+          "date": "2026-10-11",
+          "sun": "1423 0130",
+          "moon": "1547 0110",
+          "civil": "1352 0201",
+          "nautical": "1316 0237",
+          "astronomical": "1240 0313"
+        }
+      ]
+    },
+    {
+      "site": {
+        "name": "Seattle",
+        "lat": 47.60621,
+        "lon": -122.34253,
+        "tz": "America/Los_Angeles"
+      },
+      "night": "2026-10-25",
+      "utcDays": [
+        {
+          "date": "2026-10-24",
+          "sun": "1442 0106",
+          "moon": "     1258",
+          "civil": "1410 0138",
+          "nautical": "1334 0214",
+          "astronomical": "1259 0249"
+        },
+        {
+          "date": "2026-10-25",
+          "sun": "1443 0105",
+          "moon": "0006 1417",
+          "civil": "1412 0136",
+          "nautical": "1336 0212",
+          "astronomical": "1300 0248"
+        },
+        {
+          "date": "2026-10-26",
+          "sun": "1445 0103",
+          "moon": "0027 1541",
+          "civil": "1413 0135",
+          "nautical": "1337 0211",
+          "astronomical": "1301 0246"
+        },
+        {
+          "date": "2026-10-27",
+          "sun": "1446 0101",
+          "moon": "0054 1706",
+          "civil": "1414 0133",
+          "nautical": "1338 0209",
+          "astronomical": "1303 0245"
+        }
+      ]
+    },
+    {
+      "site": {
+        "name": "Seattle",
+        "lat": 47.60621,
+        "lon": -122.34253,
+        "tz": "America/Los_Angeles"
+      },
+      "night": "2026-10-31",
+      "utcDays": [
+        {
+          "date": "2026-10-30",
+          "sun": "1451 0056",
+          "moon": "0320 2034",
+          "civil": "1419 0128",
+          "nautical": "1342 0204",
+          "astronomical": "1307 0240"
+        },
+        {
+          "date": "2026-10-31",
+          "sun": "1452 0055",
+          "moon": "0436 2115",
+          "civil": "1420 0127",
+          "nautical": "1344 0203",
+          "astronomical": "1308 0239"
+        },
+        {
+          "date": "2026-11-01",
+          "sun": "1454 0053",
+          "moon": "0558 2145",
+          "civil": "1421 0125",
+          "nautical": "1345 0202",
+          "astronomical": "1309 0237"
+        },
+        {
+          "date": "2026-11-02",
+          "sun": "1455 0052",
+          "moon": "0719 2208",
+          "civil": "1423 0124",
+          "nautical": "1346 0200",
+          "astronomical": "1311 0236"
+        }
+      ]
+    },
+    {
+      "site": {
+        "name": "Edinburgh",
+        "lat": 55.95,
+        "lon": -3.19,
+        "tz": "Europe/London"
+      },
+      "night": "2026-06-20",
+      "utcDays": [
+        {
+          "date": "2026-06-19",
+          "sun": "0326 2102",
+          "moon": "0900 2343",
+          "civil": "0224 2205",
+          "nautical": "//// ////",
+          "astronomical": "//// ////"
+        },
+        {
+          "date": "2026-06-20",
+          "sun": "0326 2103",
+          "moon": "1029 2350",
+          "civil": "0224 2205",
+          "nautical": "//// ////",
+          "astronomical": "//// ////"
+        },
+        {
+          "date": "2026-06-21",
+          "sun": "0326 2103",
+          "moon": "1153 2355",
+          "civil": "0224 2205",
+          "nautical": "//// ////",
+          "astronomical": "//// ////"
+        },
+        {
+          "date": "2026-06-22",
+          "sun": "0327 2103",
+          "moon": "1315",
+          "civil": "0224 2205",
+          "nautical": "//// ////",
+          "astronomical": "//// ////"
+        }
+      ]
+    },
+    {
+      "site": {
+        "name": "Sydney",
+        "lat": -33.87,
+        "lon": 151.21,
+        "tz": "Australia/Sydney"
+      },
+      "night": "2026-10-03",
+      "utcDays": [
+        {
+          "date": "2026-10-02",
+          "sun": "1930 0758",
+          "moon": "1419 2355",
+          "civil": "1905 0823",
+          "nautical": "1836 0853",
+          "astronomical": "1806 0923"
+        },
+        {
+          "date": "2026-10-03",
+          "sun": "1929 0759",
+          "moon": "1517",
+          "civil": "1904 0824",
+          "nautical": "1834 0854",
+          "astronomical": "1804 0924"
+        },
+        {
+          "date": "2026-10-04",
+          "sun": "1927 0800",
+          "moon": "1605 0104",
+          "civil": "1902 0825",
+          "nautical": "1833 0854",
+          "astronomical": "1803 0924"
+        },
+        {
+          "date": "2026-10-05",
+          "sun": "1926 0800",
+          "moon": "1646 0215",
+          "civil": "1901 0826",
+          "nautical": "1831 0855",
+          "astronomical": "1801 0925"
+        }
+      ]
+    },
+    {
+      "site": {
+        "name": "Sydney",
+        "lat": -33.87,
+        "lon": 151.21,
+        "tz": "Australia/Sydney"
+      },
+      "night": "2026-12-21",
+      "utcDays": [
+        {
+          "date": "2026-12-20",
+          "sun": "1841 0905",
+          "moon": "0454 1529",
+          "civil": "1811 0934",
+          "nautical": "1736 1010",
+          "astronomical": "1656 1049"
+        },
+        {
+          "date": "2026-12-21",
+          "sun": "1841 0905",
+          "moon": "0606 1613",
+          "civil": "1812 0935",
+          "nautical": "1736 1010",
+          "astronomical": "1657 1050"
+        },
+        {
+          "date": "2026-12-22",
+          "sun": "1842 0906",
+          "moon": "0720 1707",
+          "civil": "1812 0935",
+          "nautical": "1737 1011",
+          "astronomical": "1657 1050"
+        },
+        {
+          "date": "2026-12-23",
+          "sun": "1842 0906",
+          "moon": "0832 1812",
+          "civil": "1813 0936",
+          "nautical": "1737 1011",
+          "astronomical": "1658 1051"
+        }
+      ]
+    }
+  ],
+  "columns": "Each cell is the verbatim UTC HHMM pair: rise/begin, set/end. Blank = no event; //// = continuously above the horizon/twilight limit; ==== = continuously below."
+}

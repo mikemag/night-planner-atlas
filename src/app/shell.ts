@@ -11,6 +11,7 @@ import { C, readColors } from '../render/colors';
 import { ctx, size, sizeSurface } from '../render/surface';
 import { el, scroller } from '../ui/dom';
 import { inspect } from '../ui/inspector';
+import { updateRiverReadout } from '../ui/river-readout';
 import { hideTip } from '../ui/tooltip';
 import { calendar } from '../views/calendar';
 import { lunations } from '../views/lunations';
@@ -61,6 +62,7 @@ export function draw(): void {
     ctx.fillStyle = C.panel;
     ctx.fillRect(0, 0, size.W, size.H);
     v.draw(scroller.scrollTop);
+    if (v === river) updateRiverReadout();
     updatePeriod();
   });
 }
@@ -70,6 +72,8 @@ export function draw(): void {
 /** Select night `i`; `scroll` brings it into view (at the top when `top`). */
 export function select(i: number, scroll: boolean, top?: boolean): void {
   S.sel = i;
+  S.hover = null;
+  S.riverReadoutSelected = true;
   inspect(i);
   const v = canvasView();
   if (scroll && v) v.scrollTo(i, !!top);
@@ -82,6 +86,8 @@ export function goTonight(): void {
   if (!r) return;
   const i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
   S.sel = i;
+  S.hover = null;
+  S.riverReadoutSelected = true;
   inspect(i);
   const v = canvasView();
   if (v) {
@@ -97,8 +103,7 @@ function currentMonthIndex(): number {
   const r = data.range;
   if (!r) return -1;
   const v = canvasView();
-  let i = S.view === 'table' ? (S.sel >= 0 ? S.sel : r.tonightIdx) : v ? v.topNight() : 0;
-  if (S.view === 'river') i = Math.max(0, river.rowAt(scroller.scrollTop + 4 * (river.hs[0] || 1)));
+  const i = S.view === 'table' ? (S.sel >= 0 ? S.sel : r.tonightIdx) : v ? v.topNight() : 0;
   const n = r.nights[Math.max(0, i)];
   return r.months.findIndex((mo) => mo.y === n.y && mo.m === n.m);
 }
@@ -199,14 +204,18 @@ function viewControls(): void {
   }
 }
 
-/** Change a view option, remember it, and keep the selected night in view. */
+/** Change a view option; River keeps the browsed position rather than jumping to selection. */
 export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
+  const anchor = S.view === 'river' && data.ready ? river.anchor() : null;
   const keep = S.sel >= 0 ? S.sel : null;
   S[key] = val;
   store.set(key, val);
   if (key === 'calZoom' || key === 'calOrient') S.expandedWeek = null;
-  relayout(keep);
-  if (keep == null) draw();
+  if (key === 'riverMark') draw();
+  else if (anchor) {
+    relayout();
+    river.restoreAnchor(anchor);
+  } else relayout(keep);
 }
 
 export function setView(view: ViewId): void {
@@ -214,11 +223,13 @@ export function setView(view: ViewId): void {
   S.view = view;
   store.set('view', view);
   S.hover = null;
+  S.riverReadoutSelected = false;
   hideTip();
   for (const b of el('viewSeg').children)
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === view));
   const v = canvasView(view);
   scroller.hidden = !v;
+  el('riverReadout').hidden = view !== 'river';
   el('tableView').hidden = view !== 'table';
   el('notesView').hidden = view !== 'notes';
   el('legend').style.display = view === 'notes' || view === 'table' ? 'none' : '';
@@ -237,13 +248,15 @@ export function setView(view: ViewId): void {
 
 /** New-moon focus: ±N nights, or 0 for off. */
 export function setFocus(focus: number): void {
+  const anchor = S.view === 'river' && data.ready ? river.anchor() : null;
   S.focus = focus;
   store.set('focus', focus);
   for (const x of el('focusSeg').children)
     x.setAttribute('aria-pressed', String(Number((x as HTMLElement).dataset.val) === focus));
   if (data.ready && data.range) {
     bestWeekends(data.range, lunWindow(focus));
-    relayout(S.sel >= 0 ? S.sel : data.range.tonightIdx);
+    relayout(anchor ? null : S.sel >= 0 ? S.sel : data.range.tonightIdx);
+    if (anchor) river.restoreAnchor(anchor);
   }
 }
 
@@ -269,7 +282,7 @@ export function shiftRange(dir: number): void {
 export function siteLabel(): void {
   const s = S.site;
   el('siteBtn').textContent =
-    `${s.name} · ${Math.abs(s.lat).toFixed(2)}°${s.lat >= 0 ? 'N' : 'S'} ${Math.abs(s.lon).toFixed(2)}°${s.lon >= 0 ? 'E' : 'W'} ▾`;
+    `${s.name} · ${Math.abs(s.lat).toFixed(2)}°${s.lat >= 0 ? 'N' : 'S'} ${Math.abs(s.lon).toFixed(2)}°${s.lon >= 0 ? 'E' : 'W'}${s.elevation == null ? '' : ` · ${s.elevation} m`} ▾`;
 }
 
 export function applySite(site: Site): void {

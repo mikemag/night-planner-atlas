@@ -45,15 +45,51 @@ range's earliest sunset to its latest sunrise. A row is the single-night chart's
 flattened.
 
 - **Zoom is row height.** Year fits the whole loaded range on one screen, at about 2 px per night.
-  Month uses 20 px rows. Week uses rows tall enough for moon-free window times, sunset, sunrise,
-  moonrise and moonset labels, and the moon's altitude track.
+  Month uses 20 px rows, with moon-free start/end times wherever both times fit inside the window.
+  Weekday times are quieter than weekend and selected-night times; short
+  windows still have their green edge and duration in the right gutter. Clock-change notices take
+  priority over times in compact rows. Week uses 48 px rows, with 11.5 px centered moon-free window
+  times and duration totals, and 12 px daily dates. Sky and moon-up shading carry the same
+  information as Month. A clock-change notice sits above the window labels. Week's expanded focus
+  rows also use 48 px; compressed context rows retain their 14 px height and existing type sizes.
+  Week's phone date gutter is four pixels wider to give the larger dates a clear margin.
+  Exact Sun/Moon event times and altitude
+  curves are available in the inspector. Window-time pairs use measured text widths in all
+  horizontal bars, including the Calendar.
+  Changing zoom or new-moon focus preserves the top visible night and the fraction of its row
+  already scrolled past, as far as the range boundaries allow. Appearance changes leave scrolling
+  untouched; selection and the inspector stay on the chosen night while browsing elsewhere.
 - **New-moon focus (±N)** is a fisheye: nights within N of a new moon open up with window times,
-  and the rest squash to thin context lines.
+  and the rest squash to thin context lines. The compressed date gutter keeps a sparse scaffold:
+  month names with years, plus Monday dates as weekly anchors, in the same readable 11.5 px text
+  in Month and Week zoom. Short gutter ticks point to the exact nights. Month labels take priority
+  when a Monday is less than 16 px away; its tick stays visible. Labels too close to the pinned
+  axis or bottom edge are omitted rather than clipped. Expanded nights retain daily labels, and
+  compressed Friday/Saturday gutters keep the weekend tint. The label backings stay in the date
+  gutter; Month focus gives that gutter four extra pixels on phones to fit the year labels. Row heights,
+  selection and navigation stay unchanged. Year zoom ignores focus.
 - **Gutters.** The left gutter holds date and weekday (weekends tinted and bold) and a moon phase
-  glyph. On the right, a bar and value give moon-free hours per night. In Month and Week zoom, a
-  minimap of the whole range sits at the right edge; click or drag it to move.
-- **Hover** shows a crosshair with the clock time and a tooltip: the night's moon-free total and
-  window, sun and moon times, and the sky at the pointer ("True dark · moon up 6°").
+  glyph. The first of a month uses its month name in place of the weekday. On the right, a bar and
+  value give moon-free duration per night, in hours and minutes matching the inspector (for
+  example, "8h 5m"). The duration column is wider than in Year zoom to fit these values on phones.
+  The pinned axis names the top visible month (abbreviated
+  with its year on narrow screens). In Month and Week zoom on desktop, a minimap of the whole range
+  sits at the right edge. Its three-letter month labels, month ticks, stronger January boundary
+  and range-year heading keep the overview readable. A shaded amber viewport with a center grip
+  shows the visible dates; its grab area is at least 24 px tall, even in Week zoom. Grab it anywhere
+  inside its outline to drag without recentering. Clicking outside the viewport centers that date
+  and can continue into a drag. Dragging tracks continuous date position, including unequal
+  focus/context rows, and clamps at the range ends. Selection and the inspector stay unchanged.
+- **Fixed readout.** River has no floating night tooltip. A reserved strip below the chart shows
+  the pointed-at date, site-local clock time, sky stage and explicitly labeled Moon center
+  altitude in Month and Week. "Astronomical darkness" describes the sky stage independently of
+  whether the Moon is up. In Year, or when pointing at a date or duration gutter, it shows the
+  night's moon-free duration and full window times (or why there is none). The crosshair and
+  axis clock label remain. Leaving the chart clears pointer information; clicking, tapping or
+  keyboard navigation shows the selected night's summary without requiring hover. Moving the
+  pointer previews other nights without changing the selection or inspector. The readout has
+  fixed height in each responsive layout so updates cannot move the chart, and pointer updates
+  are not a live region. Sun and Moon event details remain in the inspector.
 - _Best at_ showing the shape: the moon leaving the evening dark after full, the whole night open
   at new moon, the dark sliding to the mornings as the moon waxes. It also shows the seasonal
   hourglass and clock changes.
@@ -103,14 +139,20 @@ twin of the charts.
 ### Shared pieces
 
 - **Inspector** (right panel). The selected night as the familiar altitude chart: sun and moon
-  altitude over the phase bands, with moon-free time hatched green. Below it: stage start times
+  center altitude over the phase bands, with moon-free time hatched green. The sampled curves
+  illustrate position; all Moon event times and window boundaries are separately refined. Below
+  it: stage start times
   and durations for evening and morning, moon phase with rise and set, and **Dark weekends
   ahead**, the best Friday–Saturday pair near each upcoming new moon.
-- **Planning thresholds.** _Moon counts once above_ (0°–15°) allows for a tree line or hills.
+- **Planning thresholds.** _Moon’s upper edge above_ (0°–15°) allows for a tree line or hills.
+  The Moon counts as up while any part of its refracted disk
+  clears that height; Moonrise and Moonset use the upper edge at the natural horizon.
   _Ignore a moon under_ (10–30% lit) is for people who don't mind a thin crescent. Both change
   every number and the weekend picks, not just the drawing.
-- **Site.** Name, latitude, longitude and IANA time zone, saved only in the browser. The default is
-  Seattle.
+- **Site.** Name, latitude, longitude, IANA time zone and optional elevation in metres above sea
+  level, saved only in the browser. Blank elevation uses sea level; existing saved sites keep
+  their coordinates. Elevation adjusts observer position and idealized refraction while assuming
+  a level horizon, with no terrain lookup. The default is Seattle.
 - **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–5 switch views, Esc
   collapses an expanded week.
 
@@ -138,10 +180,10 @@ Rationale that isn't obvious from the result:
 - **Marking moon-free time.** The single-night chart hatches moon-free time green. At month scale
   hatching turns into noise, so the month views use black plus a thin green edge. The River's
   _Black only_ toggle lets you compare.
-- **Altitude curves.** Curves in every calendar cell were unreadable at cell size, so they appear
-  only in Week zoom, expanded weeks and the inspector.
+- **Altitude curves.** River's Moon-up shading carries the effect on usable dark time. Altitude
+  curves appear in expanded Calendar weeks and the inspector.
 - **Clock time versus elapsed time.** The month views use clock time, which is what you plan with.
-  The inspector's chart uses elapsed time, like AllSky's Swift chart, so the repeated hour on a
+  The inspector's chart uses elapsed time, so the repeated hour on a
   fall-back night doesn't fold the curves.
 - **Considered and not built.** A radial year clock was pretty, but it made times hard to read and
   nights hard to compare. A plain heat-map calendar loses _when_ in the night the dark falls.

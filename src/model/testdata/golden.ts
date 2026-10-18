@@ -2,7 +2,7 @@
  * Golden records of computed nights, for characterization tests.
  *
  * The committed golden files were first captured from the original single-file prototype,
- * so the tests pin the TypeScript model to exactly the numbers the prototype produced. After
+ * and have since been intentionally updated for upper-limb Moon events and refined crossings. After
  * an intentional change to the night model, regenerate them with `npx vitest run -u` and
  * review the diff.
  */

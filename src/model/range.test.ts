@@ -54,6 +54,20 @@ describe('a computed range', () => {
     r = computeRangeSync(SEATTLE, 0, { moonAlt: 0, crescent: 0 }, 14, NOW);
   }, 30_000);
 
+  it('uses the optional site elevation and treats missing elevation as sea level', () => {
+    const high = computeRangeSync(
+      { ...SEATTLE, elevation: 2000 },
+      0,
+      { moonAlt: 0, crescent: 0 },
+      14,
+      NOW,
+    );
+    expect(high.site.elevation).toBe(2000);
+    expect(high.nights[0].ev.sunset).toBeLessThan(r.nights[0].ev.sunset!);
+    expect(high.nights[0].ev.sunrise).toBeGreaterThan(r.nights[0].ev.sunrise!);
+    expect(high.nights.map((n) => n.id)).toEqual(r.nights.map((n) => n.id));
+  });
+
   it('knows tonight', () => {
     expect(r.nights[r.tonightIdx].id).toBe('2026-09-23');
   });

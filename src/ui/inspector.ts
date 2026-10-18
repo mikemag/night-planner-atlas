@@ -119,7 +119,7 @@ export function moonSVG(phase: number, size: number): string {
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${r}" fill="#2a3040" stroke="rgba(128,136,152,.6)"/><path d="${d}" fill="rgb(${C.moon})"/></svg>`;
 }
 
-/** The single-night altitude chart, drawn against elapsed time as in the AllSky app. */
+/** The single-night altitude chart, drawn against elapsed time to avoid folding the repeated DST hour. */
 export function altitudeChartSVG(n: Night, isTonight: boolean): string {
   const ev = n.ev;
   const g0 = ev.sunset != null ? ev.sunset : n.noon + 6 * MS_H;
@@ -146,7 +146,7 @@ export function altitudeChartSVG(n: Night, isTonight: boolean): string {
     a == null || b == null
       ? ''
       : `<rect x="${X(a).toFixed(1)}" y="${pt}" width="${Math.max(0, X(b) - X(a)).toFixed(1)}" height="${ph}" fill="${color}" opacity="${op}"/>`;
-  let s = `<svg class="ins-chart" viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="Sun and moon altitude through the night">`;
+  let s = `<svg class="ins-chart" viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="Sun and Moon center altitudes through the night; Moon events use its upper edge">`;
   s += `<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="rgba(47,189,120,0.14)"/><line x1="0" y1="0" x2="0" y2="7" stroke="rgba(47,189,120,0.75)" stroke-width="1.2"/></pattern></defs>`;
   s += `<rect width="${Wd}" height="${Hd}" rx="10" fill="#0c111c"/>`;
   s +=

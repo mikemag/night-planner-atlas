@@ -124,3 +124,84 @@ test('the page follows the system color scheme', async ({ page }, info) => {
   const dark = info.project.use.colorScheme === 'dark';
   expect(bg).toBe(dark ? 'rgb(7, 9, 14)' : 'rgb(233, 237, 242)');
 });
+
+test('optional elevation persists, corrects events, and can be cleared without changing coordinates', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await open(page);
+  const before = await page.evaluate(() => {
+    const n = window.__npa!.nights.find((n) => n.id === '2026-10-03')!;
+    return { sunset: n.ev.sunset!, sunrise: n.ev.sunrise!, moonRise: n.moonRise! };
+  });
+  await page.locator('#siteBtn').click();
+  await expect(page.getByLabel('Elevation (m above sea level, optional)')).toHaveValue('');
+  await page.locator('#siteElevation').fill('2000');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#siteBtn')).toContainText('2000 m');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  const after = await page.evaluate(() => {
+    const n = window.__npa!.nights.find((n) => n.id === '2026-10-03')!;
+    return { sunset: n.ev.sunset!, sunrise: n.ev.sunrise!, moonRise: n.moonRise! };
+  });
+  expect(after.sunset).toBeLessThan(before.sunset);
+  expect(after.sunrise).toBeGreaterThan(before.sunrise);
+  expect(after.moonRise).toBeGreaterThan(before.moonRise);
+  await page.reload();
+  await expect(page.locator('#loading')).toBeHidden();
+  await page.locator('#siteBtn').click();
+  await expect(page.locator('#siteElevation')).toHaveValue('2000');
+  await expect(page.locator('#siteLat')).toHaveValue('47.60621');
+  await expect(page.locator('#siteLon')).toHaveValue('-122.34253');
+  await page.locator('#siteElevation').fill('');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#loading')).toBeHidden();
+  expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
+  expect(
+    await page.evaluate(() => window.__npa!.nights.find((n) => n.id === '2026-10-03')!.ev.sunset),
+  ).toBe(before.sunset);
+  expect(errors).toEqual([]);
+});
+
+test('elevation validates range, accepts below sea level, and resets with the site', async ({
+  page,
+}) => {
+  const errors = await open(page);
+  await page.locator('#siteBtn').click();
+  for (const value of ['-501', '10001']) {
+    await page.locator('#siteElevation').fill(value);
+    await page.locator('#siteApply').click();
+    await expect(page.locator('#siteErr')).toHaveText(
+      'Elevation must be between −500 and 10,000 metres above sea level, or left blank.',
+    );
+    expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
+  }
+  await page.locator('#siteElevation').fill('-400');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#siteBtn')).toContainText('-400 m');
+  await page.locator('#siteBtn').click();
+  await page.locator('#siteReset').click();
+  await expect(page.locator('#loading')).toBeHidden();
+  expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
+  expect(errors).toEqual([]);
+});
+
+test('sites saved before elevation was supported retain their coordinates and use sea level', async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      'npa:site',
+      JSON.stringify({ name: 'Legacy site', lat: 55.95, lon: -3.19, tz: 'Europe/London' }),
+    ),
+  );
+  const errors = await open(page);
+  await expect(page.locator('#siteBtn')).toContainText('Legacy site');
+  await page.locator('#siteBtn').click();
+  await expect(page.locator('#siteElevation')).toHaveValue('');
+  await expect(page.locator('#siteLat')).toHaveValue('55.95');
+  await expect(page.locator('#siteLon')).toHaveValue('-3.19');
+  expect(errors).toEqual([]);
+});

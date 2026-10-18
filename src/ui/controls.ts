@@ -43,7 +43,15 @@ export function initControls(): void {
   new ResizeObserver(() => {
     if (canvasView()) resize();
   }).observe(scroller);
-  scroller.addEventListener('scroll', draw, { passive: true });
+  scroller.addEventListener(
+    'scroll',
+    () => {
+      S.hover = null;
+      hideTip();
+      draw();
+    },
+    { passive: true },
+  );
 }
 
 function initCanvasPointer(): void {
@@ -55,14 +63,18 @@ function initCanvasPointer(): void {
     const px = e.clientX - r.left,
       py = e.clientY - r.top;
     if (dragMini && v === river) {
-      river.miniScroll(py);
+      river.dragMinimap(py);
       return;
     }
+    if (v === river && e.pointerType === 'touch') return;
     const h = v.hit(px, py);
     const prev = S.hover;
+    S.riverReadoutSelected = false;
     S.hover = h && !h.mini ? h : null;
     cv.style.cursor = h && (h.i != null || h.gutter || h.mini) ? 'pointer' : 'default';
-    if (h && h.i != null) showTip(h.i, h.hh, e.clientX, e.clientY);
+    if (v === river && h?.mini) cv.style.cursor = river.miniContains(px, py) ? 'grab' : 'pointer';
+    if (v === river) hideTip();
+    else if (h && h.i != null) showTip(h.i, h.hh, e.clientX, e.clientY);
     else if (h && h.gutter)
       showNote(
         S.expandedWeek === h.gutter
@@ -72,10 +84,11 @@ function initCanvasPointer(): void {
         e.clientY,
       );
     else hideTip();
-    if (JSON.stringify(prev) !== JSON.stringify(S.hover)) draw();
+    if (v === river || JSON.stringify(prev) !== JSON.stringify(S.hover)) draw();
   });
-  cv.addEventListener('pointerleave', () => {
+  cv.addEventListener('pointerleave', (e) => {
     S.hover = null;
+    if (e.pointerType !== 'touch') S.riverReadoutSelected = false;
     hideTip();
     draw();
   });
@@ -86,9 +99,16 @@ function initCanvasPointer(): void {
     const h = v.hit(e.clientX - r.left, e.clientY - r.top);
     if (!h) return;
     if (h.mini) {
+      if (e.button !== 0) return;
+      e.preventDefault();
       dragMini = true;
+      S.hover = null;
+      S.riverReadoutSelected = false;
+      hideTip();
       cv.setPointerCapture(e.pointerId);
-      river.miniScroll(e.clientY - r.top);
+      river.beginMiniDrag(e.clientX - r.left, e.clientY - r.top);
+      cv.style.cursor = 'grabbing';
+      draw();
       return;
     }
     if (h.gutter) {
@@ -98,9 +118,14 @@ function initCanvasPointer(): void {
     }
     if (h.i != null) select(h.i, false);
   });
-  cv.addEventListener('pointerup', () => {
+  const endMiniDrag = () => {
     dragMini = false;
-  });
+    river.endMiniDrag();
+    cv.style.cursor = 'default';
+  };
+  cv.addEventListener('pointerup', endMiniDrag);
+  cv.addEventListener('pointercancel', endMiniDrag);
+  cv.addEventListener('lostpointercapture', endMiniDrag);
   cv.addEventListener('dblclick', (e) => {
     if (S.view !== 'calendar' || S.calZoom !== 'year') return;
     const r = cv.getBoundingClientRect();
@@ -177,6 +202,7 @@ function initSiteEditor(): void {
   const name = el<HTMLInputElement>('siteName'),
     lat = el<HTMLInputElement>('siteLat'),
     lon = el<HTMLInputElement>('siteLon'),
+    elevation = el<HTMLInputElement>('siteElevation'),
     tz = el<HTMLInputElement>('siteTz'),
     err = el('siteErr');
   el('siteBtn').addEventListener('click', () => {
@@ -185,6 +211,7 @@ function initSiteEditor(): void {
       name.value = S.site.name;
       lat.value = String(S.site.lat);
       lon.value = String(S.site.lon);
+      elevation.value = S.site.elevation == null ? '' : String(S.site.elevation);
       tz.value = S.site.tz;
       err.hidden = true;
       name.focus();
@@ -197,7 +224,9 @@ function initSiteEditor(): void {
   el('siteApply').addEventListener('click', () => {
     const la = parseFloat(lat.value),
       lo = parseFloat(lon.value),
-      zone = tz.value.trim();
+      zone = tz.value.trim(),
+      elevationText = elevation.value.trim(),
+      metres = elevationText === '' ? undefined : Number(elevationText);
     const fail = (msg: string) => {
       err.textContent = msg;
       err.hidden = false;
@@ -205,11 +234,24 @@ function initSiteEditor(): void {
     if (!(la >= -65 && la <= 65))
       return fail('Latitude must be between −65° and 65° for this planner.');
     if (!(lo >= -180 && lo <= 180)) return fail('Longitude must be between −180° and 180°.');
+    if (
+      elevation.validity.badInput ||
+      (metres != null && (!Number.isFinite(metres) || metres < -500 || metres > 10000))
+    )
+      return fail(
+        'Elevation must be between −500 and 10,000 metres above sea level, or left blank.',
+      );
     try {
       new Intl.DateTimeFormat('en-US', { timeZone: zone });
     } catch {
       return fail(`“${zone}” is not a time zone name. Try America/Los_Angeles.`);
     }
-    applySite({ name: name.value.trim() || 'Custom site', lat: la, lon: lo, tz: zone });
+    applySite({
+      name: name.value.trim() || 'Custom site',
+      lat: la,
+      lon: lo,
+      tz: zone,
+      ...(metres == null ? {} : { elevation: metres }),
+    });
   });
 }

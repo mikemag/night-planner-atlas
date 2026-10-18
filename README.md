@@ -7,7 +7,6 @@ nights worth the drive to a dark site.
 
 ![River view: one row per night, clock time across](docs/images/river-month.png)
 
-It began as a design study for the night planner in AllSky's Timeline and grew into its own site.
 It is a private prototype for now; [issues](https://github.com/mikemag/night-planner-atlas/issues)
 track where it is going.
 
@@ -46,7 +45,9 @@ npm run dev
 `npm run dev` serves the site at <http://localhost:5173/> with hot reload. `npm run build` writes
 the deployable static site to `dist/`, and `npm run preview` serves that build. Sun and moon
 positions are computed in the browser; your site is saved only in the browser's local storage and
-never sent anywhere.
+never sent anywhere. You can enter an optional elevation above sea level; blank uses sea level.
+Elevation adjusts the observer position and idealized refraction, with a level horizon and no
+automatic terrain lookup.
 
 | Command               | What it does                                                                      |
 | --------------------- | --------------------------------------------------------------------------------- |
@@ -79,9 +80,10 @@ AGENTS.md               guidance for coding agents working in this repo
 ## Status
 
 A working prototype with a real toolchain: TypeScript, Vite, unit and browser tests, and CI on
-every push and pull request. Work is tracked in GitHub issues. Next up: checking the numbers
-against reference tables and hosting on Google Cloud, then shareable links, choosing the metrics
-each view shows, and accounts to save sites and preferences.
+every push and pull request. Work is tracked in GitHub issues. The night model has been checked
+against USNO tables; see the measured accuracy and sampling limits in
+[the night model](docs/night-model.md#reference-verification-and-accuracy). Next up is polishing
+the River, Calendar and Lunations views and assessing usability before hosting and launch.
 
 ## Credits
 
