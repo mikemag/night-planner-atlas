@@ -49,9 +49,14 @@ never sent anywhere. You can enter an optional elevation above sea level; blank 
 Elevation adjusts the observer position and idealized refraction, with a level horizon and no
 automatic terrain lookup.
 
+See [Hosting the Helen preview](docs/hosting.md) for local deployment, caching, rollback and
+per-browser settings behavior. Deployment publishes only the built site; the repository stays
+private.
+
 | Command               | What it does                                                                      |
 | --------------------- | --------------------------------------------------------------------------------- |
 | `npm run check`       | Lint, format check, type check, unit tests and build                              |
+| `npm run deploy`      | Run local checks and browser tests, then publish to Firebase Hosting              |
 | `npm test`            | Unit tests for the night model (Vitest)                                           |
 | `npm run test:e2e`    | Browser smoke tests of the built site in Chromium and WebKit (Playwright)         |
 | `npm run screenshots` | The smoke tests, saving a screenshot of every view to `test-results/screenshots/` |
@@ -85,7 +90,8 @@ A working prototype with TypeScript, Vite, and local unit and browser tests.
 Work is tracked in GitHub issues. The night model has been checked
 against USNO tables; see the measured accuracy and sampling limits in
 [the night model](docs/night-model.md#reference-verification-and-accuracy). Next up is polishing
-the River, Calendar and Lunations views and assessing usability before hosting and launch.
+the River, Calendar and Lunations views and assessing usability in the
+[hosted preview](https://night-planner-atlas.web.app/). Public launch remains separate work.
 
 ## Credits
 
