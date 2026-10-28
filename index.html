@@ -87,6 +87,10 @@
                 settings</span
               >
               <span><i class="sw line" style="background: var(--good)"></i>Moon-free duration</span>
+              <span id="riverMoonKey"
+                ><b class="new-moon-label">New Moon</b><i class="sw new-moon-tick"></i>New-moon
+                night</span
+              >
             </div>
           </div>
           <div class="scroller" id="scroller">
@@ -234,7 +238,16 @@
                 Tap a night to expand its timeline and key planning details, and tap again to
                 collapse. Enter or Space toggles the selected night; arrows move an open expansion.
                 New-moon focus is a fisheye: nights near new moon open up with window times, and
-                moonlit nights squash to thin context lines.
+                moonlit nights squash to thin context lines. A centered
+                <strong>New Moon</strong> label in Month, or a high-contrast gutter tick in Year,
+                marks the one night associated with each exact new-moon event, even with focus off.
+                The Month label includes the event&rsquo;s site-local date and time; the ordinary
+                Moon glyph stays in the gutter. Point at or select that night for the event&rsquo;s
+                site-local date and time in the fixed readout. That timestamp can fall during
+                daylight or on a different date from the row&rsquo;s evening date. The written
+                &ldquo;New moon&rdquo; phase describes low illumination and can appear on
+                surrounding nights; only the central label or tick identifies the event-associated
+                night.
               </td>
             </tr>
             <tr>

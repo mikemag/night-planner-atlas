@@ -71,7 +71,7 @@ export function draw(): void {
       updateRiverReadout();
       const n = data.range!.nights[S.sel];
       if (n) {
-        const status = `${nightTitle(n)}. ${fmtDur(n.mfMs)} usable dark.${S.riverZoom === 'month' && S.riverExpanded ? ' Expanded.' : ''}`;
+        const status = `${nightTitle(n)}.${n.quarter === 0 ? ' New moon night.' : ''} ${fmtDur(n.mfMs)} usable dark.${S.riverZoom === 'month' && S.riverExpanded ? ' Expanded.' : ''}`;
         const live = el('riverSelection');
         if (live.textContent !== status) live.textContent = status;
       }
@@ -275,6 +275,7 @@ export function setView(view: ViewId): void {
   el('tableView').hidden = view !== 'table';
   el('notesView').hidden = view !== 'notes';
   el('legend').style.display = view === 'notes' || view === 'table' ? 'none' : '';
+  el('riverMoonKey').hidden = view !== 'river';
   el('periodBox').style.visibility = view === 'notes' ? 'hidden' : '';
   el('viewTitle').textContent = VIEW_INFO[view][0];
   el('viewSub').textContent = VIEW_INFO[view][1];

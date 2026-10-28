@@ -91,8 +91,20 @@ flattened.
   gutter; Month focus gives that gutter four extra pixels on phones to fit the year labels. Row heights,
   selection and navigation stay unchanged. The selected expanded night stays readable even outside
   the focus window. Year zoom ignores focus.
+- **New-moon events.** Month centers a **New Moon** label with the event's site-local date and
+  time between that night's sunset and sunrise on the clock axis, including when expanded. If
+  either Sun boundary is absent, the label uses the center of the displayed axis. An opaque contrasting backing keeps it readable
+  over black and twilight alike; the ordinary phase glyph remains in the gutter. On phones the
+  label uses two lines within the existing row height and takes the place of compact window-time
+  labels on that row; its duration remains in the right gutter and expansion shows all boundaries.
+  Year uses a short high-contrast horizontal gutter tick instead. Its phone date gutter reserves
+  enough width to keep the January/year label clear of the ticks. These cues use the existing event assignment and
+  remain visible with focus off or on, without changing the sky shading or row heights. The
+  illumination-based written phase can say “New moon” on several nights, while the central label
+  or Year tick identifies just one event-associated night.
 - **Gutters.** The left gutter holds date and weekday (weekends tinted and bold) and a moon phase
-  glyph. The first of a month uses its month name in place of the weekday. On the right, a bar and
+  glyph, replaced by a tick for Year's new-moon event rows. The first of a month uses its month
+  name in place of the weekday. On the right, a bar and
   value give moon-free duration per night, in hours and minutes matching the inspector (for
   example, "8h 5m"). The duration column is wider than in Year zoom to fit these values on phones.
   The pinned axis names the top visible month (abbreviated
@@ -113,7 +125,10 @@ flattened.
   keyboard navigation shows the selected night's summary without requiring hover. Moving the
   pointer previews other nights without changing selection. The readout has
   fixed height in each responsive layout so updates cannot move the chart, and pointer updates
-  are not a live region. Boundary event times appear in the expanded row.
+  are not a live region. On a new-moon event's assigned night, both pointer and selection readouts
+  include the event's site-local date and time, rounded to the nearest minute. This is distinct
+  from the row's evening date: the event can occur during daylight or on a different civil date.
+  Boundary event times appear in the expanded row.
 - _Best at_ showing the shape: the moon leaving the evening dark after full, the whole night open
   at new moon, the dark sliding to the mornings as the moon waxes. It also shows the seasonal
   hourglass and clock changes.

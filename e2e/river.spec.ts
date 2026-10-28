@@ -7,6 +7,7 @@ interface PaintedText {
   left: number;
   right: number;
   fontSize: number;
+  color: string;
 }
 
 interface PaintedRect {
@@ -22,6 +23,8 @@ declare global {
     riverRects: PaintedRect[];
     riverDateTicks: PaintedRect[];
     riverCurves: number;
+    riverNewMoonTicks: PaintedRect[];
+    riverMoonGlyphs: Array<{ x: number; y: number }>;
   }
 }
 
@@ -32,6 +35,13 @@ async function openRiver(page: Page): Promise<void> {
     window.riverRects = [];
     window.riverDateTicks = [];
     window.riverCurves = 0;
+    window.riverNewMoonTicks = [];
+    window.riverMoonGlyphs = [];
+    const arc = CanvasRenderingContext2D.prototype.arc;
+    CanvasRenderingContext2D.prototype.arc = function (x, y, radius, start, end, counterclockwise) {
+      if (this.canvas.id === 'cv' && radius <= 6) window.riverMoonGlyphs.push({ x, y });
+      arc.call(this, x, y, radius, start, end, counterclockwise);
+    };
     const segments = new WeakMap<CanvasRenderingContext2D, number>();
     const begin = CanvasRenderingContext2D.prototype.beginPath;
     CanvasRenderingContext2D.prototype.beginPath = function () {
@@ -55,7 +65,11 @@ async function openRiver(page: Page): Promise<void> {
         window.riverRects = [];
         window.riverDateTicks = [];
         window.riverCurves = 0;
+        window.riverNewMoonTicks = [];
+        window.riverMoonGlyphs = [];
       }
+      if (this.canvas.id === 'cv' && w === 14 && h === 2)
+        window.riverNewMoonTicks.push({ left: x, top: y, width: w, height: h });
       if (this.canvas.id === 'cv' && w === 6 && h === 1)
         window.riverDateTicks.push({ left: x, top: y, width: w, height: h });
       fill.call(this, x, y, w, h);
@@ -72,6 +86,7 @@ async function openRiver(page: Page): Promise<void> {
           left,
           right: left + width,
           fontSize: parseFloat(this.font.match(/[\d.]+px/)![0]),
+          color: String(this.fillStyle),
         });
       }
       if (maxWidth == null) write.call(this, s, x, y);
@@ -519,3 +534,251 @@ for (const width of [1512, 390]) {
     expect(labels.some((t) => t.text.includes('2027') || t.text.includes('’27'))).toBe(false);
   });
 }
+
+test.describe('new-moon event markers', () => {
+  // The event's clock and date must follow the site even when the viewer is elsewhere.
+  test.use({ timezoneId: 'Asia/Tokyo' });
+
+  for (const width of [1512, 390]) {
+    test(`event labels, glyphs and Year ticks stay distinct at ${width}px`, async ({
+      page,
+    }, info) => {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
+      await openRiver(page);
+      const event = await page.evaluate(() => {
+        const a = window.__npa!;
+        const i = a.nights.findIndex((n) => n.quarter === 0 && n.m === 10);
+        const t = a.lunations.find((l) => l.i === i)!.t;
+        const instant = new Date(t + 30_000);
+        const options = { timeZone: a.S.site.tz };
+        return {
+          i,
+          id: a.nights[i].id,
+          date: new Intl.DateTimeFormat('en-US', {
+            ...options,
+            month: 'short',
+            day: 'numeric',
+          }).format(instant),
+          year: new Intl.DateTimeFormat('en-US', { ...options, year: 'numeric' }).format(instant),
+          time: new Intl.DateTimeFormat('en-US', {
+            ...options,
+            hour: 'numeric',
+            minute: '2-digit',
+          }).format(instant),
+          totals: a.nights.map((n) => n.mfMs),
+        };
+      });
+      // This morning event belongs to the preceding evening's row.
+      expect(event.id).toBe('2026-10-09');
+      expect(event.date).toBe('Oct 10');
+      const eventText = `New moon: ${event.date}, ${event.year} ${event.time}`;
+      const readout = page.locator('#riverReadout');
+      for (const focus of ['0', '3']) {
+        await page.locator(`#focusSeg button[data-val="${focus}"]`).click();
+        await page.evaluate((i) => window.__npa!.select(i, true, true), event.i);
+        await painted(page);
+        const geometry = await page.evaluate(
+          ({ i, width }) => {
+            const a = window.__npa!;
+            const cv = document.getElementById('cv') as HTMLCanvasElement;
+            const header = a.riverRows.heights[i];
+            const cy =
+              30 +
+              a.riverRows.tops[i] -
+              document.getElementById('scroller')!.scrollTop +
+              (header - 1) / 2;
+            const labels = window.riverText.filter(
+              (t) => Math.abs(t.y - cy) <= 6 && /^(New Moon|Oct 10,)/.test(t.text),
+            );
+            const dpr = window.devicePixelRatio;
+            const rgb = [
+              ...cv
+                .getContext('2d')!
+                .getImageData(
+                  Math.floor((Math.min(...labels.map((t) => t.left)) - 4) * dpr),
+                  Math.floor(cy * dpr),
+                  1,
+                  1,
+                ).data,
+            ].slice(0, 3);
+            const x0 = width === 390 ? (a.S.focus ? 78 : 74) : 92;
+            const x1 = cv.clientWidth - (width === 390 ? 88 : 216);
+            const night = a.nights[i];
+            const nightMiddle = (night.evH.sunset! + night.evH.sunrise!) / 2;
+            const center =
+              x0 + ((nightMiddle - a.ax!.start) / (a.ax!.end - a.ax!.start)) * (x1 - x0);
+            return {
+              cy,
+              header,
+              labels,
+              rgb,
+              x0,
+              x1,
+              center,
+              glyph: window.riverMoonGlyphs.some(
+                (g) =>
+                  Math.abs(g.y - cy) < 0.1 && g.x === (width === 390 ? (a.S.focus ? 67 : 63) : 81),
+              ),
+            };
+          },
+          { i: event.i, width },
+        );
+        expect(geometry.labels.map((t) => t.text)).toEqual(
+          width === 390
+            ? ['New Moon', `${event.date}, ${event.time}`]
+            : [`New Moon · ${event.date}, ${event.time}`],
+        );
+        expect(geometry.header).toBe(focus === '3' ? 34 : width === 390 ? 32 : 20);
+        expect(geometry.glyph).toBe(true);
+        for (const label of geometry.labels) {
+          expect(label.left).toBeGreaterThanOrEqual(geometry.x0 + 8);
+          expect(label.right).toBeLessThanOrEqual(geometry.x1 - 8);
+          expect((label.left + label.right) / 2).toBeCloseTo(geometry.center);
+        }
+        // Sample the actual backing pixels; check contrast in each project's real theme.
+        const luminance = (rgb: number[]) =>
+          rgb
+            .map((v) => {
+              const s = v / 255;
+              return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+            })
+            .reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
+        const foreground = luminance(
+          geometry.labels[0].color
+            .slice(1)
+            .match(/../g)!
+            .map((v) => parseInt(v, 16)),
+        );
+        const background = luminance(geometry.rgb);
+        expect(
+          (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05),
+        ).toBeGreaterThan(7);
+        await expect(readout).toContainText(eventText);
+        const bounds = await readout.boundingBox();
+        const cv = (await page.locator('#cv').boundingBox())!;
+        await page.mouse.move(cv.x + (geometry.x0 + geometry.x1) / 2, cv.y + geometry.cy);
+        await expect(readout).toContainText(eventText);
+        expect(await readout.boundingBox()).toEqual(bounds);
+        expect(await readout.evaluate((e) => e.scrollHeight <= e.clientHeight)).toBe(true);
+        await page.mouse.move(1, 1);
+        if (process.env.SCREENSHOTS)
+          await page.screenshot({
+            path: `test-results/screenshots/${info.project.name}-new-moon-${width}-focus-${focus}.png`,
+            fullPage: true,
+          });
+      }
+      await page.locator('#cv').press('Enter');
+      await expect(page.locator('#riverDetail')).toBeVisible();
+      await expect(page.locator('#riverDetail .river-moon-phase')).toHaveText('New moon');
+      await painted(page);
+      expect(
+        await page.evaluate(() => window.riverText.some((t) => t.text.startsWith('New Moon'))),
+      ).toBe(true);
+      if (process.env.SCREENSHOTS)
+        await page.screenshot({
+          path: `test-results/screenshots/${info.project.name}-new-moon-expanded-${width}.png`,
+          fullPage: true,
+        });
+      await page.locator('#cv').press('ArrowLeft');
+      await painted(page);
+      await expect(readout).not.toContainText('New moon:');
+      // The phase may still say New moon, but the centered event label belongs only to its assigned row.
+      expect(
+        await page.evaluate(() => {
+          const a = window.__npa!;
+          const y =
+            30 +
+            a.riverRows.tops[a.S.sel] -
+            document.getElementById('scroller')!.scrollTop +
+            (a.riverRows.header - 1) / 2;
+          return window.riverText.some(
+            (t) => t.text.startsWith('New Moon') && Math.abs(t.y - y) <= 6,
+          );
+        }),
+      ).toBe(false);
+      await page.locator('#cv').press('ArrowRight');
+      await zoom(page, 'Year');
+      await painted(page);
+      const year = await page.evaluate(() => {
+        const a = window.__npa!;
+        return {
+          ticks: window.riverNewMoonTicks,
+          centers: a.nights.flatMap((n, i) =>
+            n.quarter === 0 ? [30 + a.riverRows.tops[i] + a.riverRows.heights[i] / 2] : [],
+          ),
+          labels: window.riverText.filter((t) => t.text.startsWith('New Moon')),
+          dates: window.riverText.filter((t) => t.left === 8 && t.y >= 30),
+          totals: a.nights.map((n) => n.mfMs),
+        };
+      });
+      expect(year.ticks).toHaveLength(year.centers.length);
+      expect(year.ticks.length).toBeGreaterThanOrEqual(13);
+      year.ticks.forEach((tick, i) =>
+        expect(Math.abs(tick.top + 1 - year.centers[i])).toBeLessThanOrEqual(0.5),
+      );
+      expect(year.labels).toEqual([]);
+      for (const date of year.dates) expect(date.right).toBeLessThanOrEqual(year.ticks[0].left - 2);
+      expect(year.totals).toEqual(event.totals);
+      await expect(readout).toContainText(eventText);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+      if (process.env.SCREENSHOTS)
+        await page.screenshot({
+          path: `test-results/screenshots/${info.project.name}-new-moon-year-${width}.png`,
+          fullPage: true,
+        });
+      await page.locator('#viewSeg').getByRole('button', { name: 'Calendar', exact: true }).click();
+      await expect(page.locator('#riverMoonKey')).toBeHidden();
+    });
+
+    test(`new-moon labels also fit over summer twilight at ${width}px`, async ({ page }, info) => {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
+      await page.addInitScript(() =>
+        localStorage.setItem(
+          'npa:site',
+          JSON.stringify({
+            name: 'Twilight check',
+            lat: 60,
+            lon: 0,
+            tz: 'Europe/London',
+          }),
+        ),
+      );
+      await openRiver(page);
+      await page.evaluate(() => {
+        const a = window.__npa!;
+        a.select(
+          a.nights.findIndex((n) => n.quarter === 0 && n.m === 6),
+          true,
+          true,
+        );
+      });
+      await painted(page);
+      expect(await page.evaluate(() => window.__npa!.nights[window.__npa!.S.sel].tdMs)).toBe(0);
+      const labels = await page.evaluate(() => {
+        const a = window.__npa!;
+        const cy =
+          30 +
+          a.riverRows.tops[a.S.sel] -
+          document.getElementById('scroller')!.scrollTop +
+          (a.riverRows.heights[a.S.sel] - 1) / 2;
+        return window.riverText.filter(
+          (t) =>
+            Math.abs(t.y - cy) <= 6 && (t.text.startsWith('New Moon') || /^Jun \d+,/.test(t.text)),
+        );
+      });
+      expect(labels).toHaveLength(width === 390 ? 2 : 1);
+      const canvasWidth = await page.locator('#cv').evaluate((e) => e.clientWidth);
+      for (const label of labels) {
+        expect(label.left).toBeGreaterThanOrEqual(width === 390 ? 82 : 100);
+        expect(label.right).toBeLessThanOrEqual(canvasWidth - (width === 390 ? 96 : 224));
+      }
+      await expect(page.locator('#riverReadout')).toContainText('New moon:');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+      if (process.env.SCREENSHOTS)
+        await page.screenshot({
+          path: `test-results/screenshots/${info.project.name}-new-moon-twilight-${width}.png`,
+          fullPage: true,
+        });
+    });
+  }
+});

@@ -338,6 +338,24 @@ input {
   height: 3px;
   border-radius: 1px;
 }
+.new-moon-label {
+  display: inline-block;
+  padding: 0 5px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--panel);
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 16px;
+  text-align: center;
+}
+.sw.new-moon-tick {
+  width: 14px;
+  height: 2px;
+  border-radius: 0;
+  background: var(--ink);
+}
 .scroller {
   flex: 1;
   min-height: 0;

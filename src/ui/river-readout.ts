@@ -25,6 +25,12 @@ export function updateRiverReadout(): void {
           : 'No true dark';
       value = `${date} · ${total} · ${windowsText(n)}`;
     }
+    const event = atlas().quarters.find((q) => q.q === 0 && q.i === i);
+    if (event) {
+      const p = atlas().tz.wallParts(event.t + 30_000);
+      const clock = fmtClock(p.h + p.mi / 60 - 12);
+      value += ` · New moon: ${MON3[p.m - 1]} ${p.d}, ${p.y} ${clock}`;
+    }
   }
   if (box.textContent !== value) box.textContent = value;
 }

@@ -34,6 +34,8 @@ class RiverView implements CanvasView {
     this.GR = S.riverZoom === 'year' ? (W < 700 ? 56 : 92) : W < 700 ? 88 : 120;
     const wideDates = S.focus > 0 && S.riverZoom !== 'year';
     this.GL = W < 700 ? (wideDates ? 56 : 52) : 70;
+    // January includes the year; leave it clear of the event ticks on narrow screens.
+    if (W < 700 && S.riverZoom === 'year') this.GL = 60;
     const x0 = this.GL + this.GM,
       x1 = W - this.GR - this.MINI;
     return { x0, x1, cw: Math.max(40, x1 - x0) };
@@ -130,7 +132,7 @@ class RiverView implements CanvasView {
   }
 
   draw(st: number): void {
-    const { nights, ax, maxMF, tonightIdx } = atlas();
+    const { nights, ax, maxMF, tonightIdx, quarters, tz } = atlas();
     const { W, H } = size;
     const { x0, x1, cw } = this.geom();
     if (S.riverZoom === 'month' && S.riverExpanded && S.sel >= 0)
@@ -144,6 +146,8 @@ class RiverView implements CanvasView {
     ctx.rect(0, top, W - this.MINI, H - top);
     ctx.clip();
     const i0 = Math.max(0, this.rowAt(st));
+    const newMoonTicks: number[] = [];
+    const newMoonLabels: Array<{ x: number; y: number; lines: string[] }> = [];
     for (let i = i0; i < N; i++) {
       const y = top + this.ys[i] - st,
         h = this.hs[i];
@@ -162,7 +166,8 @@ class RiverView implements CanvasView {
         ctx.fillRect(0, y, this.GL + this.GM - 2, barH - gap);
       }
       drawNight(n, x0, y, cw, barH - gap, 'h', {
-        labels: !expanded && (barH >= 26 || (monthLabel && !n.dst)),
+        labels:
+          !expanded && !(W < 700 && n.quarter === 0) && (barH >= 26 || (monthLabel && !n.dst)),
         labelWeight: S.riverZoom === 'month' && !weekend && i !== S.sel ? 450 : 600,
         labelSize: expanded ? 11.5 : 10.5,
       });
@@ -187,8 +192,23 @@ class RiverView implements CanvasView {
       }
       // moon column
       const mx = this.GL + this.GM / 2;
-      if (barH >= 13) moonGlyph(n, mx, y + (barH - gap) / 2, Math.min(6, (barH - gap) / 2 - 1.5));
-      else if (n.quarter === 0 || n.quarter === 2) moonGlyph(n, mx, y + barH / 2, 4);
+      if (n.quarter === 0 && S.riverZoom === 'year') newMoonTicks.push(y + (barH - gap) / 2);
+      else if (barH >= 13)
+        moonGlyph(n, mx, y + (barH - gap) / 2, Math.min(6, (barH - gap) / 2 - 1.5));
+      else if (n.quarter === 2) moonGlyph(n, mx, y + barH / 2, 4);
+      if (n.quarter === 0 && S.riverZoom === 'month') {
+        const event = quarters.find((q) => q.q === 0 && q.i === i);
+        let lines = ['New Moon'];
+        if (event) {
+          const p = tz.wallParts(event.t + 30_000);
+          const dateTime = `${MON3[p.m - 1]} ${p.d}, ${fmtClock(p.h + p.mi / 60 - 12)}`;
+          lines = W < 700 ? ['New Moon', dateTime] : [`New Moon · ${dateTime}`];
+        }
+        const { sunset, sunrise } = n.evH;
+        const center =
+          sunset != null && sunrise != null ? (sunset + sunrise) / 2 : (ax.start + ax.end) / 2;
+        newMoonLabels.push({ x: X(center), y: y + (barH - gap) / 2, lines });
+      }
       // right gutter: moon-free hours
       const bx = x1 + 8,
         bw = this.GR - (S.riverZoom === 'year' ? 44 : 72);
@@ -237,6 +257,9 @@ class RiverView implements CanvasView {
         ctx.strokeRect(x0 + 0.5, y + 0.5, cw - 1, barH - gap - 1);
       }
     }
+    // Draw after the rows so a nearby month boundary cannot cover a Year marker.
+    ctx.fillStyle = C.ink;
+    for (const cy of newMoonTicks) ctx.fillRect(this.GL + this.GM / 2 - 7, snap(cy - 1), 14, 2);
     if (S.focus > 0 && S.riverZoom !== 'year') this.drawContextDates(st);
     // hour grid over the night
     const ticks = hourTicks(cw / span);
@@ -250,6 +273,22 @@ class RiverView implements CanvasView {
     if (hoverH != null) {
       ctx.fillStyle = C.select;
       ctx.fillRect(snap(X(hoverH)), top, 1, H - top);
+    }
+    // Keep the event label in the sky where people scan, clear of grid/crosshair strokes.
+    for (const { x: cx, y, lines } of newMoonLabels) {
+      const width = Math.max(...lines.map((line) => tw(line, 11.5, 650))) + 16;
+      const height = lines.length === 1 ? 16 : 28;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x0, y - height / 2, cw, height);
+      ctx.clip();
+      ctx.fillStyle = C.ink;
+      roundRect(cx - width / 2, y - height / 2, width, height, 4);
+      ctx.fill();
+      lines.forEach((line, i) =>
+        text(line, cx, y + (i - (lines.length - 1) / 2) * 12, 11.5, inkOn(C.ink), 'center', 650),
+      );
+      ctx.restore();
     }
     ctx.restore();
     // axis band
