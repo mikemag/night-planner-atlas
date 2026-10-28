@@ -1,4 +1,4 @@
-import { MON3, MONL } from '../model/format';
+import { MON3, MONL, fmtDur, nightTitle } from '../model/format';
 import type { Site } from '../model/night';
 import {
   bestWeekends,
@@ -8,7 +8,7 @@ import {
   type NightRange,
 } from '../model/range';
 import { C, readColors } from '../render/colors';
-import { ctx, size, sizeSurface } from '../render/surface';
+import { ctx, cv, size, sizeSurface } from '../render/surface';
 import { el, scroller } from '../ui/dom';
 import { inspect } from '../ui/inspector';
 import { updateRiverReadout } from '../ui/river-readout';
@@ -36,8 +36,13 @@ const thresholds = () => ({ moonAlt: S.moonAlt, crescent: S.crescent });
 
 /** Match the canvas to the scroller, then lay out again. */
 export function resize(): void {
+  const anchor =
+    S.view === 'river' && data.ready && river.hs.length === data.range?.nights.length
+      ? river.anchor()
+      : null;
   sizeSurface(scroller.clientWidth, scroller.clientHeight, window.devicePixelRatio || 1);
   relayout();
+  if (anchor) river.restoreAnchor(anchor);
 }
 
 /** Lay out the current view; `keepNight` scrolls that night to the top afterwards. */
@@ -62,7 +67,18 @@ export function draw(): void {
     ctx.fillStyle = C.panel;
     ctx.fillRect(0, 0, size.W, size.H);
     v.draw(scroller.scrollTop);
-    if (v === river) updateRiverReadout();
+    if (v === river) {
+      updateRiverReadout();
+      const n = data.range!.nights[S.sel];
+      if (n) {
+        const status = `${nightTitle(n)}. ${fmtDur(n.mfMs)} usable dark.${S.riverZoom === 'month' && S.riverExpanded ? ' Expanded.' : ''}`;
+        const live = el('riverSelection');
+        if (live.textContent !== status) live.textContent = status;
+      }
+      cv.setAttribute('role', S.riverZoom === 'month' ? 'button' : 'img');
+      if (S.riverZoom === 'month') cv.setAttribute('aria-expanded', String(S.riverExpanded));
+      else cv.removeAttribute('aria-expanded');
+    }
     updatePeriod();
   });
 }
@@ -70,14 +86,41 @@ export function draw(): void {
 // ---------- selection and navigation
 
 /** Select night `i`; `scroll` brings it into view (at the top when `top`). */
-export function select(i: number, scroll: boolean, top?: boolean): void {
+function selectState(i: number): void {
   S.sel = i;
   S.hover = null;
   S.riverReadoutSelected = true;
   inspect(i);
+}
+
+/** Select a night, carrying an open Month expansion along with keyboard navigation. */
+export function select(i: number, scroll: boolean, top?: boolean): void {
   const v = canvasView();
+  const moving = v === river && S.riverZoom === 'month' && S.riverExpanded && i !== S.sel;
+  const oldY = river.ys[S.sel] - scroller.scrollTop;
+  const keepY =
+    scroll && !top && oldY >= 0 && oldY < size.H - river.AX
+      ? oldY
+      : river.ys[i] - scroller.scrollTop;
+  selectState(i);
+  if (moving) {
+    relayout();
+    scroller.scrollTop = river.ys[i] - keepY;
+  }
   if (scroll && v) v.scrollTo(i, !!top);
   if (S.view === 'table') renderTable(currentMonthIndex());
+  draw();
+}
+
+/** Toggle only the chosen Month row; preserve its header before minimally revealing details. */
+export function toggleRiverNight(i: number = S.sel): void {
+  if (!data.ready || i < 0 || S.view !== 'river' || S.riverZoom !== 'month') return;
+  const keepY = river.ys[i] - scroller.scrollTop;
+  S.riverExpanded = !(S.riverExpanded && S.sel === i);
+  selectState(i);
+  relayout();
+  scroller.scrollTop = river.ys[i] - keepY;
+  if (S.riverExpanded) river.reveal(i);
   draw();
 }
 
@@ -85,16 +128,9 @@ export function goTonight(): void {
   const r = data.range;
   if (!r) return;
   const i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
-  S.sel = i;
-  S.hover = null;
-  S.riverReadoutSelected = true;
-  inspect(i);
-  const v = canvasView();
-  if (v) {
-    v.scrollTo(i, true);
-    if (v === river) scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.hs[i]);
-  }
-  if (S.view === 'table') renderTable(currentMonthIndex());
+  select(i, true, true);
+  if (canvasView() === river)
+    scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.heights().base);
   draw();
 }
 
@@ -184,7 +220,6 @@ function viewControls(): void {
     seg('riverZoom', [
       ['year', 'Year'],
       ['month', 'Month'],
-      ['week', 'Week'],
     ]);
   }
   if (S.view === 'calendar') {
@@ -202,6 +237,8 @@ function viewControls(): void {
 
 /** Change a view option; River keeps the browsed position rather than jumping to selection. */
 export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
+  const reopening =
+    key === 'riverZoom' && S.riverZoom === 'year' && val === 'month' && S.riverExpanded;
   const anchor = S.view === 'river' && data.ready ? river.anchor() : null;
   const keep = S.sel >= 0 ? S.sel : null;
   S[key] = val;
@@ -209,7 +246,8 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
   if (key === 'calZoom' || key === 'calOrient') S.expandedWeek = null;
   if (anchor) {
     relayout();
-    river.restoreAnchor(anchor);
+    if (reopening) river.scrollTo(S.sel, true);
+    else river.restoreAnchor(anchor);
   } else relayout(keep);
 }
 
@@ -224,6 +262,15 @@ export function setView(view: ViewId): void {
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === view));
   const v = canvasView(view);
   scroller.hidden = !v;
+  if (view !== 'river') {
+    cv.removeAttribute('role');
+    cv.removeAttribute('aria-expanded');
+  }
+  el('viewBody').classList.toggle('river-mode', view === 'river');
+  el('inspector').hidden = view === 'river';
+  el('riverWeekends').hidden = view !== 'river';
+  el(view === 'river' ? 'riverWeekendSlot' : 'inspector').appendChild(el('weekendList'));
+  if (view !== 'river') el('riverDetail').hidden = true;
   el('riverReadout').hidden = view !== 'river';
   el('tableView').hidden = view !== 'table';
   el('notesView').hidden = view !== 'notes';
@@ -316,12 +363,13 @@ export function restart(): void {
         `${MON3[spec.m - 1]} ${spec.y} – ${MON3[last.m - 1]} ${last.y}`;
       let i = selId ? nights.findIndex((n) => n.id === selId) : -1;
       if (i < 0) i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
+      if (!selId || nights[i].id !== selId) S.riverExpanded = false;
       S.sel = i;
       inspect(i);
       setView(S.view);
       const v = canvasView();
       if (v) {
-        if (v === river) scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.hs[i]);
+        if (v === river) scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.heights().base);
         else v.scrollTo(i, true);
       }
       draw();
@@ -365,6 +413,8 @@ export interface TestHooks {
   select: typeof select;
   setView: typeof setView;
   setOpt: typeof setOpt;
+  toggleRiverNight: typeof toggleRiverNight;
+  readonly riverRows: { tops: Float64Array; heights: Float64Array; header: number };
   relayout: typeof relayout;
   draw: typeof draw;
   goTonight: typeof goTonight;
@@ -386,6 +436,10 @@ function exposeTestHooks(): void {
     select,
     setView,
     setOpt,
+    toggleRiverNight,
+    get riverRows() {
+      return { tops: river.ys, heights: river.hs, header: river.detailHeader };
+    },
     relayout,
     draw,
     goTonight,

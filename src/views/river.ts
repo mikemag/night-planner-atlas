@@ -5,6 +5,7 @@ import { C, inkOn } from '../render/colors';
 import { drawNight, hourTicks, moonGlyph } from '../render/night-draw';
 import { ctx, roundRect, size, snap, text, tw } from '../render/surface';
 import { scroller } from '../ui/dom';
+import { prepareRiverDetail, placeRiverDetail } from '../ui/river-detail';
 import type { CanvasView, Hit } from './view';
 
 /** One row per night, stacked by date, with clock time running left to right. */
@@ -19,13 +20,19 @@ class RiverView implements CanvasView {
   hs = new Float64Array(0);
   ys = new Float64Array(0);
   total = 0;
+  /** Expanded nights retain the same sky-band height as their compact neighbors. */
+  get detailHeader(): number {
+    const { base, fH } = this.heights();
+    const n = atlas().nights[S.sel];
+    return S.focus > 0 && n && Math.abs(n.nmOff) <= S.focus ? fH : base;
+  }
   private miniDrag: { y: number; index: number } | null = null;
 
   geom() {
     const { W } = size;
     this.MINI = S.riverZoom === 'year' || W < 700 ? 0 : 96;
     this.GR = S.riverZoom === 'year' ? (W < 700 ? 56 : 92) : W < 700 ? 88 : 120;
-    const wideDates = S.riverZoom === 'week' || (S.focus > 0 && S.riverZoom !== 'year');
+    const wideDates = S.focus > 0 && S.riverZoom !== 'year';
     this.GL = W < 700 ? (wideDates ? 56 : 52) : 70;
     const x0 = this.GL + this.GM,
       x1 = W - this.GR - this.MINI;
@@ -35,14 +42,13 @@ class RiverView implements CanvasView {
   /** Row heights: the zoom sets them, and new-moon focus splits them into focus and context. */
   heights() {
     const N = atlas().nights.length;
-    const avail = size.H - this.AX - 10;
+    const avail = size.H - this.AX - 12;
     const z = S.riverZoom;
     if (z === 'year') {
-      const b = Math.max(1, avail / N);
+      const b = Math.max(0.1, avail / N);
       return { base: b, fH: b, cH: b };
     }
-    if (z === 'month') return { base: 20, fH: 34, cH: 8 };
-    return { base: 48, fH: 48, cH: 14 };
+    return { base: size.W < 700 ? 32 : 20, fH: 34, cH: 8 };
   }
 
   layout(): void {
@@ -51,11 +57,27 @@ class RiverView implements CanvasView {
     this.hs = new Float64Array(N);
     this.ys = new Float64Array(N + 1);
     const { base, fH, cH } = this.heights();
+    const { x0, cw } = this.geom();
+    const { ax } = atlas();
+    const detailHeight = prepareRiverDetail(
+      S.riverZoom === 'month' && S.riverExpanded ? nights[S.sel] : null,
+      {
+        width: size.W - this.MINI,
+        x0,
+        cw,
+        start: ax.start,
+        end: ax.end,
+        moonX: this.GL + this.GM / 2,
+      },
+      size.W < 700,
+    );
     let y = 0;
     for (let i = 0; i < N; i++) {
       let h = base;
       if (S.focus > 0 && S.riverZoom !== 'year') h = Math.abs(nights[i].nmOff) <= S.focus ? fH : cH;
       this.ys[i] = y;
+      if (S.riverZoom === 'month' && S.riverExpanded && i === S.sel)
+        h = this.detailHeader + detailHeight;
       this.hs[i] = h;
       y += h;
     }
@@ -94,16 +116,25 @@ class RiverView implements CanvasView {
 
   scrollTo(i: number, top: boolean): void {
     const y = this.ys[i];
-    const vis0 = scroller.scrollTop,
-      vis1 = vis0 + size.H - this.AX;
-    if (top || y < vis0 || y + this.hs[i] > vis1)
-      scroller.scrollTop = Math.max(0, y - (top ? 0 : (size.H - this.AX) * 0.3));
+    if (top) scroller.scrollTop = y;
+    else this.reveal(i);
+  }
+
+  /** Reveal only as much as necessary; oversized details start below the pinned axis. */
+  reveal(i: number): void {
+    const available = size.H - this.AX;
+    const y = this.ys[i];
+    if (y < scroller.scrollTop || this.hs[i] > available) scroller.scrollTop = y;
+    else if (y + this.hs[i] > scroller.scrollTop + available)
+      scroller.scrollTop = y + this.hs[i] - available;
   }
 
   draw(st: number): void {
     const { nights, ax, maxMF, tonightIdx } = atlas();
     const { W, H } = size;
     const { x0, x1, cw } = this.geom();
+    if (S.riverZoom === 'month' && S.riverExpanded && S.sel >= 0)
+      placeRiverDetail(this.AX + this.ys[S.sel] + this.detailHeader, st, this.AX);
     const top = this.AX,
       N = nights.length;
     const span = ax.end - ax.start;
@@ -118,30 +149,31 @@ class RiverView implements CanvasView {
         h = this.hs[i];
       if (y > H) break;
       const n = nights[i];
-      const gap = h >= 7 ? 1 : 0;
+      const expanded = S.riverZoom === 'month' && S.riverExpanded && i === S.sel;
+      const barH = expanded ? this.detailHeader : h;
+      const gap = barH >= 7 ? 1 : 0;
       const focusRow = S.focus > 0 && Math.abs(n.nmOff) <= S.focus;
-      const contextRow = S.focus > 0 && S.riverZoom !== 'year' && !focusRow;
-      const weekRow = S.riverZoom === 'week' && !contextRow;
+      const contextRow = S.focus > 0 && S.riverZoom !== 'year' && !focusRow && !expanded;
       const weekend = n.dow === 5 || n.dow === 6;
-      const monthLabel = S.riverZoom === 'month' && h >= 16;
+      const monthLabel = S.riverZoom === 'month' && barH >= 16;
       // weekend tint in the gutter
-      if (weekend && (h >= 11 || contextRow)) {
+      if (weekend && (barH >= 11 || contextRow)) {
         ctx.fillStyle = C.weekend;
-        ctx.fillRect(0, y, this.GL + this.GM - 2, h - gap);
+        ctx.fillRect(0, y, this.GL + this.GM - 2, barH - gap);
       }
-      drawNight(n, x0, y, cw, h - gap, 'h', {
-        labels: h >= 26 || (monthLabel && !n.dst),
+      drawNight(n, x0, y, cw, barH - gap, 'h', {
+        labels: !expanded && (barH >= 26 || (monthLabel && !n.dst)),
         labelWeight: S.riverZoom === 'month' && !weekend && i !== S.sel ? 450 : 600,
-        labelSize: S.riverZoom === 'week' ? 11.5 : 10.5,
+        labelSize: expanded ? 11.5 : 10.5,
       });
       // gutter labels
-      if (h >= 11 && !contextRow) {
+      if (barH >= 11 && !contextRow) {
         const wk = n.dow === 5 || n.dow === 6;
         text(
           n.d === 1 ? `${MON3[n.m - 1]} 1` : `${WD3[n.dow]} ${n.d}`,
           this.GL - 6,
-          y + (h - gap) / 2,
-          h >= 16 ? (weekRow ? 12 : 11) : 10,
+          y + (barH - gap) / 2,
+          barH >= 16 ? (expanded ? 12 : 11) : 10,
           wk ? C.ink : C.ink3,
           'right',
           wk ? 650 : 500,
@@ -150,36 +182,36 @@ class RiverView implements CanvasView {
       if (n.d === 1) {
         ctx.fillStyle = C.panel;
         ctx.fillRect(0, y - 1, W - this.MINI, 1);
-        if (h < 11 && !contextRow)
+        if (barH < 11 && !contextRow)
           text(`${MON3[n.m - 1]}${n.m === 1 ? ' ' + n.y : ''}`, 8, y + 6, 10.5, C.ink, 'left', 700);
       }
       // moon column
       const mx = this.GL + this.GM / 2;
-      if (h >= 13) moonGlyph(n, mx, y + (h - gap) / 2, Math.min(6, (h - gap) / 2 - 1.5));
-      else if (n.quarter === 0 || n.quarter === 2) moonGlyph(n, mx, y + h / 2, 4);
+      if (barH >= 13) moonGlyph(n, mx, y + (barH - gap) / 2, Math.min(6, (barH - gap) / 2 - 1.5));
+      else if (n.quarter === 0 || n.quarter === 2) moonGlyph(n, mx, y + barH / 2, 4);
       // right gutter: moon-free hours
       const bx = x1 + 8,
         bw = this.GR - (S.riverZoom === 'year' ? 44 : 72);
-      const bh = Math.max(1, Math.min(h - gap - 2, 9));
+      const bh = Math.max(1, Math.min(barH - gap - 2, 9));
       const len = (bw * n.mfMs) / maxMF;
       if (len > 0) {
         ctx.fillStyle = C.good;
-        ctx.fillRect(bx, y + (h - gap - bh) / 2, len, bh);
+        ctx.fillRect(bx, y + (barH - gap - bh) / 2, len, bh);
       }
-      if (h >= 12)
+      if (barH >= 12)
         text(
           n.mfMs ? fmtDur(n.mfMs) : '—',
           bx + bw + 4,
-          y + (h - gap) / 2,
-          weekRow ? 11.5 : 10.5,
+          y + (barH - gap) / 2,
+          expanded ? 11.5 : 10.5,
           n.mfMs ? C.ink2 : C.ink3,
           'left',
           focusRow ? 650 : 500,
         );
       // clock change
-      if (n.dst && h >= 11) {
+      if (n.dst && barH >= 11 && !expanded) {
         const label = 'Clocks change tonight';
-        const cy = weekRow ? y + 9 : y + (h - gap) / 2;
+        const cy = y + (barH - gap) / 2;
         ctx.fillStyle = C.day;
         ctx.fillRect(x0 + 3, cy - 7, tw(label, 10, 650) + 6, 14);
         text(label, x0 + 6, cy, 10, inkOn(C.day), 'left', 650);
@@ -187,22 +219,22 @@ class RiverView implements CanvasView {
       // tonight and selection
       if (i === tonightIdx) {
         ctx.fillStyle = C.now;
-        ctx.fillRect(0, y, 3, h - gap);
+        ctx.fillRect(0, y, 3, barH - gap);
         const nowH = wallH(Date.now(), n);
         if (nowH > ax.start && nowH < ax.end) {
           ctx.fillStyle = C.now;
-          ctx.fillRect(snap(X(nowH)) - 1, y, 2, h - gap);
+          ctx.fillRect(snap(X(nowH)) - 1, y, 2, barH - gap);
         }
       }
       if (i === S.sel) {
         ctx.strokeStyle = C.select;
         ctx.lineWidth = 2;
-        ctx.strokeRect(x0 - 1, y - 1 + 0.0, cw + 2, h - gap + 2);
+        ctx.strokeRect(1, y, W - this.MINI - 2, h - 1);
       }
       if (S.hover && S.hover.i === i && i !== S.sel) {
         ctx.strokeStyle = 'rgba(255,255,255,0.55)';
         ctx.lineWidth = 1;
-        ctx.strokeRect(x0 + 0.5, y + 0.5, cw - 1, h - gap - 1);
+        ctx.strokeRect(x0 + 0.5, y + 0.5, cw - 1, barH - gap - 1);
       }
     }
     if (S.focus > 0 && S.riverZoom !== 'year') this.drawContextDates(st);
@@ -276,7 +308,12 @@ class RiverView implements CanvasView {
       const n = nights[i];
       const cy = center(i);
       if (cy > H + 8) break;
-      if (Math.abs(n.nmOff) <= S.focus || (n.d !== 1 && n.dow !== 1)) continue;
+      if (
+        (S.riverExpanded && i === S.sel) ||
+        Math.abs(n.nmOff) <= S.focus ||
+        (n.d !== 1 && n.dow !== 1)
+      )
+        continue;
       const month = n.d === 1;
       // Ticks retain the exact row position even where a nearby month suppresses a week label.
       ctx.fillStyle = month ? C.ink2 : C.ink3;
@@ -380,6 +417,13 @@ class RiverView implements CanvasView {
     if (this.MINI && px > size.W - this.MINI) return { mini: true, y: py };
     const i = this.rowAt(py - this.AX + scroller.scrollTop);
     if (i < 0) return null;
+    if (
+      S.riverZoom === 'month' &&
+      S.riverExpanded &&
+      i === S.sel &&
+      py - this.AX + scroller.scrollTop - this.ys[i] >= this.detailHeader
+    )
+      return null;
     const hh = px >= x0 && px <= x1 ? ax.start + ((px - x0) / cw) * (ax.end - ax.start) : null;
     return { i, hh };
   }

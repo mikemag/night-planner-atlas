@@ -103,7 +103,11 @@ const scroll = (page: Page) => page.locator('#scroller').evaluate((e) => e.scrol
 async function rowTimes(page: Page, id: string) {
   return page.evaluate((id) => {
     const i = window.__npa!.nights.findIndex((n) => n.id === id);
-    const y = 30 + i * 20 - document.getElementById('scroller')!.scrollTop + 8.5;
+    const rows = window.__npa!.riverRows;
+    const bar =
+      window.__npa!.S.riverExpanded && window.__npa!.S.sel === i ? rows.header : rows.heights[i];
+    const y =
+      30 + rows.tops[i] - document.getElementById('scroller')!.scrollTop + (bar - 1) / 2 - 1;
     return {
       windows: window.__npa!.nights[i].mfH,
       labels: window.riverText
@@ -154,22 +158,18 @@ test('River zoom and focus preserve the browsed night away from selection', asyn
   await page.locator('#scroller').evaluate((e) => {
     e.scrollTop = 150 * 20 + 7;
   });
-  await zoom(page, 'Week');
-  expect(Math.abs((await scroll(page)) - (150 * 48 + (7 / 20) * 48))).toBeLessThanOrEqual(1);
-  await zoom(page, 'Month');
-  expect(Math.abs((await scroll(page)) - 3007)).toBeLessThanOrEqual(1);
   await page.locator('#focusSeg button[data-val="3"]').click();
   await page.locator('#focusSeg button[data-val="0"]').click();
   // Browsers round scrollTop to whole pixels; expanding an 8 px context row can amplify that.
   expect(Math.abs((await scroll(page)) - 3007)).toBeLessThanOrEqual(3);
   await expect(page.locator('#insDate')).toHaveText(selection!);
   await zoom(page, 'Year');
-  await zoom(page, 'Week');
+  await zoom(page, 'Month');
   // Year fits the range and clamps scroll to its start; zooming back must not jump to selection.
   expect(await scroll(page)).toBeLessThan(200);
 });
 
-test('phone River labels stay in their columns in Month and Week', async ({ page }, info) => {
+test('phone River labels stay in their columns in Month', async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await openRiver(page);
   await page.evaluate(() =>
@@ -179,7 +179,7 @@ test('phone River labels stay in their columns in Month and Week', async ({ page
       true,
     ),
   );
-  for (const mode of ['Month', 'Week']) {
+  for (const mode of ['Month']) {
     await zoom(page, mode);
     await painted(page);
     const { width, labels } = await page
@@ -299,7 +299,7 @@ test.describe('touch River', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openRiver(page);
     const box = (await page.locator('#cv').boundingBox())!;
-    await page.touchscreen.tap(box.x + 150, box.y + 30 + 5 * 20 + 10);
+    await page.touchscreen.tap(box.x + 150, box.y + 30 + 5 * 32 + 16);
     await expect(page.locator('#insDate')).toHaveText('Fri Sep 25 → Sat Sep 26');
     await expect(page.locator('#riverReadout')).toContainText('Fri Sep 25, 2026');
     await expect(page.locator('#tip')).toBeHidden();
@@ -343,7 +343,6 @@ test('minimap has readable month labels, year context and a visible viewport', a
     expect(label.right).toBeLessThan(width - 50);
   }
   expect(labels.find((t) => t.text === '2026–27')).toBeTruthy();
-  await zoom(page, 'Week');
   expect((await miniThumb(page)).height).toBeGreaterThanOrEqual(24);
   if (process.env.SCREENSHOTS)
     await page.screenshot({
@@ -353,18 +352,21 @@ test('minimap has readable month labels, year context and a visible viewport', a
   expect(await miniThumb(page)).toBeUndefined();
 });
 
-test('minimap viewport keeps the grab point in Month, Week and new-moon focus', async ({
+test('minimap viewport keeps the grab point with expansion and new-moon focus', async ({
   page,
 }) => {
   await openRiver(page);
   const selection = await page.locator('#insDate').textContent();
-  for (const [mode, focus] of [
-    ['Month', '0'],
-    ['Week', '0'],
-    ['Month', '3'],
-    ['Week', '3'],
-  ]) {
+  for (const [mode, focus, expanded] of [
+    ['Month', '0', false],
+    ['Month', '0', true],
+    ['Month', '3', false],
+    ['Month', '3', true],
+  ] as const) {
     await zoom(page, mode);
+    await page.evaluate((expanded) => {
+      if (window.__npa!.S.riverExpanded !== expanded) window.__npa!.toggleRiverNight();
+    }, expanded);
     await page.locator(`#focusSeg button[data-val="${focus}"]`).click();
     await page.locator('#scroller').evaluate((e) => {
       e.scrollTop = 3007;
@@ -501,22 +503,6 @@ for (const width of [1512, 390]) {
     });
     await painted(page);
     await assertReadable();
-    await zoom(page, 'Week');
-    await selectDate('2026-11-12');
-    labels = await gutter();
-    expect(labels.find((t) => t.text === 'Mon 16')?.fontSize).toBe(11.5);
-    expect(labels.find((t) => t.text === (width === 390 ? 'Dec ’26' : 'Dec 2026'))?.fontSize).toBe(
-      11.5,
-    );
-    expect(labels.find((t) => t.text === 'Mon 30')).toBeUndefined(); // One context row before Dec 1.
-    expect(labels.find((t) => t.text === 'Thu 12')).toBeUndefined(); // Context uses weekly anchors.
-    await assertReadable();
-    if (process.env.SCREENSHOTS)
-      await page.screenshot({
-        path: `test-results/screenshots/${info.project.name}-river-focus-week-${width}.png`,
-        fullPage: width === 390,
-      });
-    await zoom(page, 'Month');
     await selectDate('2026-12-30');
     expect(
       (await gutter()).find((t) => t.text === (width === 390 ? 'Jan ’27' : 'Jan 2027'))?.fontSize,
@@ -531,96 +517,5 @@ for (const width of [1512, 390]) {
     labels = await gutter();
     expect(labels.some((t) => t.text === 'Jan 1')).toBe(true);
     expect(labels.some((t) => t.text.includes('2027') || t.text.includes('’27'))).toBe(false);
-  });
-}
-
-for (const width of [1512, 390]) {
-  test(`Week emphasizes windows and totals without event labels or altitude tracks at ${width}px`, async ({
-    page,
-  }, info) => {
-    await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
-    await openRiver(page);
-    await zoom(page, 'Week');
-    await page.evaluate(() =>
-      window.__npa!.select(
-        window.__npa!.nights.findIndex((n) => n.id === '2026-10-08'),
-        true,
-        true,
-      ),
-    );
-    await painted(page);
-    const { labels, curves, bounds, total } = await page.evaluate(() => {
-      const n = window.__npa!.nights.find((n) => n.id === '2026-10-08')!;
-      return {
-        labels: window.riverText,
-        curves: window.riverCurves,
-        bounds: n.mfH[0],
-        total: n.mfMs,
-      };
-    });
-    expect(curves).toBe(0);
-    expect(labels.filter((t) => /sunset|sunrise|moonrise|moonset/i.test(t.text))).toEqual([]);
-    for (const value of bounds.map(fmtClockS)) {
-      const label = labels.find((t) => t.text === value && t.y < 78)!;
-      expect(label).toBeTruthy();
-      expect(label.y).toBe(52.5); // Centered in the first 48 px row, below the 30 px axis.
-      expect(label.fontSize).toBe(11.5);
-    }
-    expect(labels.find((t) => t.text === fmtDur(total))?.fontSize).toBe(11.5);
-    const height = await page.locator('#cv').evaluate((e) => e.clientHeight);
-    const dates = labels.filter(
-      (t) =>
-        t.right <= (width === 390 ? 52 : 70) &&
-        t.y > 30 &&
-        t.y < height - 6 &&
-        /^(Sun|Mon|Tue|Wed|Thu|Fri|Sat) \d+$/.test(t.text),
-    );
-    expect(dates).toHaveLength(width === 390 ? 7 : 14);
-    for (let i = 0; i < dates.length; i++) {
-      expect(dates[i].fontSize).toBe(12);
-      expect(dates[i].left).toBeGreaterThanOrEqual(4);
-      if (i) expect(dates[i].y - dates[i - 1].y).toBe(48);
-    }
-    await expect(page.locator('#insMoon')).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
-    if (process.env.SCREENSHOTS)
-      await page.screenshot({
-        path: `test-results/screenshots/${info.project.name}-river-week-simple-${width}.png`,
-        fullPage: width === 390,
-      });
-    await page.evaluate(() =>
-      window.__npa!.select(
-        window.__npa!.nights.findIndex((n) => n.id === '2026-10-31'),
-        true,
-        true,
-      ),
-    );
-    await painted(page);
-    const clockChange = await page.evaluate(() => ({
-      notice: window.riverText.find((t) => t.text === 'Clocks change tonight')!,
-      windows: window.riverText.filter((t) => t.y < 78 && /^\d+:\d+[ap]$/.test(t.text)),
-    }));
-    expect(clockChange.notice.y).toBe(39);
-    for (const time of clockChange.windows)
-      expect(time.y - clockChange.notice.y).toBeGreaterThanOrEqual(13);
-    if (process.env.SCREENSHOTS)
-      await page.screenshot({
-        path: `test-results/screenshots/${info.project.name}-river-week-clock-${width}.png`,
-      });
-    await page.evaluate(() =>
-      window.__npa!.select(
-        window.__npa!.nights.findIndex((n) => n.id === '2027-01-08'),
-        true,
-        true,
-      ),
-    );
-    await painted(page);
-    const longTotal = await page.locator('#cv').evaluate((cv) => ({
-      width: cv.clientWidth,
-      labels: window.riverText.filter((t) => /^1\d+h \d+m$/.test(t.text) && t.y < 78),
-    }));
-    expect(longTotal.labels.length).toBeGreaterThan(0);
-    for (const label of longTotal.labels)
-      expect(label.right).toBeLessThan(longTotal.width - (width === 390 ? 0 : 96));
   });
 }

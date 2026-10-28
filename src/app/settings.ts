@@ -1,7 +1,7 @@
 import type { Site } from '../model/night';
 
 export type ViewId = 'river' | 'calendar' | 'lunations' | 'table' | 'notes';
-export type RiverZoom = 'year' | 'month' | 'week';
+export type RiverZoom = 'year' | 'month';
 export type CalZoom = 'month' | 'year';
 export type CalOrient = 'v' | 'h';
 
@@ -52,6 +52,6 @@ export function loadSettings(): Settings {
     crescent: store.get('crescent', 0),
     calOrient: store.get<CalOrient>('calOrient', 'v'),
     calZoom: store.get<CalZoom>('calZoom', 'month'),
-    riverZoom: store.get<RiverZoom>('riverZoom', 'month'),
+    riverZoom: store.get<string>('riverZoom', 'month') === 'year' ? 'year' : 'month',
   };
 }

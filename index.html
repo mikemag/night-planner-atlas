@@ -69,7 +69,7 @@
         </span>
       </div>
 
-      <div class="body">
+      <div class="body" id="viewBody">
         <section class="stage" id="stage">
           <div class="stage-head">
             <span class="view-title" id="viewTitle">River</span>
@@ -93,9 +93,16 @@
             <canvas
               id="cv"
               tabindex="0"
-              aria-label="Night planner chart. Use arrow keys to move between nights."
+              aria-label="Night planner chart. Arrow keys move between nights; Enter or Space expands the selected night in River Month; Escape collapses it."
             ></canvas>
             <div class="sizer" id="sizer"></div>
+            <div class="sr-only" id="riverSelection" role="status" aria-live="polite"></div>
+            <section
+              class="river-detail"
+              id="riverDetail"
+              aria-label="Expanded night"
+              hidden
+            ></section>
           </div>
           <div
             class="river-readout"
@@ -148,7 +155,7 @@
         <aside class="inspector" id="inspector" aria-live="polite">
           <div class="ins-head">
             <div>
-              <div class="ins-date" id="insDate">—</div>
+              <div class="ins-date" id="insDate" tabindex="-1">—</div>
               <div class="ins-sub" id="insSub"></div>
             </div>
             <div class="ins-nav">
@@ -164,7 +171,7 @@
           <div class="moonrow" id="insMoon"></div>
           <div class="kv" id="insStages"></div>
           <div class="ins-foot" id="insFoot"></div>
-          <div class="wkl">
+          <div class="wkl" id="weekendList">
             <div class="wkl-h">
               Dark weekends ahead <span>Fri + Sat nights, best near each new moon</span>
             </div>
@@ -172,6 +179,10 @@
           </div>
         </aside>
       </div>
+      <details class="weekends-tray" id="riverWeekends" hidden>
+        <summary>Dark weekends ahead</summary>
+        <div id="riverWeekendSlot"></div>
+      </details>
       <div class="tip" id="tip" hidden></div>
     </div>
 
@@ -187,8 +198,10 @@
       <p>
         One visual language throughout: the sky gets darker through the stages (day, civil,
         nautical, astronomical, true dark), the moon washes true dark toward grey in proportion to
-        how full it is, and a thin green edge marks moon-free true dark. Click any night for the
-        familiar single-night chart. Arrow keys step nights and weeks; <strong>T</strong> jumps to
+        how full it is. Moonlit time accepted by your planning thresholds uses green at the same
+        brightness; genuinely moon-free dark stays black. Expand a River Month night to see times
+        attached to its boundaries. Other chart views retain the single-night inspector. Arrow keys
+        step nights and weeks; Enter or Space toggles River expansion; <strong>T</strong> jumps to
         tonight.
       </p>
 
@@ -217,10 +230,11 @@
                 canvas needs the minimap or Year zoom to keep your place.
               </td>
               <td>
-                Row height is the zoom. Year (the whole range on one screen), Month (20&nbsp;px
-                rows) and Week (48&nbsp;px rows with larger window times, dates and duration
-                totals). New-moon focus is a fisheye: nights near new moon open up with window
-                times, and moonlit nights squash to thin context lines.
+                Year fits the whole range on one screen. Month uses compact rows, taller on phones.
+                Tap a night to expand its timeline and key planning details, and tap again to
+                collapse. Enter or Space toggles the selected night; arrows move an open expansion.
+                New-moon focus is a fisheye: nights near new moon open up with window times, and
+                moonlit nights squash to thin context lines.
               </td>
             </tr>
             <tr>
@@ -281,8 +295,8 @@
         </li>
         <li>
           <strong>One mental model from a year down to a single night.</strong> Only the row height
-          changes between Year, Month and Week, and a row already looks like the chart people know
-          in the inspector.
+          changes between Year and Month. Expanding a Month row keeps its clock axis and adds
+          boundary times with leader lines and usable-duration brackets.
         </li>
         <li>
           <strong>&ldquo;Expand around new moons&rdquo; costs nothing.</strong> It is just taller

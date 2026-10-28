@@ -14,6 +14,7 @@ import {
   setView,
   shiftRange,
   stepMonth,
+  toggleRiverNight,
 } from '../app/shell';
 import { S, data } from '../app/state';
 import { cv } from '../render/surface';
@@ -56,6 +57,7 @@ export function initControls(): void {
 
 function initCanvasPointer(): void {
   let dragMini = false;
+  let tap: { x: number; y: number; i: number; id: number; scroll: number } | null = null;
   cv.addEventListener('pointermove', (e) => {
     const v = canvasView();
     if (!data.ready || !v) return;
@@ -94,7 +96,7 @@ function initCanvasPointer(): void {
   });
   cv.addEventListener('pointerdown', (e) => {
     const v = canvasView();
-    if (!data.ready || !v) return;
+    if (!data.ready || !v || e.button !== 0) return;
     const r = cv.getBoundingClientRect();
     const h = v.hit(e.clientX - r.left, e.clientY - r.top);
     if (!h) return;
@@ -116,15 +118,37 @@ function initCanvasPointer(): void {
       relayout();
       return;
     }
-    if (h.i != null) select(h.i, false);
+    if (h.i != null) {
+      if (v === river)
+        tap = { x: e.clientX, y: e.clientY, i: h.i, id: e.pointerId, scroll: scroller.scrollTop };
+      else select(h.i, false);
+    }
   });
   const endMiniDrag = () => {
     dragMini = false;
     river.endMiniDrag();
     cv.style.cursor = 'default';
   };
-  cv.addEventListener('pointerup', endMiniDrag);
-  cv.addEventListener('pointercancel', endMiniDrag);
+  cv.addEventListener('pointerup', (e) => {
+    const pending = tap;
+    tap = null;
+    if (
+      !dragMini &&
+      pending &&
+      e.pointerId === pending.id &&
+      Math.hypot(e.clientX - pending.x, e.clientY - pending.y) <= 8 &&
+      Math.abs(scroller.scrollTop - pending.scroll) <= 3
+    ) {
+      cv.focus({ preventScroll: true });
+      if (S.riverZoom === 'month') toggleRiverNight(pending.i);
+      else select(pending.i, false);
+    }
+    endMiniDrag();
+  });
+  cv.addEventListener('pointercancel', () => {
+    tap = null;
+    endMiniDrag();
+  });
   cv.addEventListener('lostpointercapture', endMiniDrag);
   cv.addEventListener('dblclick', (e) => {
     if (S.view !== 'calendar' || S.calZoom !== 'year') return;
@@ -141,11 +165,30 @@ function initKeyboard(): void {
   const steps: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
   window.addEventListener('keydown', (e) => {
     const target = e.target as HTMLElement | null;
-    if (!data.ready || !data.range || target?.tagName === 'INPUT' || target?.tagName === 'SELECT')
+    if (
+      !data.ready ||
+      !data.range ||
+      e.altKey ||
+      e.ctrlKey ||
+      e.metaKey ||
+      target?.isContentEditable ||
+      ['INPUT', 'SELECT', 'TEXTAREA'].includes(target?.tagName ?? '')
+    )
       return;
+    if (
+      (e.key === 'Enter' || e.key === ' ') &&
+      S.view === 'river' &&
+      S.riverZoom === 'month' &&
+      (target === cv || target === document.body)
+    ) {
+      e.preventDefault();
+      toggleRiverNight();
+      return;
+    }
     const step = steps[e.key];
     if (step && canvasView()) {
       e.preventDefault();
+      if (target?.closest('#riverDetail')) cv.focus({ preventScroll: true });
       const { nights, tonightIdx } = data.range;
       select(
         Math.max(0, Math.min(nights.length - 1, (S.sel < 0 ? tonightIdx : S.sel) + step)),
@@ -156,6 +199,10 @@ function initKeyboard(): void {
     } else if (e.key >= '1' && e.key <= '5') {
       setView(VIEW_KEYS[+e.key - 1]);
     } else if (e.key === 'Escape') {
+      if (S.view === 'river' && S.riverZoom === 'month' && S.riverExpanded) {
+        if (target?.closest('#riverDetail')) cv.focus({ preventScroll: true });
+        toggleRiverNight();
+      }
       S.expandedWeek = null;
       relayout();
     }

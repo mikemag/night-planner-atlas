@@ -370,6 +370,7 @@ input {
   overflow-y: auto;
 }
 .loading {
+  z-index: 2;
   position: absolute;
   inset: 44px 0 0 0;
   display: grid;
@@ -763,4 +764,134 @@ input {
   * {
     scroll-behavior: auto !important;
   }
+}
+
+/* The expanded River row scrolls with the nights and reserves its own canvas height. */
+#scroller {
+  overflow-anchor: none;
+}
+.river-detail {
+  position: absolute;
+  left: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  border: 1px solid var(--select);
+  border-top: 0;
+  background: var(--raised);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+.river-annotations {
+  display: block;
+  overflow: hidden;
+  max-width: none;
+  margin-left: -1px;
+}
+.river-annotations text {
+  text-anchor: middle;
+  fill: var(--ink);
+}
+.river-leader {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-opacity: 0.7;
+}
+.river-boundary {
+  fill: var(--ink-3);
+}
+.river-label-backing {
+  fill: var(--raised);
+}
+.river-event-time {
+  font-size: 12px;
+  font-weight: 650;
+}
+.river-event-name {
+  font-size: 9px;
+  fill: var(--ink-2) !important;
+}
+.river-annotations .accepted {
+  stroke: var(--good);
+}
+.river-annotations .river-event-time.accepted {
+  fill: var(--good);
+  stroke: none;
+}
+.river-boundary.accepted {
+  fill: var(--good);
+}
+.river-window-bracket {
+  fill: none;
+  stroke: var(--good);
+  stroke-width: 1.5;
+}
+.river-annotations .river-window-duration {
+  fill: var(--good);
+  font-size: 15px;
+  font-weight: 700;
+}
+.river-annotations .river-window-caption {
+  fill: var(--good);
+  font-size: 10px;
+}
+.river-no-window {
+  font-size: 12px;
+}
+.river-annotations .river-moon-percent {
+  fill: var(--ink-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+.river-annotations .river-moon-phase {
+  fill: var(--ink-2);
+  font-size: 9px;
+  font-weight: 500;
+}
+.river-annotations .river-detail-note {
+  fill: var(--ink-2);
+  font-size: 10px;
+}
+.body.river-mode {
+  grid-template-columns: minmax(0, 1fr);
+}
+.weekends-tray {
+  flex: none;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 12px;
+}
+.weekends-tray summary {
+  padding: 7px 12px;
+  cursor: pointer;
+  font-weight: 650;
+}
+.weekends-tray .wkl {
+  border: 0;
+  padding: 0 8px 8px;
+}
+.weekends-tray .wkl-h {
+  display: none;
+}
+.weekends-tray #insWeekends {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 2px 16px;
+  max-height: 140px;
+  overflow: auto;
+}
+
+.sr-only {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

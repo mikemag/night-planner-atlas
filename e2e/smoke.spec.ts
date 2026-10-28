@@ -75,6 +75,7 @@ test('keys, the inspector list and Tonight move the selection', async ({ page })
   await expect(insDate(page)).toHaveText('Thu Sep 24 → Fri Sep 25');
   await page.keyboard.press('ArrowDown');
   await expect(insDate(page)).toHaveText('Thu Oct 1 → Fri Oct 2');
+  await page.locator('#riverWeekends > summary').click();
   await page.locator('#insWeekends button').first().click();
   await expect(insDate(page)).toHaveText('Fri Oct 9 → Sat Oct 10');
   await expect(page.locator('#insBig')).toHaveText('9h 24m');
