@@ -24,6 +24,7 @@
   --sky-astro: #3a4a86;
   --sky-dark: #0a0f1e;
   --moon-rgb: 204, 196, 172;
+  --moon-accepted-rgb: 132, 217, 166;
   --tip-bg: #121826;
   --tip-ink: #f1f3f7;
   --tip-ink-2: #a9b2c3;
@@ -52,6 +53,7 @@
     --sky-astro: #27325f;
     --sky-dark: #03050b;
     --moon-rgb: 196, 190, 168;
+    --moon-accepted-rgb: 125, 210, 160;
     --tip-bg: #1b212c;
     --tip-ink: #eef1f6;
     --tip-ink-2: #9aa4b6;
@@ -80,6 +82,7 @@
   --sky-astro: #27325f;
   --sky-dark: #03050b;
   --moon-rgb: 196, 190, 168;
+  --moon-accepted-rgb: 125, 210, 160;
   --tip-bg: #1b212c;
   --tip-ink: #eef1f6;
   --tip-ink-2: #9aa4b6;
@@ -327,6 +330,9 @@ input {
   height: 9px;
   border-radius: 2px;
   display: inline-block;
+}
+.sw.accepted-moonlight {
+  width: 21px;
 }
 .sw.line {
   height: 3px;

@@ -2,11 +2,10 @@ import { atlas } from '../app/state';
 import { fmtClockS } from '../model/format';
 import { NS, STEP, wallH, type Night } from '../model/night';
 import { C, moonAlpha } from './colors';
+import { moonlightBands } from './moonlight';
 import { ctx, snap, text, tw } from './surface';
 
 export interface NightDrawOptions {
-  /** Mark moon-free true dark with the green edge (default on). */
-  mark?: boolean;
   /** Label moon-free windows with their start and end times where they fit. */
   labels?: boolean;
   /** Draw the moon's altitude track (time across only). */
@@ -55,27 +54,14 @@ export function drawNight(
   if (E.nauticalDusk != null && E.nauticalDawn != null)
     seg(E.nauticalDusk, E.nauticalDawn, C.astro);
   if (n.tdH) seg(n.tdH[0], n.tdH[1], C.dark);
-  if (n.tdH) {
+  const bands = moonlightBands(n);
+  if (bands.ordinary.length) {
     const col = `rgba(${C.moon},${moonAlpha(n.illum).toFixed(3)})`;
-    for (const [a, b] of n.moonUpH) {
-      const s = Math.max(a, n.tdH[0]),
-        e = Math.min(b, n.tdH[1]);
-      if (e > s) seg(s, e, col);
-    }
+    for (const [a, b] of bands.ordinary) seg(wallH(a, n), wallH(b, n), col);
   }
-  if (opt.mark !== false && n.mfH.length && (o === 'h' ? h >= 5 : w >= 5)) {
-    ctx.fillStyle = C.good;
-    const th =
-      o === 'h' ? Math.max(1.5, Math.min(2, h * 0.12)) : Math.max(1.5, Math.min(2, w * 0.06));
-    for (const [a, b] of n.mfH) {
-      let p0 = P(a),
-        p1 = P(b);
-      if (p0 < 0) p0 = 0;
-      if (p1 > L) p1 = L;
-      if (!(p1 > p0)) continue;
-      if (o === 'h') ctx.fillRect(x + p0, y + h - th, p1 - p0, th);
-      else ctx.fillRect(x, y + p0, th, p1 - p0);
-    }
+  if (bands.accepted.length) {
+    const green = `rgba(${C.acceptedMoon},${moonAlpha(n.illum).toFixed(3)})`;
+    for (const [a, b] of bands.accepted) seg(wallH(a, n), wallH(b, n), green);
   }
   if (opt.curve && o === 'h') {
     const aMin = -25,

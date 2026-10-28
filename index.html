@@ -81,10 +81,12 @@
               <span><i class="sw" style="background: var(--sky-naut)"></i>Nautical</span>
               <span><i class="sw" style="background: var(--sky-astro)"></i>Astronomical</span>
               <span><i class="sw" style="background: var(--sky-dark)"></i>True dark</span>
-              <span><i class="sw" id="moonSw"></i>Moon up (upper edge; brighter = fuller)</span>
+              <span><i class="sw" id="moonSw"></i>Moon above horizon (brighter = fuller)</span>
               <span
-                ><i class="sw line" style="background: var(--good)"></i>Moon-free true dark</span
+                ><i class="sw accepted-moonlight" id="acceptedMoonSw"></i>Moonlit, accepted by
+                settings</span
               >
+              <span><i class="sw line" style="background: var(--good)"></i>Moon-free duration</span>
             </div>
           </div>
           <div class="scroller" id="scroller">
@@ -306,9 +308,10 @@
           crescent barely lifts the black.
         </li>
         <li>
-          <strong>Green fill for moon-free dark</strong>, as in the single-night chart. At month
-          scale the hatching turned into noise. Black already means dark, so a thin green edge
-          disambiguates thin crescents. You can compare with <em>Black only</em> in the River.
+          <strong>A green edge on moon-free dark.</strong> It was hard to read when planning
+          thresholds admitted more time. Accepted moonlit time now uses a green wash, with the same
+          illumination-based brightness as ordinary moonlight. Truly moon-free dark stays plain
+          black.
         </li>
         <li>
           <strong>Altitude curves in every calendar cell.</strong> They were unreadable at cell

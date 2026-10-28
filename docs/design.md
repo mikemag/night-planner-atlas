@@ -24,10 +24,16 @@ One encoding everywhere, so a night looks the same in every view and in the sing
 - **Moonlight** washes true dark toward a warm grey, stronger the fuller the moon. It is scaled so
   a full moon looks about as bright as late nautical twilight, roughly its real effect on sky
   brightness, while a thin crescent barely lifts the black. The wash is drawn only over true dark,
-  where moonlight is what matters.
-- **Moon-free true dark** is black with a thin green edge. The edge tells moon-free time apart
-  from a thin crescent's nearly black wash. Green is the one "good" color, also used for
-  moon-free hour bars and totals.
+  where moonlight is what matters. It follows the Moon’s upper edge at the natural horizon (0°),
+  independently of planning thresholds.
+- **Moon-free true dark** is black, without an edge marker. Green marks duration bars and
+  totals rather than boundaries in the night bands.
+- **Accepted moonlight** uses a green wash with the same illumination-based opacity as ordinary
+  moonlight. Only the intersection of natural-horizon moonlight, true dark and accepted planning
+  windows is green. The green tint replaces the ordinary wash there rather than layering over it,
+  so brightness continues to represent illumination. Raising the Moon-altitude threshold or ignoring
+  a crescent can add green time; truly moon-free time stays plain black. The inspector uses the same
+  treatment.
 - **Weekends** (Friday and Saturday nights) get an amber tint, **selection** is an amber outline,
   and **tonight and now** are blue.
 - **Time** is the site's local clock time, including daylight saving time. The one-hour jump on a
@@ -47,7 +53,7 @@ flattened.
 - **Zoom is row height.** Year fits the whole loaded range on one screen, at about 2 px per night.
   Month uses 20 px rows, with moon-free start/end times wherever both times fit inside the window.
   Weekday times are quieter than weekend and selected-night times; short
-  windows still have their green edge and duration in the right gutter. Clock-change notices take
+  windows still have their duration in the right gutter. Clock-change notices take
   priority over times in compact rows. Week uses 48 px rows, with 11.5 px centered moon-free window
   times and duration totals, and 12 px daily dates. Sky and moon-up shading carry the same
   information as Month. A clock-change notice sits above the window labels. Week's expanded focus
@@ -57,8 +63,8 @@ flattened.
   curves are available in the inspector. Window-time pairs use measured text widths in all
   horizontal bars, including the Calendar.
   Changing zoom or new-moon focus preserves the top visible night and the fraction of its row
-  already scrolled past, as far as the range boundaries allow. Appearance changes leave scrolling
-  untouched; selection and the inspector stay on the chosen night while browsing elsewhere.
+  already scrolled past, as far as the range boundaries allow. Selection and the inspector stay
+  on the chosen night while browsing elsewhere.
 - **New-moon focus (±N)** is a fisheye: nights within N of a new moon open up with window times,
   and the rest squash to thin context lines. The compressed date gutter keeps a sparse scaffold:
   month names with years, plus Monday dates as weekly anchors, in the same readable 11.5 px text
@@ -139,7 +145,8 @@ twin of the charts.
 ### Shared pieces
 
 - **Inspector** (right panel). The selected night as the familiar altitude chart: sun and moon
-  center altitude over the phase bands, with moon-free time hatched green. The sampled curves
+  center altitude over the phase bands, with ordinary moonlight in warm grey and accepted
+  moonlit time in illumination-scaled green. The sampled curves
   illustrate position; all Moon event times and window boundaries are separately refined. Below
   it: stage start times
   and durations for evening and morning, moon phase with rise and set, and **Dark weekends
@@ -177,9 +184,11 @@ Rationale that isn't obvious from the result:
 - **Moonlight wash.** A bright beige wash dominated the chart and read brighter than nautical
   twilight. The current warm grey, with opacity 0.17 + 0.40 × illumination^0.8, keeps a full moon
   near late nautical twilight's brightness.
-- **Marking moon-free time.** The single-night chart hatches moon-free time green. At month scale
-  hatching turns into noise, so the month views use black plus a thin green edge. The River's
-  _Black only_ toggle lets you compare.
+- **Marking planning windows.** A thin green edge was hard to interpret when planning thresholds
+  accepted time beyond strictly moon-free darkness. Accepted moonlit time now uses a green wash
+  instead of hatching. Its opacity follows the same 0.17 + 0.40 × illumination^0.8 curve as ordinary
+  moonlight, with green RGB values chosen for comparable luminance in each theme. Truly moon-free
+  time stays plain black. Green duration bars and totals still identify all usable time.
 - **Altitude curves.** River's Moon-up shading carries the effect on usable dark time. Altitude
   curves appear in expanded Calendar weeks and the inspector.
 - **Clock time versus elapsed time.** The month views use clock time, which is what you plan with.

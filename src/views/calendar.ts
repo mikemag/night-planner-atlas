@@ -389,7 +389,7 @@ class CalendarView implements CanvasView {
           const cx = b.x + d * cw,
             cy = y + 42 + wi * ch;
           const dimmed = S.focus > 0 && Math.abs(n.nmOff) > S.focus;
-          drawNight(n, cx, cy + 11, cw - 2, ch - 13, 'v', { mark: true, dim: dimmed });
+          drawNight(n, cx, cy + 11, cw - 2, ch - 13, 'v', { dim: dimmed });
           text(
             `${n.d}`,
             cx + 1,

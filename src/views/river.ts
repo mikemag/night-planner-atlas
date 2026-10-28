@@ -130,7 +130,6 @@ class RiverView implements CanvasView {
         ctx.fillRect(0, y, this.GL + this.GM - 2, h - gap);
       }
       drawNight(n, x0, y, cw, h - gap, 'h', {
-        mark: S.riverMark === 'line',
         labels: h >= 26 || (monthLabel && !n.dst),
         labelWeight: S.riverZoom === 'month' && !weekend && i !== S.sel ? 450 : 600,
         labelSize: S.riverZoom === 'week' ? 11.5 : 10.5,
@@ -351,7 +350,7 @@ class RiverView implements CanvasView {
       600,
     );
     for (let i = 0; i < N; i++) {
-      drawNight(nights[i], x, y0 + i * rh, w, Math.max(1, rh + 0.35), 'h', { mark: false });
+      drawNight(nights[i], x, y0 + i * rh, w, Math.max(1, rh + 0.35), 'h');
     }
     for (let i = 0; i < N; i++) {
       const n = nights[i];

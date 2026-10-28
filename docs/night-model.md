@@ -104,7 +104,11 @@ From astronomical dusk to astronomical dawn. Absent when the Sun doesn't reach �
 - **Best weekend** (Lunations) is the Friday and Saturday pair in the window with the most
   combined moon-free time. **Dark weekends ahead** makes the same pick within ±7 nights of each
   new moon, from tonight on.
-- **Moonlight wash** (display only): opacity 0.17 + 0.40 × illumination^0.8, drawn over true dark.
+- **Moonlight wash** (display only): opacity 0.17 + 0.40 × illumination^0.8, drawn over true dark
+  while the Moon’s upper edge is above the natural horizon (0°), independent of planning thresholds.
+  The intersection of that moonlight with accepted planning windows uses a green wash instead
+  of warm grey, at the same illumination-based opacity. The bands do not overlap, and genuinely
+  moon-free time stays plain black. This display distinction does not change any computed events, windows or totals.
 
 ## Reference verification and accuracy
 

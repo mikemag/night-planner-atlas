@@ -157,7 +157,7 @@ const VIEW_INFO: Record<ViewId, [string, string]> = {
   notes: ['Notes', 'What each approach is for, and which one I would build.'],
 };
 
-type ViewOption = 'riverZoom' | 'riverMark' | 'calZoom' | 'calOrient';
+type ViewOption = 'riverZoom' | 'calZoom' | 'calOrient';
 
 /** The segmented controls for the current view's own options. */
 function viewControls(): void {
@@ -186,10 +186,6 @@ function viewControls(): void {
       ['month', 'Month'],
       ['week', 'Week'],
     ]);
-    seg('riverMark', [
-      ['line', 'Green edge'],
-      ['none', 'Black only'],
-    ]);
   }
   if (S.view === 'calendar') {
     seg('calZoom', [
@@ -211,8 +207,7 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
   S[key] = val;
   store.set(key, val);
   if (key === 'calZoom' || key === 'calOrient') S.expandedWeek = null;
-  if (key === 'riverMark') draw();
-  else if (anchor) {
+  if (anchor) {
     relayout();
     river.restoreAnchor(anchor);
   } else relayout(keep);

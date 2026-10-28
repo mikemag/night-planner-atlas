@@ -9,6 +9,8 @@ export interface Palette {
   dark: string;
   /** "r, g, b" for use inside rgba(). */
   moon: string;
+  /** Green moonlight accepted by planning thresholds; "r, g, b" for rgba(). */
+  acceptedMoon: string;
   good: string;
   ink: string;
   ink2: string;
@@ -31,6 +33,7 @@ export const C: Palette = {
   astro: '',
   dark: '',
   moon: '',
+  acceptedMoon: '',
   good: '',
   ink: '',
   ink2: '',
@@ -57,6 +60,7 @@ export function readColors(): void {
     astro: g('--sky-astro'),
     dark: g('--sky-dark'),
     moon: g('--moon-rgb'),
+    acceptedMoon: g('--moon-accepted-rgb'),
     good: g('--good'),
     ink: g('--ink'),
     ink2: g('--ink-2'),
@@ -71,8 +75,13 @@ export function readColors(): void {
     weekend: g('--weekend'),
     accent: g('--accent'),
   } satisfies Palette);
-  el('moonSw').style.background =
-    `linear-gradient(90deg, rgba(${C.moon},0.2), rgba(${C.moon},0.8))`;
+  for (const [id, rgb] of [
+    ['moonSw', C.moon],
+    ['acceptedMoonSw', C.acceptedMoon],
+  ]) {
+    el(id).style.background =
+      `linear-gradient(90deg, rgba(${rgb},${moonAlpha(0)}), rgba(${rgb},${moonAlpha(1)})), ${C.dark}`;
+  }
 }
 
 /** Ink or white, whichever reads better on the hex color `hex`. */

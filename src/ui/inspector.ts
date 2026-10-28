@@ -4,7 +4,8 @@ import { MON3, fmtClock, fmtDur, nightTitle } from '../model/format';
 import { NS, STEP, wallH, type Night } from '../model/night';
 import { weekendsAhead } from '../model/range';
 import { MS_H, MS_M } from '../model/time';
-import { C } from '../render/colors';
+import { C, moonAlpha } from '../render/colors';
+import { moonlightBands } from '../render/moonlight';
 import { el } from './dom';
 
 /** Show night `i` in the side panel: headline, altitude chart, moon, stages and dark weekends. */
@@ -147,7 +148,6 @@ export function altitudeChartSVG(n: Night, isTonight: boolean): string {
       ? ''
       : `<rect x="${X(a).toFixed(1)}" y="${pt}" width="${Math.max(0, X(b) - X(a)).toFixed(1)}" height="${ph}" fill="${color}" opacity="${op}"/>`;
   let s = `<svg class="ins-chart" viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="Sun and Moon center altitudes through the night; Moon events use its upper edge">`;
-  s += `<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="rgba(47,189,120,0.14)"/><line x1="0" y1="0" x2="0" y2="7" stroke="rgba(47,189,120,0.75)" stroke-width="1.2"/></pattern></defs>`;
   s += `<rect width="${Wd}" height="${Hd}" rx="10" fill="#0c111c"/>`;
   s +=
     band(ev.sunset, ev.civilDusk, '#a0703f', 0.55) +
@@ -158,9 +158,11 @@ export function altitudeChartSVG(n: Night, isTonight: boolean): string {
   s +=
     band(ev.nauticalDusk, ev.astroDusk, '#3d3a9a', 0.55) +
     band(ev.astroDawn, ev.nauticalDawn, '#3d3a9a', 0.55);
-  if (n.td) s += band(n.td[0], n.td[1], '#000000', 0.75);
-  for (const [a, b] of n.mf)
-    s += `<rect x="${X(a).toFixed(1)}" y="${pt}" width="${Math.max(0, X(b) - X(a)).toFixed(1)}" height="${ph}" fill="url(#hatch)"/>`;
+  if (n.td) s += band(n.td[0], n.td[1], C.dark, 1);
+  const bands = moonlightBands(n);
+  for (const [a, b] of bands.ordinary) s += band(a, b, `rgb(${C.moon})`, moonAlpha(n.illum));
+  for (const [a, b] of bands.accepted)
+    s += band(a, b, `rgb(${C.acceptedMoon})`, moonAlpha(n.illum));
   s += `<line x1="${pl}" x2="${pl + pw}" y1="${Y(0)}" y2="${Y(0)}" stroke="rgba(200,208,222,.55)"/>`;
   s += `<line x1="${pl}" x2="${pl + pw}" y1="${Y(-18)}" y2="${Y(-18)}" stroke="rgba(200,208,222,.45)" stroke-dasharray="5 4"/>`;
   const path = (idx: 1 | 2) =>

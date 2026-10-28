@@ -120,7 +120,10 @@ test('Month shows window times without hover on weekdays and weekends wherever t
   await openRiver(page);
   await expect(
     page.locator('#viewCtl').getByRole('button', { name: 'Green edge', exact: true }),
-  ).toHaveAttribute('aria-pressed', 'true');
+  ).toHaveCount(0);
+  await expect(
+    page.locator('#viewCtl').getByRole('button', { name: 'Black only', exact: true }),
+  ).toHaveCount(0);
   await page.evaluate(() =>
     window.__npa!.select(
       window.__npa!.nights.findIndex((n) => n.id === '2026-10-08'),
@@ -144,17 +147,13 @@ test('Month shows window times without hover on weekdays and weekends wherever t
   expect(hovered.labels).toEqual(hovered.windows.flat().map(fmtClockS));
 });
 
-test('River display, zoom and focus preserve the browsed night away from selection', async ({
-  page,
-}) => {
+test('River zoom and focus preserve the browsed night away from selection', async ({ page }) => {
   await openRiver(page);
   const selection = await page.locator('#insDate').textContent();
   // Browse well away from the selection, seven pixels into a Month row.
   await page.locator('#scroller').evaluate((e) => {
     e.scrollTop = 150 * 20 + 7;
   });
-  await page.locator('#viewCtl').getByRole('button', { name: 'Black only', exact: true }).click();
-  expect(await scroll(page)).toBe(3007);
   await zoom(page, 'Week');
   expect(Math.abs((await scroll(page)) - (150 * 48 + (7 / 20) * 48))).toBeLessThanOrEqual(1);
   await zoom(page, 'Month');

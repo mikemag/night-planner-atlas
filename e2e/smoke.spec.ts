@@ -56,8 +56,8 @@ for (const view of VIEWS) {
         page.getByRole('heading', { name: 'Three ways to plan a month of nights' }),
       ).toBeVisible();
     } else {
-      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
-      expect(await canvasColors(page)).toBeGreaterThan(8);
+      // Resize and view changes can schedule another frame, especially in WebKit.
+      await expect.poll(() => canvasColors(page)).toBeGreaterThan(8);
     }
     await expect(insDate(page)).toHaveText('Wed Sep 23 → Thu Sep 24');
     if (process.env.SCREENSHOTS) {
