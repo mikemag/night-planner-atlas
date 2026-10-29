@@ -246,6 +246,11 @@
       windows and weekends. These views keep a selected-night inspector with altitude curves and
       stage times.
     </p>
+    <p>
+      <strong>Share</strong> copies a link to the loaded dates, view, zoom, focus, planning
+      thresholds and selected night. Site inclusion is off by default, so a recipient uses their own
+      site and may see different results. Themes remain a personal preference.
+    </p>
     <dl class="guide-shortcuts">
       <div>
         <dt><kbd>←</kbd> <kbd>→</kbd></dt>
@@ -410,11 +415,18 @@
   <section id="privacy-credits" aria-labelledby="privacyTitle">
     <h3 id="privacyTitle">Privacy and credits</h3>
     <p>
-      Site names, coordinates, elevations, favorite lists and preferences stay in this browser’s
-      local storage. There are no accounts, analytics or remote coordinate lookups. The app loads
-      its static assets from its own origin and calculations keep working after loading when the
-      network is disconnected. Clearing browser site data removes saved favorites and preferences.
-      If storage is unavailable, temporary changes are identified.
+      Saved sites and preferences are kept in this browser’s local storage. There are no accounts,
+      analytics or remote coordinate lookups. The app loads its static assets from its own origin
+      and calculations keep working after loading when the network is disconnected. Clearing browser
+      site data removes saved favorites and preferences. If storage is unavailable, temporary
+      changes are identified.
+    </p>
+    <p>
+      A shared link normally omits the whole site record. Choosing
+      <strong>Include this site</strong> explicitly adds the reviewed name, coordinates, zone and
+      optional elevation to the URL fragment. Anyone with that link can read them, and the URL can
+      remain in browser history. Opening a link keeps its controls and included site temporary.
+      Saving view settings and saving the site as a favorite are separate deliberate actions.
     </p>
     <p>
       Sun and Moon positions:

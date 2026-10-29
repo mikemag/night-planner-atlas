@@ -156,4 +156,14 @@ describe('a computed range', () => {
     });
     expect(result).toBeNull();
   });
+
+  it('keeps an explicitly shared first month independent of now and includes leap day', async () => {
+    const shared = await computeRange(SEATTLE, 0, { moonAlt: 0, crescent: 0 }, 14, NOW, {
+      startMonth: { y: 2028, m: 2 },
+    });
+    expect(shared!.spec).toEqual({ y: 2028, m: 2, count: 14 });
+    expect(shared!.nights[0].id).toBe('2028-02-01');
+    expect(shared!.nights.some((night) => night.id === '2028-02-29')).toBe(true);
+    expect(shared!.nights.at(-1)!.id).toBe('2029-03-31');
+  }, 30_000);
 });

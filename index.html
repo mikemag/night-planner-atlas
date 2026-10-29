@@ -56,6 +56,7 @@
           <button data-view="lunations">Lunations</button>
           <button data-view="notes">How it works</button>
         </div>
+        <button class="btn share-trigger" id="shareBtn" disabled>Share</button>
         <div class="period" id="periodBox">
           <button class="icon-btn" id="prevBtn" aria-label="Previous month">‹</button>
           <span class="period-label" id="periodLabel">—</span>
@@ -100,6 +101,14 @@
       </div>
 
       <p id="siteStorageNotice" class="storage-notice" role="status" hidden></p>
+      <aside id="sharedNotice" class="shared-notice" aria-label="Shared plan" hidden>
+        <p id="sharedNoticeText" role="status"></p>
+        <div class="dialog-actions">
+          <button class="btn" id="shareKeepSettings">Save these view settings</button>
+          <button class="btn" id="shareReviewSite">Review site in favorites…</button>
+          <button class="btn" id="shareRestore">Use my saved plan</button>
+        </div>
+      </aside>
 
       <div class="body" id="viewBody">
         <section class="stage" id="stage">
@@ -274,6 +283,41 @@
                 <button class="btn primary" type="submit" id="siteApply">
                   Save &amp; use site
                 </button>
+              </div>
+            </form>
+          </dialog>
+          <dialog class="site-dialog" id="shareDialog" aria-labelledby="shareTitle">
+            <form id="shareForm">
+              <div class="dialog-heading">
+                <h2 id="shareTitle">Share this plan</h2>
+                <button class="icon-btn" id="shareClose" type="button" aria-label="Close sharing">
+                  ×
+                </button>
+              </div>
+              <p id="shareContext"></p>
+              <p>
+                The link restores dates, view, focus, planning thresholds and the selected night. By
+                default the recipient uses their own site, so their results may differ from yours.
+              </p>
+              <label class="share-site-choice" for="shareIncludeSite"
+                ><input type="checkbox" id="shareIncludeSite" />Include this site</label
+              >
+              <div id="shareSitePreview" hidden>
+                <p><strong>These site fields will be included:</strong></p>
+                <dl class="share-site-fields" id="shareSiteFields"></dl>
+                <p>
+                  The fields above will appear in the copied URL fragment and may remain in browser
+                  history. Anyone with the link can read them. Opening the link does not save the
+                  site to the recipient’s favorites.
+                </p>
+              </div>
+              <label for="shareLink"
+                >Share link<textarea id="shareLink" rows="3" readonly spellcheck="false"></textarea>
+              </label>
+              <p id="shareStatus" role="status"></p>
+              <div class="dialog-actions dialog-footer">
+                <button class="btn" id="shareCancel" type="button">Close</button>
+                <button class="btn primary" id="shareCopy" type="submit">Copy link</button>
               </div>
             </form>
           </dialog>

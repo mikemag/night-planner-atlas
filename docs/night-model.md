@@ -28,7 +28,8 @@ corrections), and `range.ts`
   the next local noon.
 - "Tonight" is today's date after local noon, and yesterday's before it.
 - The loaded range is 14 whole months starting with the month before the current one. The Range
-  control shifts it by a year.
+  control shifts it by a year. A shared plan can fix the first month explicitly so its loaded
+  dates remain reproducible when opened later; the Range control still shifts those dates by years.
 
 ## Sun events
 

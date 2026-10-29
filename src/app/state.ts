@@ -5,6 +5,12 @@ import { loadSettings, type Settings } from './settings';
 export interface UiState {
   /** Years to shift the loaded range from the default. */
   rangeShift: number;
+  /** Absolute first month from a shared plan; rangeShift still moves by years. */
+  rangeStart: { y: number; m: number } | null;
+  /** Initial selected evening date from a link, consumed only after its range finishes. */
+  pendingNight: string | null;
+  /** Shared controls remain temporary until the viewer deliberately saves them. */
+  sharedSettings: boolean;
   /** Selected night index, or −1. */
   sel: number;
   /** Key of the expanded calendar week, if any. */
@@ -24,6 +30,9 @@ export type AppState = Settings & UiState;
 export const S: AppState = {
   ...loadSettings(),
   rangeShift: 0,
+  rangeStart: null,
+  pendingNight: null,
+  sharedSettings: false,
   sel: -1,
   expandedWeek: null,
   riverExpanded: false,

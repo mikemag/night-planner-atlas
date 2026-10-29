@@ -1249,3 +1249,61 @@ kbd {
     border: 1px solid CanvasText;
   }
 }
+
+.share-trigger {
+  min-height: 30px;
+}
+.shared-notice {
+  padding: 10px 12px;
+  border: 1px solid var(--select);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 12px;
+}
+.shared-notice p {
+  margin: 0 0 8px;
+  color: var(--ink-2);
+}
+.site-dialog textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--hair-2);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--ink);
+  font:
+    11px/1.5 ui-monospace,
+    monospace;
+}
+.site-dialog .share-site-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  min-height: 32px;
+}
+.site-dialog input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+.share-site-fields {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 14px;
+  font-size: 12px;
+  padding: 10px;
+  background: var(--panel);
+  border-radius: 6px;
+}
+.share-site-fields dt {
+  color: var(--ink-2);
+}
+.share-site-fields dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

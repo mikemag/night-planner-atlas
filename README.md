@@ -45,8 +45,8 @@ npm run dev
 
 `npm run dev` serves the site at <http://localhost:5173/> with hot reload. `npm run build` writes
 the deployable static site to `dist/`, and `npm run preview` serves that build. Sun and moon
-positions are computed in the browser; your site is saved only in the browser's local storage and
-never sent anywhere. Named local favorites keep complete site records. Paste coordinates or a supported full Google
+positions and site time zones are computed in the browser. Saved sites stay in browser storage;
+sharing a site requires explicitly including it in a copied link. Named local favorites keep complete site records. Paste coordinates or a supported full Google
 Maps search link; a bundled offline lookup infers the editable IANA zone. The header shows the
 site’s current local clock, UTC offset and zone. System, Light, Dark and Observing themes are saved
 locally; Observing is designed for a separately enabled OS red filter.

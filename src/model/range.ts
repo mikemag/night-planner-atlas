@@ -258,6 +258,8 @@ export function weekendsAhead(r: NightRange): WeekendPick[] {
 }
 
 export interface ComputeOptions {
+  /** An explicit first month, e.g. a shared plan; otherwise use the current site-local date. */
+  startMonth?: Pick<RangeSpec, 'y' | 'm'>;
   /** Called after each slice with the number of nights done and the total. */
   onProgress?: (done: number, total: number) => void;
   /** Checked before each slice; returning true abandons the computation. */
@@ -266,10 +268,10 @@ export interface ComputeOptions {
   sliceMs?: number;
 }
 
-function setup(site: Site, shift: number, now: number) {
+function setup(site: Site, shift: number, now: number, startMonth?: Pick<RangeSpec, 'y' | 'm'>) {
   const tz = new TimeZone(site.tz);
   const observer = new Observer(site.lat, site.lon, site.elevation ?? 0);
-  const spec = rangeStart(now, tz, shift);
+  const spec = startMonth ? { ...startMonth, count: RANGE_MONTHS } : rangeStart(now, tz, shift);
   return { tz, observer, spec, list: nightDates(spec) };
 }
 
@@ -285,7 +287,7 @@ export async function computeRange(
   now: number,
   opts: ComputeOptions = {},
 ): Promise<NightRange | null> {
-  const { tz, observer, spec, list } = setup(site, shift, now);
+  const { tz, observer, spec, list } = setup(site, shift, now, opts.startMonth);
   const slice = opts.sliceMs ?? 24;
   const nights: Night[] = [];
   let k = 0;

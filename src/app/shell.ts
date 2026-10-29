@@ -34,6 +34,9 @@ export function canvasView(view: ViewId = S.view): CanvasView | null {
 }
 
 const thresholds = () => ({ moonAlt: S.moonAlt, crescent: S.crescent });
+const remember = (key: string, value: unknown) => {
+  if (!S.sharedSettings) store.set(key, value);
+};
 
 // ---------- layout and drawing
 
@@ -238,7 +241,7 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
   const anchor = S.view === 'river' && data.ready ? river.anchor() : null;
   const keep = S.sel >= 0 ? S.sel : null;
   S[key] = val;
-  store.set(key, val);
+  remember(key, val);
   if (key === 'calZoom' || key === 'calOrient') S.expandedWeek = null;
   if (anchor) {
     relayout();
@@ -250,7 +253,7 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
 export function setView(view: ViewId): void {
   const keep = S.sel >= 0 ? S.sel : (data.range?.tonightIdx ?? -1);
   S.view = view;
-  store.set('view', view);
+  remember('view', view);
   S.hover = null;
   S.riverReadoutSelected = false;
   hideTip();
@@ -291,7 +294,7 @@ export function setView(view: ViewId): void {
 export function setFocus(focus: number): void {
   const anchor = S.view === 'river' && data.ready ? river.anchor() : null;
   S.focus = focus;
-  store.set('focus', focus);
+  remember('focus', focus);
   for (const x of el('focusSeg').children)
     x.setAttribute('aria-pressed', String(Number((x as HTMLElement).dataset.val) === focus));
   if (data.ready && data.range) {
@@ -304,7 +307,7 @@ export function setFocus(focus: number): void {
 /** Change a planning threshold and re-derive every night (positions don't change). */
 export function setThreshold(key: 'moonAlt' | 'crescent', value: number): void {
   S[key] = value;
-  store.set(key, value);
+  remember(key, value);
   if (data.ready && data.range) {
     deriveRange(data.range, thresholds(), lunWindow(S.focus));
     inspect(S.sel);
@@ -341,13 +344,16 @@ let computeToken = 0;
 /** Compute the range for the current site; the previous range stays on screen until it's done. */
 export function restart(): void {
   const prev = data.range;
-  const selId = S.sel >= 0 && prev && prev.nights[S.sel] ? prev.nights[S.sel].id : null;
+  const selId =
+    S.pendingNight ?? (S.sel >= 0 && prev && prev.nights[S.sel] ? prev.nights[S.sel].id : null);
   data.ready = false;
   el('loading').hidden = false;
+  el<HTMLButtonElement>('shareBtn').disabled = true;
   el('loadingText').textContent = 'Computing sun and moon for each night…';
   el('loadingBar').style.width = '0%';
   const token = ++computeToken;
   computeRange(S.site, S.rangeShift, thresholds(), lunWindow(S.focus), Date.now(), {
+    startMonth: S.rangeStart ? { y: S.rangeStart.y + S.rangeShift, m: S.rangeStart.m } : undefined,
     isCancelled: () => token !== computeToken,
     onProgress: (done, total) => {
       el('loadingBar').style.width = ((100 * done) / total).toFixed(0) + '%';
@@ -358,7 +364,9 @@ export function restart(): void {
       // Controls remain usable while positions compute; publish the latest planning choices.
       deriveRange(r, thresholds(), lunWindow(S.focus));
       data.range = r;
+      S.pendingNight = null;
       data.ready = true;
+      el<HTMLButtonElement>('shareBtn').disabled = false;
       el('loading').hidden = true;
       const { spec, nights } = r;
       const last = nights[nights.length - 1];
@@ -398,16 +406,20 @@ export function onTheme(): void {
   }
 }
 
-export function boot(): void {
-  readColors();
-  siteLabel();
-  initSiteClock();
+export function syncSettingsControls(): void {
   for (const x of el('focusSeg').children)
     x.setAttribute('aria-pressed', String(Number((x as HTMLElement).dataset.val) === S.focus));
   el<HTMLSelectElement>('moonAltSel').value = String(S.moonAlt);
   el<HTMLSelectElement>('crescentSel').value = String(S.crescent);
   for (const b of el('viewSeg').children)
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === S.view));
+}
+
+export function boot(): void {
+  readColors();
+  siteLabel();
+  initSiteClock();
+  syncSettingsControls();
   initGuide();
   exposeTestHooks();
   restart();

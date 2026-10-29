@@ -181,6 +181,14 @@ Calendar's Time ↓.
 
 ### Shared pieces
 
+- **Sharing.** A versioned, validated URL fragment carries the first of 14 loaded months, current
+  view/zooms/orientation, focus, thresholds, selected evening date and River expansion. The site
+  record is omitted by default; the Share dialog explains that recipients use their own site and
+  may see different results. Explicit inclusion previews name, coordinates, zone and optional
+  elevation and explains copied-link/history exposure. Opening a link applies temporary controls
+  and an optional temporary site without overwriting saved preferences or favorites. Keeping view
+  settings and saving the included site are separate deliberate actions. Theme stays personal.
+  A notice can restore the viewer's saved plan. Copy failure selects the link for manual copying.
 - **How it works.** One offline page with in-page navigation, practical reading instructions,
   a worked Seattle night, and expandable calculation/reference detail. Its sky ramp shares chart
   tokens and contrast-selected ink; an upper-edge/center diagram explains Moon events. Measured
