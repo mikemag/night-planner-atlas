@@ -71,7 +71,9 @@ flattened.
   on two compact lines beneath the percentage. The first solar level leaves that gutter clear. The expansion omits the date-range
   footer, time zone and Collapse button; tapping the header, Enter/Space or Escape controls it.
   Callouts are selectable SVG text with an accessible event/time description. Interacting with
-  them does not toggle the row. River has no Full detail button or inspector sidebar: its chart uses
+  them does not toggle the row. The detail body and callout backings use the chart's panel surface,
+  keeping the expansion continuous with its surroundings in both themes.
+  River has no Full detail button or inspector sidebar: its chart uses
   the full width, with Dark weekends ahead preserved in a collapsible tray below it.
 - **Selection and scrolling.** Enter or Space on the chart toggles expansion; Escape collapses.
   Arrow keys retain their night/week steps. An open expansion follows selection, keeping its header

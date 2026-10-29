@@ -747,7 +747,7 @@ input {
   box-sizing: border-box;
   border: 1px solid var(--select);
   border-top: 0;
-  background: var(--raised);
+  background: var(--panel);
   color: var(--ink);
   font-size: 12px;
   line-height: 1.45;
@@ -773,7 +773,7 @@ input {
   fill: var(--ink-3);
 }
 .river-label-backing {
-  fill: var(--raised);
+  fill: var(--panel);
 }
 .river-event-time {
   font-size: 12px;
