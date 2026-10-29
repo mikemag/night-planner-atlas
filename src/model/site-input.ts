@@ -15,6 +15,8 @@ export function checkCoordinates(lat: number, lon: number): Coordinates {
 
 const DECIMAL = '[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)';
 const PAIR = new RegExp(`^\\s*(${DECIMAL})(?:\\s*,\\s*|\\s+)(${DECIMAL})\\s*$`);
+const COPY_POINT =
+  'Open the link in Google Maps, copy the intended point’s latitude and longitude, and paste them here. The help below this field shows how.';
 
 function pair(text: string): Coordinates | null {
   const match = PAIR.exec(text.replaceAll('−', '-'));
@@ -35,9 +37,7 @@ export function parseSiteInput(input: string): Coordinates {
     );
   }
   if (url.hostname === 'maps.app.goo.gl' || url.hostname === 'goo.gl')
-    throw new Error(
-      'Short Maps links cannot be read offline. Open the link in Maps, then copy the point’s coordinates or a full coordinate-bearing search link.',
-    );
+    throw new Error(`Short Maps links cannot be read offline. ${COPY_POINT}`);
   if (
     !/^https?:$/.test(url.protocol) ||
     !/^(?:www\.|maps\.)?google\.(?:com|[a-z]{2}|co\.[a-z]{2}|com\.[a-z]{2})$/.test(url.hostname)
@@ -48,7 +48,7 @@ export function parseSiteInput(input: string): Coordinates {
     ['query_place_id', 'place_id', 'cid'].some((key) => url.searchParams.has(key))
   )
     throw new Error(
-      'This link identifies directions or a place rather than one clear coordinate pair. Copy the intended point’s latitude, longitude.',
+      `This link identifies directions or a place rather than one clear point. ${COPY_POINT}`,
     );
   const allowedPath =
     /^\/maps(?:\/search)?\/?$/.test(url.pathname) ||
@@ -57,7 +57,7 @@ export function parseSiteInput(input: string): Coordinates {
   const points = allowedPath ? values.map((value) => pair(value.replace(/^loc:/i, ''))) : [];
   if (!points.length || points.some((point) => point == null))
     throw new Error(
-      'This link has no supported point coordinates. A map’s @latitude,longitude is its camera, not necessarily the pin. Copy the point’s latitude, longitude or use a Maps search link with query=latitude,longitude.',
+      `This link does not identify a supported point. A map’s center may differ from your intended location. ${COPY_POINT}`,
     );
   const point = points[0]!;
   if (points.some((other) => other!.lat !== point.lat || other!.lon !== point.lon))

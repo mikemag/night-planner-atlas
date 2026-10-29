@@ -18,13 +18,19 @@ export function initSiteEditor(): void {
   const elevation = el<HTMLInputElement>('siteElevation');
   const zone = el<HTMLInputElement>('siteTz');
   const status = el('siteZoneStatus');
-  const error = el('siteErr');
+  const save = el<HTMLButtonElement>('siteApply');
+  const errors = new Map<HTMLInputElement, HTMLElement>([
+    [location, el('siteLocationErr')],
+    [elevation, el('siteElevationErr')],
+    [zone, el('siteTzErr')],
+  ]);
   const raw = store.raw('favorites');
   const { book, readable } = readSiteBook(raw, S.site);
   let storageFailed = !readable;
   let editingId: string | null = null;
   let point: Coordinates | null = null;
   let coordinateError = '';
+  let saveAttempt = 0;
   let opener: HTMLElement = picker;
   const matchesCurrent = (site: Site) =>
     JSON.stringify(siteRecord(site)) === JSON.stringify(siteRecord(S.site));
@@ -64,17 +70,37 @@ export function initSiteEditor(): void {
     }
     return saved;
   };
-  const fail = (message: string) => {
+  const setSaving = (saving: boolean) => {
+    save.disabled = saving;
+    save.textContent = saving ? 'Finding time zone…' : 'Save & use site';
+  };
+  const cancelSave = () => {
+    saveAttempt++;
+    setSaving(false);
+  };
+  const clearError = (field: HTMLInputElement) => {
+    const error = errors.get(field)!;
+    error.textContent = '';
+    error.hidden = true;
+    field.removeAttribute('aria-invalid');
+  };
+  const fail = (field: HTMLInputElement, message: string) => {
+    const error = errors.get(field)!;
     error.textContent = message;
     error.hidden = false;
+    field.setAttribute('aria-invalid', 'true');
   };
   const preview = () => {
-    el('siteCoordinates').textContent = point
-      ? `Latitude ${point.lat}°, longitude ${point.lon}°`
-      : 'The point’s coordinates will appear here before you save.';
+    const output = el('siteCoordinates');
+    const fromLink = /^https?:\/\//i.test(location.value.trim()) ? point : null;
+    output.hidden = !fromLink;
+    output.textContent = fromLink
+      ? `Coordinates from link: latitude ${fromLink.lat}°, longitude ${fromLink.lon}°`
+      : '';
   };
   const fill = (site: Site | null, id: string | null) => {
     lookup.cancel();
+    cancelSave();
     editingId = id;
     name.value = site?.name ?? '';
     location.value = site ? `${site.lat}, ${site.lon}` : '';
@@ -82,20 +108,26 @@ export function initSiteEditor(): void {
     zone.value = site?.tz ?? '';
     point = site ? { lat: site.lat, lon: site.lon } : null;
     coordinateError = '';
-    error.hidden = true;
+    for (const field of errors.keys()) clearError(field);
     el('siteRemoval').hidden = true;
     status.textContent = site
-      ? 'Check this IANA zone; you can edit it. Coordinate changes infer a new zone.'
-      : 'Paste coordinates to find the time zone offline.';
+      ? 'Clear this field to find the zone from these coordinates when saving, or enter an IANA zone to override it.'
+      : 'Leave blank to find the zone from your coordinates. You can enter an IANA zone to override it.';
     favorites.replaceChildren();
     if (id === null) favorites.appendChild(new Option(site ? 'Unsaved site' : 'New site', ''));
-    for (const favorite of book.sites)
+    for (const favorite of book.sites) {
+      const duplicateName = book.sites.some(
+        (other) => other.id !== favorite.id && other.name === favorite.name,
+      );
       favorites.appendChild(
         new Option(
-          `${favorite.name} · ${favorite.lat.toFixed(3)}, ${favorite.lon.toFixed(3)} · ${favorite.tz}`,
+          duplicateName
+            ? `${favorite.name} · ${favorite.lat.toFixed(3)}, ${favorite.lon.toFixed(3)}`
+            : favorite.name,
           favorite.id,
         ),
       );
+    }
     favorites.value = id ?? '';
     el('siteEditTarget').textContent = id
       ? `Editing ${book.sites.find((site) => site.id === id)!.name}`
@@ -133,6 +165,7 @@ export function initSiteEditor(): void {
     el(id).addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => {
     lookup.cancel();
+    cancelSave();
     opener.focus({ preventScroll: true });
   });
   favorites.addEventListener('change', () => {
@@ -170,7 +203,7 @@ export function initSiteEditor(): void {
     favorites.focus();
   });
   location.addEventListener('input', () => {
-    error.hidden = true;
+    clearError(zone);
     try {
       point = parseSiteInput(location.value);
       coordinateError = '';
@@ -182,15 +215,22 @@ export function initSiteEditor(): void {
     lookup.infer();
   });
   location.addEventListener('blur', () => {
-    if (location.value.trim() && coordinateError) fail(coordinateError);
+    if (location.value.trim() && coordinateError) fail(location, coordinateError);
   });
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('input', (event) => {
+    cancelSave();
+    const field = event.target as HTMLInputElement;
+    if (errors.has(field)) clearError(field);
+  });
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const attempt = ++saveAttempt;
+    for (const field of errors.keys()) clearError(field);
     let coordinates: Coordinates;
     try {
       coordinates = parseSiteInput(location.value);
     } catch (err) {
-      fail((err as Error).message);
+      fail(location, (err as Error).message);
       location.focus();
       return;
     }
@@ -199,9 +239,27 @@ export function initSiteEditor(): void {
       elevation.validity.badInput ||
       (metres != null && (!Number.isFinite(metres) || metres < -500 || metres > 10000))
     ) {
-      fail('Elevation must be between −500 and 10,000 metres above sea level, or left blank.');
+      fail(
+        elevation,
+        'Elevation must be between −500 and 10,000 metres above sea level, or left blank.',
+      );
       elevation.focus();
       return;
+    }
+    if (!zone.value.trim()) {
+      setSaving(true);
+      try {
+        const inferred = await lookup.inferNow();
+        // Editing, closing or changing favorites cancels this save, even during lookup.
+        if (attempt !== saveAttempt || !dialog.open) return;
+        if (!inferred) {
+          fail(zone, status.textContent!);
+          zone.focus();
+          return;
+        }
+      } finally {
+        if (attempt === saveAttempt) setSaving(false);
+      }
     }
     const site: Site = {
       name: name.value.trim() || 'Custom site',
@@ -210,7 +268,7 @@ export function initSiteEditor(): void {
       ...(metres == null ? {} : { elevation: metres }),
     };
     if (!isSite(site)) {
-      fail(`“${zone.value.trim()}” is not a time zone name. Try America/Los_Angeles.`);
+      fail(zone, 'Enter a valid IANA time zone, such as America/Los_Angeles.');
       zone.focus();
       return;
     }

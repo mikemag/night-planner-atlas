@@ -10,6 +10,7 @@
   --ink: #111726;
   --ink-2: #485266;
   --ink-3: #58657a;
+  --error: #a82d29;
   --hair: #d9dee6;
   --hair-2: #c4cbd6;
   --chip: #dfe4ec;
@@ -40,6 +41,7 @@
     --ink: #e7ebf2;
     --ink-2: #a5aebe;
     --ink-3: #8b96a9;
+    --error: #f1a2a2;
     --hair: #1d242f;
     --hair-2: #2b3441;
     --chip: #171d27;
@@ -69,6 +71,7 @@
   --ink: #e7ebf2;
   --ink-2: #a5aebe;
   --ink-3: #8b96a9;
+  --error: #f1a2a2;
   --hair: #1d242f;
   --hair-2: #2b3441;
   --chip: #171d27;
@@ -99,6 +102,7 @@
   --ink: #edddd2;
   --ink-2: #c5b0a4;
   --ink-3: #a58d82;
+  --error: #f0c6a6;
   --hair: #35292a;
   --hair-2: #705751;
   --chip: #302326;
@@ -225,6 +229,31 @@ input {
 .site-picker option {
   color: var(--ink);
   background: var(--raised);
+}
+.site-select {
+  position: relative;
+  display: inline-grid;
+  min-width: 0;
+  max-width: 100%;
+}
+.site-heading > .site-select {
+  max-width: min(100%, 420px);
+}
+.site-select::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset-inline-end: 12px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: translateY(-70%) rotate(45deg);
+}
+.site-select select {
+  appearance: none;
+  padding-inline-end: 30px;
 }
 .site-heading {
   min-width: 0;
@@ -748,6 +777,22 @@ input {
   border-radius: 6px;
   padding: 8px;
 }
+.site-dialog .site-select select {
+  padding-inline-end: 30px;
+  line-height: 1.4;
+}
+.site-field {
+  display: grid;
+  gap: 5px;
+}
+.site-dialog input[aria-invalid='true'] {
+  border-color: var(--error);
+  box-shadow: 0 0 0 1px var(--error);
+}
+.site-dialog .field-error {
+  color: var(--error);
+  font-weight: 600;
+}
 .site-dialog p {
   margin: 0;
   color: var(--ink-2);
@@ -801,6 +846,13 @@ button:disabled {
 .coordinate-help summary {
   cursor: pointer;
 }
+.coordinate-help ul {
+  padding-inline-start: 20px;
+  margin-block: 6px;
+}
+.coordinate-help li + li {
+  margin-top: 6px;
+}
 .storage-notice {
   margin: 0;
   color: var(--ink);
@@ -808,9 +860,6 @@ button:disabled {
   padding: 8px 12px;
   border: 1px solid var(--select);
   border-radius: 6px;
-}
-.err {
-  color: #c93a3a;
 }
 .license-text {
   white-space: pre-wrap;
@@ -1282,7 +1331,7 @@ kbd {
   background: var(--panel);
   color: var(--ink);
   font:
-    11px/1.5 ui-monospace,
+    12px/1.5 ui-monospace,
     monospace;
 }
 .site-dialog .share-site-choice {

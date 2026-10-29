@@ -1,6 +1,81 @@
 import { expect, test } from '@playwright/test';
 
 for (const width of [1512, 390]) {
+  test(`site errors belong to their fields and a cleared zone is inferred on save offline at ${width}px`, async ({
+    page,
+    context,
+  }) => {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
+    const wasm = page.waitForResponse((response) => response.url().endsWith('.wasm'));
+    await page.goto('./');
+    await (await wasm).finished();
+    await expect(page.locator('#loading')).toBeHidden();
+    await context.setOffline(true);
+    await page.locator('#siteSel').selectOption('manage');
+    await expect(page.locator('#sitePop')).not.toContainText('OpenStreetMap');
+    await expect(page.locator('#siteFavorite option:checked')).toHaveText('Seattle');
+    await expect(page.locator('#siteCoordinates')).toBeHidden();
+    await page.locator('#siteAdd').click();
+    await expect(page.locator('#siteCoordinates')).toBeHidden();
+    await page.locator('#siteApply').click();
+    await expect(page.locator('#siteLocation')).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('#siteLocation')).toBeFocused();
+    await expect(
+      page
+        .locator('.site-field')
+        .filter({ has: page.locator('#siteLocation') })
+        .getByRole('alert'),
+    ).toBeVisible();
+    await page.locator('#siteName').fill('Test hill');
+    await page.locator('#siteLocation').fill('https://maps.google.com/?q=55.95,-3.19');
+    await expect(page.locator('#siteLocationErr')).toBeHidden();
+    await expect(page.locator('#siteLocation')).not.toHaveAttribute('aria-invalid');
+    await expect(page.locator('#siteCoordinates')).toHaveText(
+      'Coordinates from link: latitude 55.95°, longitude -3.19°',
+    );
+    await page.locator('#siteElevation').fill('10001');
+    await page.locator('#siteApply').click();
+    await expect(page.locator('#siteElevation')).toBeFocused();
+    await expect(page.locator('#siteElevation')).toHaveAttribute('aria-invalid', 'true');
+    await expect(
+      page
+        .locator('.site-field')
+        .filter({ has: page.locator('#siteElevation') })
+        .getByRole('alert'),
+    ).toContainText('10,000');
+    await page.locator('#siteElevation').fill('1234');
+    await page.locator('#siteTz').fill('Mars/Olympus_Mons');
+    await page.locator('#siteApply').click();
+    await expect(page.locator('#siteTz')).toBeFocused();
+    await expect(page.locator('#siteTz')).toHaveAttribute('aria-invalid', 'true');
+    await expect(
+      page
+        .locator('.site-field')
+        .filter({ has: page.locator('#siteTz') })
+        .getByRole('alert'),
+    ).toContainText('valid IANA time zone');
+    await page.locator('#siteTz').fill('');
+    await expect(page.locator('#siteTzErr')).toBeHidden();
+    await page.locator('#siteApply').click();
+    await expect(page.locator('#sitePop')).not.toBeVisible();
+    await expect(page.locator('#loading')).toBeHidden();
+    const site = {
+      name: 'Test hill',
+      lat: 55.95,
+      lon: -3.19,
+      tz: 'Europe/London',
+      elevation: 1234,
+    };
+    expect(await page.evaluate(() => window.__npa!.S.site)).toEqual(site);
+    await page.locator('#siteSel').selectOption('manage');
+    await page.locator('#siteTz').fill('');
+    await page.locator('#siteApply').click();
+    await expect(page.locator('#sitePop')).not.toBeVisible();
+    await expect(page.locator('#loading')).toBeHidden();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('npa:site')!))).toEqual(site);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  });
+
   test(`the site dropdown switches complete records directly and keeps management separate at ${width}px`, async ({
     page,
     context,
@@ -110,7 +185,7 @@ for (const width of [1512, 390]) {
         'https://www.google.com/maps/search/?api=1&query=44.7749,-117.8344&utm_source=discard-me',
       );
     await expect(page.locator('#siteCoordinates')).toHaveText(
-      'Latitude 44.7749°, longitude -117.8344°',
+      'Coordinates from link: latitude 44.7749°, longitude -117.8344°',
     );
     await expect(page.locator('#siteTz')).toHaveValue('America/Los_Angeles');
     await page
@@ -178,7 +253,9 @@ test('bad pasted links leave the current site unchanged and make no requests', a
   ]) {
     await page.locator('#siteLocation').fill(link);
     await page.locator('#siteApply').click();
-    await expect(page.locator('#siteErr')).toBeVisible();
+    await expect(page.locator('#siteLocationErr')).toBeVisible();
+    await expect(page.locator('#siteLocation')).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.locator('#siteLocationErr')).toContainText('paste them here');
     await expect(page.locator('#siteSel option:checked')).toContainText('Seattle');
   }
   expect(requests).toEqual([]);

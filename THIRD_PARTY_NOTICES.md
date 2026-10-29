@@ -24,4 +24,4 @@ The lockfile's platform-only `libc` and `r-efi` are not compiled into the browse
 
 [Data provenance and update procedure](docs/time-zone-data.md) identify the exact source,
 checksums, license audit and matching [machine-readable dataset](public/data/timezones-2026e.tzb).
-Visible credit and the data download appear beside the site/time-zone editor and in the guide.
+Visible credit and the data download appear with the other credits on the How it works page.

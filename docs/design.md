@@ -223,8 +223,13 @@ Calendar's Time ↓.
   search links, parsed entirely locally with a coordinate preview. Camera-only, ambiguous and
   short links receive guidance instead of a guessed location; imported URLs are not retained.
   A same-origin worker infers the zone from bundled boundary data, including offline. A visible
-  editable zone supports manual overrides; ambiguous results require a choice. The location UI
-  credits the ODbL data and links its matching dataset, with full notices available in the guide.
+  editable zone supports manual overrides; clearing it infers the zone when saving. Ambiguous
+  results require a choice. Validation errors sit beside their fields, mark the invalid control
+  and focus it on Save. Coordinates parsed from a Maps link appear directly below its input;
+  decimal entries do not repeat. Saved-site names use coordinates only to distinguish duplicate
+  names. Both site selectors retain native selection behavior, with consistent
+  closed-control styling. The guide credits the ODbL data and links its matching dataset and full
+  notices alongside the other credits.
   Unknown/damaged favorites are left untouched, and unavailable storage is explained.
   Blank elevation uses sea level; existing saved sites keep their coordinates.
   Elevation adjusts observer position and idealized refraction while assuming
@@ -237,7 +242,7 @@ Calendar's Time ↓.
   Month night when the chart has focus. The chart and minimap retain a visible focus outline.
   River's selected-night summary includes the local zone, full windows and usable duration;
   pointer previews do not update that live announcement. Site dialogs contain their keyboard
-  navigation and return focus to the location button on closing. Muted date/control text keeps
+  navigation and return focus to their opener on closing. Muted date/control text keeps
   readable contrast in each palette, with additional forced-color focus/boundary cues.
 
 ## Why River is the default

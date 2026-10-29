@@ -47,6 +47,9 @@ test('a failed lookup leaves deliberate manual entry usable', async ({ page }) =
   await page.locator('#siteSel').selectOption('manage');
   await page.locator('#siteLocation').fill('55.95, -3.19');
   await expect(page.locator('#siteZoneStatus')).toContainText('lookup is unavailable');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#siteTzErr')).toContainText('lookup is unavailable');
+  await expect(page.locator('#siteTz')).toBeFocused();
   await page.locator('#siteTz').fill('Europe/London');
   await page.locator('#siteApply').click();
   await expect(page.locator('#loading')).toBeHidden();
@@ -79,4 +82,45 @@ test('startup loads lookup bytes before the first site edit, and ambiguous zones
   await expect(page.locator('#siteZoneStatus')).toContainText('More than one zone');
   await expect(page.locator('#siteTz')).toHaveValue('');
   await expect(page.locator('#siteZoneChoices option')).toHaveCount(2);
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#siteTzErr')).toContainText('More than one zone');
+  await expect(page.locator('#siteTz')).toHaveAttribute('aria-invalid', 'true');
+  expect(await page.evaluate(() => window.__npa!.S.site.name)).toBe('Seattle');
+  await page.locator('#siteTz').fill('America/Denver');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#sitePop')).not.toBeVisible();
+  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#siteClock')).toContainText('America/Denver');
+});
+
+test('editing or closing during a save lookup never applies a stale draft', async ({ page }) => {
+  await page.route(/timezones\.worker.*\.js$/, (route) =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `postMessage({ready:true}); onmessage = ({data}) => setTimeout(() => postMessage({id:data.id,zones:['America/Los_Angeles']}), 400);`,
+    }),
+  );
+  await page.goto('./');
+  await expect(page.locator('#loading')).toBeHidden();
+  await page.locator('#siteSel').selectOption('manage');
+  await page.locator('#siteTz').fill('');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#siteApply')).toBeDisabled();
+  await page.locator('#siteName').fill('Changed while finding zone');
+  await expect(page.locator('#siteApply')).toBeEnabled();
+  await expect(page.locator('#siteTz')).toHaveValue('America/Los_Angeles');
+  await expect(page.locator('#sitePop')).toBeVisible();
+  expect(await page.evaluate(() => window.__npa!.S.site.name)).toBe('Seattle');
+  expect(await page.evaluate(() => localStorage.getItem('npa:favorites'))).toBeNull();
+  await page.locator('#siteTz').fill('');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#siteApply')).toBeDisabled();
+  await page.locator('#siteCancel').click();
+  await page.locator('#siteSel').selectOption('manage');
+  await expect(page.locator('#siteApply')).toBeEnabled();
+  await expect(page.locator('#siteName')).toHaveValue('Seattle');
+  await page.locator('#siteName').fill('Current draft');
+  await page.locator('#siteApply').click();
+  await expect(page.locator('#loading')).toBeHidden();
+  expect(await page.evaluate(() => window.__npa!.S.site.name)).toBe('Current draft');
 });

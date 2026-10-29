@@ -28,9 +28,11 @@
         <div class="brand">
           <h1>Night Planner Atlas</h1>
           <div class="site-heading">
-            <select class="site-picker" id="siteSel" aria-label="Observing site">
-              <option>Seattle</option>
-            </select>
+            <span class="site-select">
+              <select class="site-picker" id="siteSel" aria-label="Observing site">
+                <option>Seattle</option>
+              </select>
+            </span>
             <span class="site-clock" id="siteClock" aria-label="Current time at the site"></span>
           </div>
         </div>
@@ -197,12 +199,14 @@
                   class="icon-btn"
                   id="siteClose"
                   type="button"
-                  aria-label="Close site selector"
+                  aria-label="Close site manager"
                 >
                   ×
                 </button>
               </div>
-              <label for="siteFavorite">Saved sites<select id="siteFavorite"></select></label>
+              <label for="siteFavorite"
+                >Saved sites<span class="site-select"><select id="siteFavorite"></select></span
+              ></label>
               <div class="dialog-actions" role="group" aria-label="Site actions">
                 <button class="btn" type="button" id="siteAdd">Add site</button>
                 <button class="btn" type="button" id="siteDuplicate">Duplicate</button>
@@ -222,64 +226,77 @@
               <label for="siteName"
                 >Name<input id="siteName" autocomplete="off" maxlength="100"
               /></label>
-              <label for="siteLocation"
-                >Coordinates or full Google Maps link
-                <input
-                  id="siteLocation"
-                  autocomplete="off"
-                  spellcheck="false"
-                  aria-describedby="siteLocationHint siteCoordinates"
-                />
-              </label>
-              <p id="siteLocationHint">Latitude, longitude: <code>47.60621, -122.34253</code>.</p>
-              <details class="coordinate-help">
-                <summary>Copying coordinates and supported Maps links</summary>
-                <p>
-                  In desktop Google Maps, right-click the intended point, then click its coordinate
-                  line to copy it. Full Maps search links with
-                  <code>query=latitude,longitude</code> or <code>q=latitude,longitude</code> work
-                  too. Short links and map-camera positions need clearer input. Pasted links are
-                  read locally and never opened by the planner.
+              <div class="site-field">
+                <label for="siteLocation"
+                  >Coordinates or full Google Maps link
+                  <input
+                    id="siteLocation"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="47.60621, -122.34253"
+                    aria-describedby="siteLocationHint siteCoordinates siteLocationErr"
+                  />
+                </label>
+                <p class="field-error" id="siteLocationErr" role="alert" hidden></p>
+                <output id="siteCoordinates" for="siteLocation" hidden></output>
+                <p id="siteLocationHint">Use decimal degrees: latitude first, then longitude.</p>
+                <details class="coordinate-help">
+                  <summary>Get coordinates from Google Maps</summary>
+                  <p>
+                    If a Maps link doesn’t work, open it in Google Maps and find your intended
+                    location. Copy the point’s coordinates, then paste them in the field above:
+                  </p>
+                  <ul>
+                    <li>
+                      Computer: right-click the point, then click the latitude/longitude at the top
+                      of the menu to copy it.
+                    </li>
+                    <li>
+                      Phone: touch and hold an unlabeled point to drop a pin. On Android, copy the
+                      coordinates from the search box; on iPhone, find them in the pin’s place
+                      details.
+                    </li>
+                  </ul>
+                  <p>
+                    Full search links containing <code>query=latitude,longitude</code> or
+                    <code>q=latitude,longitude</code> also work. A short link or the center of a map
+                    does not give us a reliable point. Pasted links are read locally and never
+                    opened by the planner.
+                  </p>
+                </details>
+              </div>
+              <div class="site-field">
+                <label for="siteElevation"
+                  >Elevation (m above sea level, optional)
+                  <input
+                    id="siteElevation"
+                    type="number"
+                    inputmode="decimal"
+                    min="-500"
+                    max="10000"
+                    step="any"
+                    aria-describedby="siteElevationHint siteElevationErr"
+                  />
+                </label>
+                <p class="field-error" id="siteElevationErr" role="alert" hidden></p>
+                <p id="siteElevationHint">
+                  Blank uses sea level. A level horizon is assumed; no terrain lookup.
                 </p>
-              </details>
-              <output id="siteCoordinates" for="siteLocation"></output>
-              <label for="siteElevation"
-                >Elevation (m above sea level, optional)
-                <input
-                  id="siteElevation"
-                  type="number"
-                  inputmode="decimal"
-                  min="-500"
-                  max="10000"
-                  step="any"
-                  aria-describedby="siteElevationHint"
-                />
-              </label>
-              <p id="siteElevationHint">
-                Blank uses sea level. A level horizon is assumed; no terrain lookup.
-              </p>
-              <label for="siteTz"
-                >Time zone (IANA, editable)<input
-                  id="siteTz"
-                  list="siteZoneChoices"
-                  autocomplete="off"
-                  aria-describedby="siteZoneStatus"
-              /></label>
-              <datalist id="siteZoneChoices"></datalist>
-              <p id="siteZoneStatus" role="status"></p>
-              <p class="site-attribution">
-                Time-zone boundaries:
-                <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>,
-                via
-                <a href="https://github.com/evansiroky/timezone-boundary-builder"
-                  >timezone-boundary-builder</a
-                >
-                and <a href="https://github.com/ringsaturn/tzf-dist">tzf-dist</a> ·
-                <a href="./licenses/timezone-notices.txt">ODbL 1.0 and notices</a> ·
-                <a href="./data/timezones-2026e.tzb" download>Boundary data 2026e (4 MB)</a>.
-              </p>
+              </div>
+              <div class="site-field">
+                <label for="siteTz"
+                  >Time zone (IANA, optional override)<input
+                    id="siteTz"
+                    list="siteZoneChoices"
+                    autocomplete="off"
+                    placeholder="Automatic from coordinates"
+                    aria-describedby="siteZoneStatus siteTzErr"
+                /></label>
+                <p class="field-error" id="siteTzErr" role="alert" hidden></p>
+                <datalist id="siteZoneChoices"></datalist>
+                <p id="siteZoneStatus" role="status"></p>
+              </div>
               <p id="siteStorage"></p>
-              <p class="err" id="siteErr" role="alert" hidden></p>
               <div class="dialog-actions dialog-footer">
                 <button class="btn" type="button" id="siteCancel">Cancel</button>
                 <button class="btn primary" type="submit" id="siteApply">

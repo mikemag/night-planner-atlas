@@ -107,9 +107,11 @@ test('an unknown time zone is refused with a message', async ({ page }) => {
   await page.locator('#siteSel').selectOption('manage');
   await page.locator('#siteTz').fill('Mars/Olympus_Mons');
   await page.locator('#siteApply').click();
-  await expect(page.locator('#siteErr')).toHaveText(
-    '“Mars/Olympus_Mons” is not a time zone name. Try America/Los_Angeles.',
+  await expect(page.locator('#siteTzErr')).toHaveText(
+    'Enter a valid IANA time zone, such as America/Los_Angeles.',
   );
+  await expect(page.locator('#siteTz')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('#siteTz')).toBeFocused();
   await expect(page.locator('#siteSel option:checked')).toContainText('Seattle');
 });
 
@@ -166,9 +168,10 @@ test('elevation validates range, accepts below sea level, and can be cleared', a
   for (const value of ['-501', '10001']) {
     await page.locator('#siteElevation').fill(value);
     await page.locator('#siteApply').click();
-    await expect(page.locator('#siteErr')).toHaveText(
+    await expect(page.locator('#siteElevationErr')).toHaveText(
       'Elevation must be between −500 and 10,000 metres above sea level, or left blank.',
     );
+    await expect(page.locator('#siteElevation')).toHaveAttribute('aria-invalid', 'true');
     expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
   }
   await page.locator('#siteElevation').fill('-400');
