@@ -344,6 +344,8 @@ export function restart(): void {
   const selId = S.sel >= 0 && prev && prev.nights[S.sel] ? prev.nights[S.sel].id : null;
   data.ready = false;
   el('loading').hidden = false;
+  el('loadingText').textContent = 'Computing sun and moon for each night…';
+  el('loadingBar').style.width = '0%';
   const token = ++computeToken;
   computeRange(S.site, S.rangeShift, thresholds(), lunWindow(S.focus), Date.now(), {
     isCancelled: () => token !== computeToken,
@@ -353,6 +355,8 @@ export function restart(): void {
   })
     .then((r) => {
       if (!r || token !== computeToken) return;
+      // Controls remain usable while positions compute; publish the latest planning choices.
+      deriveRange(r, thresholds(), lunWindow(S.focus));
       data.range = r;
       data.ready = true;
       el('loading').hidden = true;
@@ -374,9 +378,9 @@ export function restart(): void {
       draw();
       window.dispatchEvent(new Event('npa-ready'));
     })
-    .catch((err: unknown) => {
+    .catch(() => {
       if (token !== computeToken) return;
-      console.error(err);
+      // Library errors can contain site inputs; keep them out of logs.
       el('loadingText').textContent =
         `Couldn't compute nights for ${S.site.name}. Check the site's time zone and coordinates.`;
     });
