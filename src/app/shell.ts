@@ -11,6 +11,7 @@ import { C, readColors } from '../render/colors';
 import { ctx, cv, size, sizeSurface } from '../render/surface';
 import { el, scroller } from '../ui/dom';
 import { inspect } from '../ui/inspector';
+import { initGuide, updateGuideColors } from '../ui/guide';
 import { updateRiverReadout } from '../ui/river-readout';
 import { initSiteClock, updateSiteClock } from '../ui/site-clock';
 import { hideTip } from '../ui/tooltip';
@@ -20,7 +21,6 @@ import { river } from '../views/river';
 import type { CanvasView } from '../views/view';
 import { store, type ViewId } from './settings';
 import { S, data, type AppState } from './state';
-import timezoneNotices from '../../public/licenses/timezone-notices.txt?raw';
 
 const sizer = el('sizer');
 
@@ -183,7 +183,7 @@ const VIEW_INFO: Record<ViewId, [string, string]> = {
     'One row per night, clock time across — the moon’s diagonal and the seasons show as shapes.',
   ],
   lunations: ['Lunations', 'One row per lunar cycle, aligned on new moon; weekends tinted.'],
-  notes: ['Notes', 'What each approach is for, and which one I would build.'],
+  notes: ['How it works', 'Calculations, conventions, accuracy and practical help.'],
 };
 
 type ViewOption = 'riverZoom' | 'calZoom' | 'calOrient';
@@ -260,7 +260,8 @@ export function setView(view: ViewId): void {
     cv.removeAttribute('aria-expanded');
   }
   el('viewBody').classList.toggle('river-mode', view === 'river');
-  el('inspector').hidden = view === 'river';
+  el('viewBody').classList.toggle('guide-mode', view === 'notes');
+  el('inspector').hidden = view === 'river' || view === 'notes';
   el('riverWeekends').hidden = view !== 'river';
   el(view === 'river' ? 'riverWeekendSlot' : 'inspector').appendChild(el('weekendList'));
   if (view !== 'river') el('riverDetail').hidden = true;
@@ -268,7 +269,8 @@ export function setView(view: ViewId): void {
   el('notesView').hidden = view !== 'notes';
   el('legend').style.display = view === 'notes' ? 'none' : '';
   el('riverMoonKey').hidden = view !== 'river';
-  el('periodBox').style.visibility = view === 'notes' ? 'hidden' : '';
+  el('periodBox').hidden = view === 'notes';
+  el('planningControls').hidden = view === 'notes';
   el('viewTitle').textContent = VIEW_INFO[view][0];
   el('viewSub').textContent = VIEW_INFO[view][1];
   viewControls();
@@ -380,6 +382,7 @@ export function restart(): void {
 /** Colors changed with the theme: re-read them and repaint. */
 export function onTheme(): void {
   readColors();
+  updateGuideColors();
   if (data.ready) {
     inspect(S.sel);
     draw();
@@ -396,8 +399,7 @@ export function boot(): void {
   el<HTMLSelectElement>('crescentSel').value = String(S.crescent);
   for (const b of el('viewSeg').children)
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === S.view));
-  el('notesView').innerHTML = el<HTMLTemplateElement>('notesTpl').innerHTML;
-  el('timezoneNotices').textContent = timezoneNotices;
+  initGuide();
   exposeTestHooks();
   restart();
 }

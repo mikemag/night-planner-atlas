@@ -95,7 +95,16 @@ export function inkOn(hex: string): string {
   const r = parseInt(c.slice(0, 2), 16),
     g = parseInt(c.slice(2, 4), 16),
     b = parseInt(c.slice(4, 6), 16);
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.55 ? '#111726' : '#ffffff';
+  const linear = (v: number) => {
+    const s = v / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = (r: number, g: number, b: number) =>
+    0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+  const light = luminance(r, g, b);
+  return (light + 0.05) / (luminance(17, 23, 38) + 0.05) > 1.05 / (light + 0.05)
+    ? '#111726'
+    : '#ffffff';
 }
 
 /** Opacity of the moonlight wash over true dark: a full moon reads like late nautical twilight. */

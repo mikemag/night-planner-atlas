@@ -179,6 +179,13 @@ Calendar's Time ↓.
 
 ### Shared pieces
 
+- **How it works.** One offline page with in-page navigation, practical reading instructions,
+  a worked Seattle night, and expandable calculation/reference detail. Its sky ramp shares chart
+  tokens and contrast-selected ink; an upper-edge/center diagram explains Moon events. Measured
+  comparison results distinguish independent USNO/solar references from same-ephemeris crossing
+  checks. Site workflows, keyboard use, observing-filter setup, limitations, privacy and full
+  offline third-party notices stay with the explanation. The page uses the full width and hides
+  chart-specific controls while it is open.
 - **Inspector** (right panel in Calendar and Lunations). The selected night as the familiar
   altitude chart: sun and moon
   center altitude over the phase bands, with ordinary moonlight in warm grey and accepted

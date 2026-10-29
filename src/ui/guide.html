@@ -1,0 +1,448 @@
+<article class="guide-page" aria-labelledby="guideTitle">
+  <header class="guide-intro">
+    <p class="guide-kicker">Planning with the Sun and Moon</p>
+    <h2 id="guideTitle">How it works</h2>
+    <p class="guide-lead">
+      Find the dark part of a night, see what the Moon takes away, and compare the nights worth a
+      trip.
+    </p>
+    <p>
+      Choose your observing site, browse the River, then expand a night for its exact boundaries.
+      Every view uses the same calculations, performed here in your browser.
+    </p>
+  </header>
+  <nav class="guide-nav" aria-label="Guide sections">
+    <a href="#reading-night">Read a night</a><a href="#planning-choices">Planning choices</a>
+    <a href="#sites-and-time">Sites and time</a><a href="#using-planner">Use the planner</a>
+    <a href="#accuracy">Accuracy</a><a href="#privacy-credits">Privacy and credits</a>
+  </nav>
+
+  <section id="reading-night" aria-labelledby="readingTitle">
+    <h3 id="readingTitle">Read a night</h3>
+    <p>
+      A night carries <strong>the date of its evening</strong> and runs from local noon to the next
+      local noon. Friday’s row includes Saturday morning. Before noon, Tonight still means the
+      previous evening.
+    </p>
+    <div
+      class="guide-sky-ramp"
+      role="img"
+      aria-label="The sky darkens from day through civil, nautical and astronomical twilight to true dark."
+    >
+      <span data-sky-stage="day">Day</span><span data-sky-stage="civil">Civil</span>
+      <span data-sky-stage="naut">Nautical</span><span data-sky-stage="astro">Astronomical</span>
+      <span data-sky-stage="dark">True dark</span>
+    </div>
+    <p>
+      <strong>True dark</strong> is the interval from astronomical dusk to astronomical dawn, when
+      the Sun’s center is at least 18° below the horizon. The strict
+      <strong>moon-free</strong> total removes the parts of that interval when any part of the Moon
+      is above the natural horizon.
+    </p>
+    <p>
+      Plain black marks genuinely moon-free darkness. A warm grey wash shows Moon-up time within
+      true dark; fuller moons make a brighter wash. This illustrates moonlight, rather than
+      predicting calibrated sky brightness. Friday and Saturday nights are emphasized; the selected
+      night has an outline and Tonight has a separate marker.
+    </p>
+
+    <details class="guide-detail">
+      <summary>Why rise/set events and altitude curves use different points</summary>
+      <p>
+        Moonrise is the moment the Moon’s <strong>upper edge</strong> reaches a level horizon as
+        seen from your site. The calculation includes lunar parallax, a radius that changes with
+        distance and atmospheric refraction. The Moon’s center can still be below 0° when its upper
+        edge appears.
+      </p>
+      <figure class="guide-diagram">
+        <svg viewBox="0 0 440 128" role="img" aria-labelledby="moonEdgeTitle moonEdgeDesc">
+          <title id="moonEdgeTitle">The Moon’s upper edge and center are different</title>
+          <desc id="moonEdgeDesc">
+            A schematic Moon disk extends above a horizontal horizon while its center remains below
+            the horizon. Refraction also shifts the apparent position.
+          </desc>
+          <circle cx="78" cy="70" r="27" fill="rgb(var(--moon-rgb))" />
+          <line x1="12" y1="60" x2="420" y2="60" stroke="currentColor" stroke-dasharray="5 4" />
+          <circle cx="78" cy="70" r="3" fill="var(--sky-dark)" />
+          <path
+            d="M 78 43 L 122 27 H 145 M 81 70 L 126 95 H 145"
+            fill="none"
+            stroke="currentColor"
+          />
+          <text x="152" y="31" fill="currentColor" font-size="13">
+            Upper edge above the horizon
+          </text>
+          <text x="152" y="99" fill="currentColor" font-size="13">
+            Center still below the horizon
+          </text>
+          <text x="312" y="53" fill="currentColor" font-size="11">Level horizon</text>
+        </svg>
+        <figcaption>
+          Schematic, not to scale. The center-altitude curve and disk-edge event answer different
+          questions.
+        </figcaption>
+      </figure>
+      <p>
+        The inspector’s curves and River’s pointer altitude show the
+        <strong>apparent center</strong>, sampled every ten minutes. Those samples illustrate
+        position; event times and usable-window boundaries come from separate refined crossing
+        searches.
+      </p>
+      <p>
+        Natural-horizon Moon events use 34 arcminutes of sea-level refraction. The elevated Moon
+        thresholds use altitude-dependent refraction; elevation scales refraction with air density.
+      </p>
+      <p>
+        Sunrise and sunset use a Sun-center altitude of −0.833° at sea level, representing the
+        conventional visible-disk edge with standard refraction. Twilight uses the geometric Sun
+        center at −6°, −12° and −18°. See the
+        <a href="https://aa.usno.navy.mil/faq/RST_defs"
+          >USNO definitions of rise, set and twilight</a
+        >.
+      </p>
+    </details>
+  </section>
+
+  <section id="planning-choices" aria-labelledby="planningTitle">
+    <h3 id="planningTitle">Choose what counts as usable</h3>
+    <p>
+      Start with strict settings: <strong>Moon’s upper edge above 0°</strong>, with no crescent
+      ignored. Two controls can accept more observing time:
+    </p>
+    <ul>
+      <li>
+        <strong>Moon’s upper edge above 5°, 10° or 15°</strong> treats the Moon as an obstruction
+        only above that apparent height. This can stand in for a simple tree line or ridge.
+      </li>
+      <li>
+        <strong>Ignore a moon under 10%, 20% or 30% lit</strong> accepts the whole true-dark
+        interval on nights below that illumination threshold. Illumination is evaluated at local
+        midnight.
+      </li>
+    </ul>
+    <p>
+      These choices change usable windows, duration totals and weekend picks. They do not remove the
+      Moon from the drawing. Moonlight shading always follows the disk’s upper edge at the
+      <strong>natural 0° horizon</strong>. Moonlit time accepted by settings has a green wash in
+      Light/Dark, or a dashed boundary in Observing. Its brightness still follows illumination.
+      Truly moon-free time stays black.
+    </p>
+    <p>
+      A night can have two separate usable windows. The total adds their actual elapsed durations;
+      pieces shorter than one minute are discarded. A missing window is explained, including nights
+      when the Sun never reaches astronomical darkness.
+    </p>
+    <div class="guide-example">
+      <p class="guide-kicker">A worked night · strict settings</p>
+      <h4>Seattle, Friday October 9 → Saturday October 10, 2026</h4>
+      <p>Sea level · America/Los_Angeles · PDT (UTC−07:00)</p>
+      <dl class="guide-facts">
+        <div>
+          <dt>Sunset</dt>
+          <dd>6:32 PM</dd>
+        </div>
+        <div>
+          <dt>Astronomical dusk</dt>
+          <dd>8:15 PM</dd>
+        </div>
+        <div>
+          <dt>Astronomical dawn</dt>
+          <dd>5:39 AM</dd>
+        </div>
+        <div>
+          <dt>Sunrise</dt>
+          <dd>7:21 AM</dd>
+        </div>
+        <div>
+          <dt>True dark</dt>
+          <dd>9h 24m</dd>
+        </div>
+        <div>
+          <dt>Moon-free</dt>
+          <dd>9h 24m</dd>
+        </div>
+      </dl>
+      <p>
+        The Moon is down throughout true dark. With about 0.25% illumination at midnight, this
+        night’s one strict moon-free window is <strong>8:15 PM–5:39 AM</strong>. Changing the
+        crescent setting does not add time to this example.
+      </p>
+    </div>
+  </section>
+
+  <section id="sites-and-time" aria-labelledby="sitesTitle">
+    <h3 id="sitesTitle">The site sets the clock</h3>
+    <p>
+      Every chart time uses <strong>the observing site’s IANA time zone</strong>, including daylight
+      saving time. Your device’s zone does not change the plan. The clock beside the location shows
+      the site’s current date, time, UTC offset and zone; selecting a future night does not change
+      that clock.
+    </p>
+    <p>
+      River uses local clock time across its rows and marks clock-change nights. A repeated or
+      skipped hour is real. The inspector instead plots elapsed time, so a repeated hour does not
+      fold its altitude curves.
+    </p>
+    <p>
+      Open the location button to choose or edit a favorite. Paste decimal
+      <strong>latitude, longitude</strong> or a supported full Google Maps search link, check the
+      coordinate preview, name the site and confirm its time zone. Elevation is optional. Save &amp;
+      use applies the complete record; Cancel or Escape leaves the current site alone. Duplicate
+      makes a separate favorite; removal asks for confirmation.
+    </p>
+    <p>
+      Maps links are input text, parsed locally. Short links, named-place-only links and camera
+      positions cannot establish the intended point. For a reliable copy in desktop Google Maps,
+      right-click the point and click its coordinate line. Latitude is currently supported from −65°
+      to +65°.
+    </p>
+    <details class="guide-detail">
+      <summary>Automatic zones, elevation and what is not modeled</summary>
+      <p>
+        Time zones are inferred locally from bundled geographic boundaries. Simplified borders can
+        be imperfect, and geographic data and your browser’s civil-time rules have different update
+        schedules. Check the visible zone, particularly near borders or disputed areas; manual
+        overrides are supported. Multiple zone results require you to choose.
+      </p>
+      <p>
+        Elevation accepts −500 to 10,000 metres above sea level. Blank means sea level. It adjusts
+        the observer’s position and idealized refraction using a standard atmosphere. The assumed
+        horizon stays level: elevation is not a terrain profile or a height above nearby
+        obstructions, and no horizon dip is inferred.
+      </p>
+      <p>
+        No local terrain, clouds, atmospheric transparency, light pollution or target visibility is
+        predicted. Real temperature, pressure and near-horizon refraction can move observed rise/set
+        times.
+      </p>
+    </details>
+  </section>
+
+  <section id="using-planner" aria-labelledby="usingTitle">
+    <h3 id="usingTitle">Use the planner</h3>
+    <p>
+      <strong>River</strong> stacks one row per night with clock time across. Year shows the shape
+      of the loaded range; Month gives readable nightly windows. Tap a Month row or press
+      Enter/Space on the chart to expand it. Boundary callouts show Sun/twilight events, Moon events
+      and any additional usable-window boundaries. Tap again or press Escape to collapse. The fixed
+      strip below the chart previews the pointed-at night; tapping or using the keyboard supplies
+      details without hover.
+    </p>
+    <p>
+      <strong>New-moon focus</strong> opens the nights within ±N of new moon and compresses the
+      context. Year stays compact. The exact New Moon label identifies one event-associated night,
+      while the written phase name can describe several nights. The label’s local date/time can
+      differ from the row’s evening date.
+    </p>
+    <p>
+      The desktop minimap navigates the range without changing selection.
+      <strong>Dark weekends ahead</strong> lists the Friday–Saturday pair with the most combined
+      usable time within seven nights of each upcoming new moon.
+    </p>
+    <p>
+      <strong>Calendar</strong> puts evening dates into month grids, with Time ↓ or Time → and
+      expandable weeks. <strong>Lunations</strong> aligns cycles around new moon to compare seasonal
+      windows and weekends. These views keep a selected-night inspector with altitude curves and
+      stage times.
+    </p>
+    <dl class="guide-shortcuts">
+      <div>
+        <dt><kbd>←</kbd> <kbd>→</kbd></dt>
+        <dd>Previous / next night</dd>
+      </div>
+      <div>
+        <dt><kbd>↑</kbd> <kbd>↓</kbd></dt>
+        <dd>Move a week</dd>
+      </div>
+      <div>
+        <dt><kbd>T</kbd></dt>
+        <dd>Tonight</dd>
+      </div>
+      <div>
+        <dt><kbd>Enter</kbd> / <kbd>Space</kbd></dt>
+        <dd>Toggle a River Month night when the chart has focus</dd>
+      </div>
+      <div>
+        <dt><kbd>Esc</kbd></dt>
+        <dd>Collapse details or cancel an open site dialog</dd>
+      </div>
+      <div>
+        <dt><kbd>1</kbd>–<kbd>4</kbd></dt>
+        <dd>Calendar, River, Lunations, How it works</dd>
+      </div>
+    </dl>
+    <details class="guide-detail">
+      <summary>Light, Dark and the Observing palette</summary>
+      <p>
+        Theme choices stay in this browser. System follows the device’s appearance; explicit Light
+        and Dark override it. Observing uses warm neutral levels and extra boundary cues designed to
+        remain distinct through a red-only accessibility filter.
+      </p>
+      <p>
+        <strong>Enable the device filter separately.</strong> On Mac, open System Settings →
+        Accessibility → Display → Color Filters, choose Color Tint and set a red tint. On iPhone,
+        open Settings → Accessibility → Display &amp; Text Size → Color Filters; choose a color tint
+        and adjust its hue/intensity toward red. See Apple’s
+        <a href="https://support.apple.com/guide/mac-help/mchl11ddd4b3/mac"
+          >Mac filter instructions</a
+        >
+        and
+        <a href="https://support.apple.com/guide/iphone/iph3e2e1fb0/ios"
+          >iPhone filter instructions</a
+        >.
+      </p>
+      <p>
+        The planner cannot control OS filters or guarantee dark adaptation. Display brightness,
+        other apps and notifications still affect what reaches your eyes.
+      </p>
+    </details>
+  </section>
+
+  <section id="accuracy" aria-labelledby="accuracyTitle">
+    <h3 id="accuracyTitle">Accuracy, with the comparisons attached</h3>
+    <p>
+      The reference suite uses independently published, minute-rounded
+      <a href="https://aa.usno.navy.mil/data/RS_OneYear">USNO annual tables</a> for Seattle,
+      Edinburgh and Sydney. The committed cases were verified on October 16, 2026 and include
+      northern/southern seasons, absent twilight, new/full moons and both directions of a
+      daylight-saving change.
+    </p>
+    <div
+      class="guide-table-wrap"
+      tabindex="0"
+      role="region"
+      aria-label="Measured reference comparisons"
+    >
+      <table class="guide-table">
+        <caption>
+          Measured comparisons for the current model
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Check</th>
+            <th scope="col">Observed difference</th>
+            <th scope="col">What it establishes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">USNO: 52 solar events</th>
+            <td>At most 29.6 seconds</td>
+            <td>
+              Agreement with independent minute-rounded tables; four absent twilight events agree
+              too.
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">USNO: 12 lunar events</th>
+            <td>At most 34 seconds</td>
+            <td>Agreement using the upper-limb convention, with minute rounding.</td>
+          </tr>
+          <tr>
+            <th scope="row">Independent solar model: seven site/date cases</th>
+            <td>Within 30 seconds</td>
+            <td>A separate low-precision solar calculation checks model wiring.</td>
+          </tr>
+          <tr>
+            <th scope="row">Full-year lunar crossing audit</th>
+            <td>Less than one second</td>
+            <td>
+              Numerical crossing checks using the same ephemeris; not an independent lunar model.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The USNO comparison tests allow 60 seconds for rounding and convention/ephemeris differences.
+      These measured cases are not a universal error bound. Real atmospheric refraction can shift
+      observed rise/set by a minute or more, especially at shallow angles. Terrain and weather
+      remain outside the calculation.
+    </p>
+    <details class="guide-detail">
+      <summary>Search windows, numerical tolerances and reference provenance</summary>
+      <p>
+        Solar events are searched from local noon for 24 hours. Moon events and Moon-up intervals
+        use local noon +2 h through noon +22 h. Events outside that window are absent, even if they
+        occur on the same civil date. A clipped interval edge is not reported as a rise or set.
+      </p>
+      <p>
+        Moon crossings are refined at 0°, 5°, 10° and 15°. A ten-minute scan brackets extrema,
+        refined extrema split the altitude curve into monotone arcs, and bisection locates crossings
+        to a 50 ms bracket. This preserves grazing event pairs hidden between samples. A tangent
+        touch adds no Moon-up interval.
+      </p>
+      <p>
+        The audit checks all 365 nights of 2026 at Seattle, Edinburgh and Sydney at all four
+        heights, using an independent one-minute scan and crossing refinement of the same underlying
+        ephemeris. Synthetic tests cover two-second grazing pairs that a one-minute scan could miss.
+        These isolate numerical search error rather than testing an independent lunar ephemeris.
+      </p>
+      <p>
+        Elevation checks at −400 m, 2,000 m and 4,500 m compare with Astronomy Engine’s separate
+        level-horizon rise/set search: within one second for the Moon and ten seconds for the Sun.
+        They use the same ephemeris and do not establish independent elevated-site accuracy.
+      </p>
+      <p>
+        The stored USNO fixture retains exact query URLs, decimal reference coordinates, UTC dates
+        and verbatim table cells. Reference dates are Seattle October 3, 9, 25 and 31; Edinburgh
+        June 20; Sydney October 3 and December 21, all in 2026. UTC tables avoid applying a fixed
+        civil offset across DST. The reference fixture is never regenerated from the planner’s own
+        results.
+      </p>
+      <p>
+        <a id="referenceFixture" download="usno-reference-2026.json"
+          >Download the reference fixture</a
+        >. The original public reference queries are listed below; they do not contain your
+        observing site.
+      </p>
+      <ul class="reference-queries" id="referenceQueries"></ul>
+      <p>
+        Calculations use <a href="https://github.com/cosinekitty/astronomy">Astronomy Engine</a>.
+        Further background:
+        <a href="https://aa.usno.navy.mil/faq/RST_defs">USNO event conventions</a> and
+        <a href="https://aa.usno.navy.mil/data/RS_OneYear">the source table service</a>.
+      </p>
+    </details>
+  </section>
+
+  <section id="privacy-credits" aria-labelledby="privacyTitle">
+    <h3 id="privacyTitle">Privacy and credits</h3>
+    <p>
+      Site names, coordinates, elevations, favorite lists and preferences stay in this browser’s
+      local storage. There are no accounts, analytics or remote coordinate lookups. The app loads
+      its static assets from its own origin and calculations keep working after loading when the
+      network is disconnected. Clearing browser site data removes saved favorites and preferences.
+      If storage is unavailable, temporary changes are identified.
+    </p>
+    <p>
+      Sun and Moon positions:
+      <a href="https://github.com/cosinekitty/astronomy">Astronomy Engine 2.1.19</a> by Don Cross,
+      MIT license.
+    </p>
+    <p>
+      Time-zone lookup: <a href="https://github.com/ringsaturn/tzf-wasm">tzf-wasm 2.0.1</a> and
+      tzf-rs, MIT. Boundaries:
+      <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, via
+      <a href="https://github.com/evansiroky/timezone-boundary-builder"
+        >timezone-boundary-builder</a
+      >
+      and <a href="https://github.com/ringsaturn/tzf-dist">tzf-dist</a>, data 2026e, ODbL 1.0.
+      <a href="./data/timezones-2026e.tzb" download
+        >Download the matching boundary dataset (TZB, 4 MB)</a
+      >.
+    </p>
+    <p>
+      Third-party software and data retain their own licenses. Private favorites and astronomical
+      results are separate from the boundary dataset.
+    </p>
+    <details class="guide-detail">
+      <summary>Read Astronomy Engine’s MIT license offline</summary>
+      <pre class="license-text" id="astronomyNotices"></pre>
+    </details>
+    <details class="guide-detail">
+      <summary>Read the time-zone code and ODbL data notices offline</summary>
+      <pre class="license-text" id="timezoneNotices"></pre>
+    </details>
+  </section>
+</article>

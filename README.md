@@ -14,15 +14,17 @@ track where it is going.
 
 - **River** (default): one row per night, clock time across. The moon's nightly 50-minute
   march becomes diagonal stripes, the seasons an hourglass, and clock changes a visible step.
-  Zoom by row height: Year, Month, Week.
+  Use Year for an overview, Month for nightly windows, and expand individual Month nights for boundary times.
 - **Calendar**: a month grid where each day holds that evening's night, and a Year view of mini
   months with monthly totals. Expand any week for times.
 - **Lunations**: one row per lunar cycle, aligned on new moon, with the best Friday–Saturday of
   each cycle.
 
 All views share one visual language and the same controls: new-moon focus (±N nights), when the
-moon counts as up, and whether to ignore a thin crescent. Click any night for its altitude chart
-and stage times; the side panel also lists the darkest weekends ahead.
+moon counts as up, and whether to ignore a thin crescent. Expand a River night for boundary times;
+Calendar and Lunations retain the altitude-chart inspector. River keeps the darkest weekends
+in a collapsible tray. **How it works** explains the calculations, measured accuracy, conventions,
+controls, privacy and credits, with technical detail available on demand.
 
 | Year at a glance (River)                        | Calendar                                           | Lunations                                          |
 | ----------------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
@@ -44,7 +46,12 @@ npm run dev
 `npm run dev` serves the site at <http://localhost:5173/> with hot reload. `npm run build` writes
 the deployable static site to `dist/`, and `npm run preview` serves that build. Sun and moon
 positions are computed in the browser; your site is saved only in the browser's local storage and
-never sent anywhere. You can enter an optional elevation above sea level; blank uses sea level.
+never sent anywhere. Named local favorites keep complete site records. Paste coordinates or a supported full Google
+Maps search link; a bundled offline lookup infers the editable IANA zone. The header shows the
+site’s current local clock, UTC offset and zone. System, Light, Dark and Observing themes are saved
+locally; Observing is designed for a separately enabled OS red filter.
+
+You can enter an optional elevation above sea level; blank uses sea level.
 Elevation adjusts the observer position and idealized refraction, with a level horizon and no
 automatic terrain lookup.
 
@@ -95,7 +102,8 @@ the River, Calendar and Lunations views and assessing usability in the
 ## Credits
 
 Sun and moon positions come from [Astronomy Engine](https://github.com/cosinekitty/astronomy) by
-Don Cross (MIT). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Don Cross (MIT). Offline time-zone lookup uses tzf-wasm (MIT), with boundary data from
+OpenStreetMap contributors via timezone-boundary-builder and tzf-dist (ODbL 1.0). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## License
 

@@ -7,7 +7,8 @@ Night Planner Atlas includes the following third-party software.
 | [Astronomy Engine](https://github.com/cosinekitty/astronomy) | Copyright (c) 2019-2023 Don Cross | 2.1.19  | MIT     | npm `astronomy-engine`, bundled into `dist/assets/` |
 
 The minified bundle keeps the library's MIT license header (see `vite.config.ts`), and the npm
-package's source carries the same notice. The site credits Astronomy Engine on its Notes page.
+package's source carries the same notice. The site credits Astronomy Engine on its How it works page, with an offline-readable copy of
+the [MIT license](public/licenses/astronomy-engine.txt).
 
 ## Offline time-zone lookup
 

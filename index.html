@@ -54,7 +54,7 @@
           <button data-view="calendar">Calendar</button>
           <button data-view="river">River</button>
           <button data-view="lunations">Lunations</button>
-          <button data-view="notes">Notes</button>
+          <button data-view="notes">How it works</button>
         </div>
         <div class="period" id="periodBox">
           <button class="icon-btn" id="prevBtn" aria-label="Previous month">‹</button>
@@ -64,7 +64,7 @@
         </div>
       </header>
 
-      <div class="controls">
+      <div class="controls" id="planningControls">
         <span class="ctl"
           >New-moon focus
           <span class="seg small" id="focusSeg">
@@ -147,7 +147,7 @@
             aria-label="River readout"
             hidden
           ></div>
-          <div class="doc" id="notesView" hidden></div>
+          <div class="doc" id="notesView" role="region" aria-label="How it works" hidden></div>
           <div class="loading" id="loading">
             <div class="loading-inner">
               <span id="loadingText">Computing sun and moon for each night…</span>
@@ -288,185 +288,6 @@
       </details>
       <div class="tip" id="tip" hidden></div>
     </div>
-
-    <template id="notesTpl">
-      <h2>Three ways to plan a month of nights</h2>
-      <details>
-        <summary>Offline time-zone lookup: credits, license and data</summary>
-        <p>
-          Time-zone lookup uses tzf-wasm 2.0.1 (MIT), with boundary data 2026e from OpenStreetMap
-          contributors, via timezone-boundary-builder and tzf-dist (ODbL 1.0).
-          <a href="./data/timezones-2026e.tzb" download
-            >Download the matching boundary dataset (TZB, 4 MB)</a
-          >. Private saved sites are separate from this boundary data and remain in your browser.
-        </p>
-        <pre class="license-text" id="timezoneNotices"></pre>
-      </details>
-      <p>
-        Every view uses the same per-night data: the eight sun events, moonrise and moonset, and
-        moon-free true dark. The ephemeris is real, computed in your browser with
-        <a href="https://github.com/cosinekitty/astronomy">Astronomy Engine</a> by Don Cross (MIT
-        license). The default site is Seattle. Use the site button in the header to try your own
-        coordinates; they stay in this browser.
-      </p>
-      <p>
-        One visual language throughout: the sky gets darker through the stages (day, civil,
-        nautical, astronomical, true dark), the moon washes true dark toward grey in proportion to
-        how full it is. Moonlit time accepted by your planning thresholds uses green at the same
-        brightness; genuinely moon-free dark stays black. Expand a River Month night to see times
-        attached to its boundaries. Other chart views retain the single-night inspector. Arrow keys
-        step nights and weeks; Enter or Space toggles River expansion; <strong>T</strong> jumps to
-        tonight.
-      </p>
-
-      <h3>The approaches</h3>
-      <div style="overflow-x: auto">
-        <table class="cmp">
-          <thead>
-            <tr>
-              <th>Approach</th>
-              <th>Best at</th>
-              <th>Weak at</th>
-              <th>Zoom and expand</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>River <span class="pick">My pick</span></td>
-              <td>
-                Shows the shape. The moon&rsquo;s nightly 50-minute march becomes diagonal stripes,
-                the seasons become an hourglass, and clock changes show as steps. Uses the same
-                left-to-right clock time as the single-night chart, so a row <em>is</em> that chart,
-                flattened. One continuous scroll covers the whole year.
-              </td>
-              <td>
-                Not a calendar grid, so weekdays come from the gutter labels and tint. A long, thin
-                canvas needs the minimap or Year zoom to keep your place.
-              </td>
-              <td>
-                Year fits the whole range on one screen. Month uses compact rows, taller on phones.
-                Tap a night to expand its timeline and key planning details, and tap again to
-                collapse. Enter or Space toggles the selected night; arrows move an open expansion.
-                New-moon focus is a fisheye: nights near new moon open up with window times, and
-                moonlit nights squash to thin context lines. A centered
-                <strong>New Moon</strong> label in Month, or a high-contrast gutter tick in Year,
-                marks the one night associated with each exact new-moon event, even with focus off.
-                The Month label includes the event&rsquo;s site-local date and time; the ordinary
-                Moon glyph stays in the gutter. Point at or select that night for the event&rsquo;s
-                site-local date and time in the fixed readout. That timestamp can fall during
-                daylight or on a different date from the row&rsquo;s evening date. The written
-                &ldquo;New moon&rdquo; phase describes low illumination and can appear on
-                surrounding nights; only the central label or tick identifies the event-associated
-                night.
-              </td>
-            </tr>
-            <tr>
-              <td>Calendar</td>
-              <td>
-                Instantly familiar. Weekends are a column, and each cell carries the night&rsquo;s
-                headline number and window. The Year view reads like the Calendar app&rsquo;s year
-                view, with monthly totals (82&nbsp;h in August, 198&nbsp;h in December, 28&nbsp;h in
-                June at Seattle).
-              </td>
-              <td>
-                Week wrapping breaks the moon&rsquo;s diagonal every seven days, and a month of
-                cells at readable size fills the screen, so a year is paging, not scanning. Leading
-                and trailing blanks waste space.
-              </td>
-              <td>
-                Month and Year zooms. The chevron expands one week with times, moonrise and moonset.
-                New-moon focus dims and squashes weeks away from new moon.
-                <em>Time &darr;</em> makes each week a small river (cells abut, so the slide shows);
-                <em>Time &rarr;</em> matches the single-night chart and reads numbers more easily.
-              </td>
-            </tr>
-            <tr>
-              <td>Lunations</td>
-              <td>
-                Answers &ldquo;which new moon, which weekend.&rdquo; Rows align on new moon, so each
-                dark window is a diamond you can compare down the page, and the season shows as
-                night length. Picks the best Fri&ndash;Sat pair for each cycle.
-              </td>
-              <td>
-                Dates and weekdays land in different columns on every row, and full-moon nights are
-                clipped away by design. Unfamiliar at first sight.
-              </td>
-              <td>
-                New-moon focus sets the window: &plusmn;3 to &plusmn;10 nights, or the whole cycle
-                when off. Narrow windows give room for times inside each night.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>Why the River</h3>
-      <ul>
-        <li>
-          <strong>It shows why a night is good</strong>, not just that it is. You see the moon
-          leaving the evening dark after full, the whole night open at new moon, and the dark
-          sliding to the mornings as the moon waxes. The Calendar breaks that motion into 7-day
-          pieces; Lunations shows it only near new moon.
-        </li>
-        <li>
-          <strong>One mental model from a year down to a single night.</strong> Only the row height
-          changes between Year and Month. Expanding a Month row keeps its clock axis and adds
-          boundary times with leader lines and usable-duration brackets.
-        </li>
-        <li>
-          <strong>&ldquo;Expand around new moons&rdquo; costs nothing.</strong> It is just taller
-          rows, so there is no mode switch and no new layout to learn.
-        </li>
-        <li>
-          <strong>It stays responsive.</strong> One canvas in a scrolling view, drawing only the
-          visible rows, with a fixed axis so live updates never shift layout.
-        </li>
-      </ul>
-      <p>
-        From the others I would keep two things. Lunations&rsquo; best-weekend logic becomes the
-        <strong>Dark weekends ahead</strong> list, which works beside any view. The Calendar&rsquo;s
-        Year view suits the public website, where a calendar is what visitors expect.
-      </p>
-
-      <h3>Tried and changed</h3>
-      <ul>
-        <li>
-          <strong>Moonlight as a bright beige block.</strong> It shouted louder than the dark it
-          hides and read brighter than nautical twilight. It is now a warm grey scaled by
-          illumination: a full moon is about as bright as late nautical twilight, and a thin
-          crescent barely lifts the black.
-        </li>
-        <li>
-          <strong>A green edge on moon-free dark.</strong> It was hard to read when planning
-          thresholds admitted more time. Accepted moonlit time now uses a green wash, with the same
-          illumination-based brightness as ordinary moonlight. Truly moon-free dark stays plain
-          black.
-        </li>
-        <li>
-          <strong>Altitude curves in every calendar cell.</strong> They were unreadable at cell
-          size, so they now appear in expanded Calendar weeks and the selected-night inspector.
-        </li>
-        <li>
-          <strong>Considered and not built:</strong> a radial year clock (pretty, but hard to read
-          times or compare nights) and a plain heat-map calendar (loses <em>when</em> in the night
-          the dark falls).
-        </li>
-      </ul>
-
-      <h3>If we build it</h3>
-      <ul>
-        <li>
-          The site computes sun and moon positions in this browser and yields between short
-          computation slices. The four Moon horizon thresholds are precomputed so switching between
-          them updates the planning numbers immediately.
-        </li>
-        <li>
-          The planning thresholds in the header (Moon’s upper edge above N&deg;, ignore a moon under
-          N% lit) matter for real trips with a tree line or a thin crescent. They change the
-          headline numbers, so they belong in settings, not buried in code.
-        </li>
-      </ul>
-    </template>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

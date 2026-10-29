@@ -9,7 +9,7 @@ const VIEWS = [
   { id: 'river', tab: 'River' },
   { id: 'calendar', tab: 'Calendar' },
   { id: 'lunations', tab: 'Lunations' },
-  { id: 'notes', tab: 'Notes' },
+  { id: 'notes', tab: 'How it works' },
 ] as const;
 
 /** Open the site with the clock fixed; returns the page errors seen so far (and later). */
@@ -49,9 +49,7 @@ for (const view of VIEWS) {
     await page.locator('#viewSeg').getByRole('button', { name: view.tab, exact: true }).click();
     await expect(page.locator('#viewTitle')).toHaveText(view.tab);
     if (view.id === 'notes') {
-      await expect(
-        page.getByRole('heading', { name: 'Three ways to plan a month of nights' }),
-      ).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'How it works' })).toBeVisible();
     } else {
       // Resize and view changes can schedule another frame, especially in WebKit.
       await expect.poll(() => canvasColors(page)).toBeGreaterThan(8);
