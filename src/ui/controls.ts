@@ -18,11 +18,13 @@ import {
 } from '../app/shell';
 import { S, data } from '../app/state';
 import { loadTheme, setTheme, type Theme } from '../app/theme';
+import { prepareTimeZones } from '../app/timezones';
 import { cv } from '../render/surface';
 import { calendar } from '../views/calendar';
 import { river } from '../views/river';
 import { el, scroller } from './dom';
 import { hideTip, showNote, showTip } from './tooltip';
+import { bindSiteZone } from './site-zone';
 
 const VIEW_KEYS: ViewId[] = ['calendar', 'river', 'lunations', 'notes'];
 
@@ -32,6 +34,9 @@ export function initControls(): void {
   initKeyboard();
   initHeader();
   initSiteEditor();
+  void prepareTimeZones().catch(() => {
+    /* Manual zone entry remains available. */
+  });
   // theme changes re-read tokens; size changes re-lay out; scrolling repaints
   try {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
@@ -252,25 +257,49 @@ function initSiteEditor(): void {
     elevation = el<HTMLInputElement>('siteElevation'),
     tz = el<HTMLInputElement>('siteTz'),
     err = el('siteErr');
+  const zoneStatus = el('siteZoneStatus');
+  const lookup = bindSiteZone(
+    () => {
+      const la = Number(lat.value),
+        lo = Number(lon.value);
+      return lat.value.trim() !== '' &&
+        lon.value.trim() !== '' &&
+        la >= -65 &&
+        la <= 65 &&
+        lo >= -180 &&
+        lo <= 180
+        ? { lat: la, lon: lo }
+        : null;
+    },
+    tz,
+    zoneStatus,
+    el<HTMLDataListElement>('siteZoneChoices'),
+  );
+  lat.addEventListener('input', lookup.infer);
+  lon.addEventListener('input', lookup.infer);
   el('siteBtn').addEventListener('click', () => {
     pop.hidden = !pop.hidden;
     if (!pop.hidden) {
+      lookup.cancel();
       name.value = S.site.name;
       lat.value = String(S.site.lat);
       lon.value = String(S.site.lon);
       elevation.value = S.site.elevation == null ? '' : String(S.site.elevation);
       tz.value = S.site.tz;
+      zoneStatus.textContent =
+        'Saved IANA zone. Coordinate edits infer a new zone; manual overrides are kept.';
       err.hidden = true;
       name.focus();
     }
   });
   el('siteCancel').addEventListener('click', () => {
+    lookup.cancel();
     pop.hidden = true;
   });
   el('siteReset').addEventListener('click', () => applySite({ ...DEFAULT_SITE }));
   el('siteApply').addEventListener('click', () => {
-    const la = parseFloat(lat.value),
-      lo = parseFloat(lon.value),
+    const la = lat.value.trim() === '' ? NaN : Number(lat.value),
+      lo = lon.value.trim() === '' ? NaN : Number(lon.value),
       zone = tz.value.trim(),
       elevationText = elevation.value.trim(),
       metres = elevationText === '' ? undefined : Number(elevationText);

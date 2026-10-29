@@ -20,6 +20,7 @@ import { river } from '../views/river';
 import type { CanvasView } from '../views/view';
 import { store, type ViewId } from './settings';
 import { S, data, type AppState } from './state';
+import timezoneNotices from '../../public/licenses/timezone-notices.txt?raw';
 
 const sizer = el('sizer');
 
@@ -397,6 +398,7 @@ export function boot(): void {
   for (const b of el('viewSeg').children)
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === S.view));
   el('notesView').innerHTML = el<HTMLTemplateElement>('notesTpl').innerHTML;
+  el('timezoneNotices').textContent = timezoneNotices;
   exposeTestHooks();
   restart();
 }

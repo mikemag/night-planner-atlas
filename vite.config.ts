@@ -9,6 +9,9 @@ export default defineConfig({
     // Keep license headers (e.g. Astronomy Engine's MIT notice) in the minified bundle.
     rolldownOptions: { output: { comments: { legal: true } } },
   },
+  worker: {
+    rolldownOptions: { output: { comments: { legal: true } } },
+  },
   test: {
     include: ['src/**/*.test.ts'],
     environment: 'node',

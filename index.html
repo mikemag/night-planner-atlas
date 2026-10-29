@@ -174,7 +174,25 @@
             <p id="siteElevationHint">
               Blank uses sea level. A level horizon is assumed; no terrain lookup.
             </p>
-            <label for="siteTz">Time zone (IANA)<input id="siteTz" autocomplete="off" /></label>
+            <label for="siteTz"
+              >Time zone (IANA, editable)<input
+                id="siteTz"
+                list="siteZoneChoices"
+                autocomplete="off"
+                aria-describedby="siteZoneStatus"
+            /></label>
+            <datalist id="siteZoneChoices"></datalist>
+            <p id="siteZoneStatus" role="status"></p>
+            <p class="site-attribution">
+              Time-zone boundaries:
+              <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, via
+              <a href="https://github.com/evansiroky/timezone-boundary-builder"
+                >timezone-boundary-builder</a
+              >
+              and <a href="https://github.com/ringsaturn/tzf-dist">tzf-dist</a> ·
+              <a href="./licenses/timezone-notices.txt">ODbL 1.0 and notices</a> ·
+              <a href="./data/timezones-2026e.tzb" download>Boundary data 2026e (4 MB)</a>.
+            </p>
             <p>Saved only in this browser; it is never sent anywhere. The default is Seattle.</p>
             <p class="err" id="siteErr" hidden></p>
             <div class="row">
@@ -221,6 +239,17 @@
 
     <template id="notesTpl">
       <h2>Three ways to plan a month of nights</h2>
+      <details>
+        <summary>Offline time-zone lookup: credits, license and data</summary>
+        <p>
+          Time-zone lookup uses tzf-wasm 2.0.1 (MIT), with boundary data 2026e from OpenStreetMap
+          contributors, via timezone-boundary-builder and tzf-dist (ODbL 1.0).
+          <a href="./data/timezones-2026e.tzb" download
+            >Download the matching boundary dataset (TZB, 4 MB)</a
+          >. Private saved sites are separate from this boundary data and remain in your browser.
+        </p>
+        <pre class="license-text" id="timezoneNotices"></pre>
+      </details>
       <p>
         Every view uses the same per-night data: the eight sun events, moonrise and moonset, and
         moon-free true dark. The ephemeris is real, computed in your browser with
