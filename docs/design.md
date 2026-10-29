@@ -38,8 +38,9 @@ One encoding everywhere, so a night looks the same in every view and in the sing
   and **tonight and now** are blue.
 - **Time** is the site's local clock time, including daylight saving time. The one-hour jump on a
   clock-change night is real, and the River labels it.
-- Light, Dark and Observing are designed palettes, selected by a visible control and saved in
-  this browser. System follows the device's light/dark preference. Explicit choices apply before
+- Light, Dark and Observing are designed palettes, selected by a compact native dropdown with
+  short labels and saved in this browser. OS red-filter setup belongs in How it works.
+  System follows the device's light/dark preference. Explicit choices apply before
   the first paint and switching palettes preserves the browsed night and selection.
   Observing uses warm neutral lightness steps designed for a separately enabled OS red-only
   accessibility filter; it does not enable the device filter. Accepted moonlight gains a dashed
