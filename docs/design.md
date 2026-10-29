@@ -46,7 +46,9 @@ One encoding everywhere, so a night looks the same in every view and in the sing
   boundary so hue is not its only cue. Normal Light and Dark retain their rich colors.
   Canvas colors come from the theme tokens in `src/styles/atlas.css`,
   and the sky ramp is tuned per theme so the day band doesn't glare in dark mode. Labels drawn on
-  sky colors pick white or ink by the background's luminance.
+  sky colors pick white or ink by relative contrast. Dark's day band stays lighter than civil
+  twilight, and the guide's shared swatches check decreasing lightness and label contrast in
+  every palette.
 
 ## The views
 

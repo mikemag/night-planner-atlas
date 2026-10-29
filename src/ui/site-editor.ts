@@ -20,6 +20,7 @@ export function initSiteEditor(): void {
   const error = el('siteErr');
   const raw = store.raw('favorites');
   const { book, readable } = readSiteBook(raw, S.site);
+  let storageFailed = !readable;
   let editingId: string | null = null;
   let point: Coordinates | null = null;
   let coordinateError = '';
@@ -36,6 +37,7 @@ export function initSiteEditor(): void {
       : 'Saved favorites could not be read. Their stored data was left unchanged; changes are temporary in this tab.';
   const persist = () => {
     const saved = readable && store.set('favorites', book);
+    storageFailed = !saved;
     if (!saved) {
       el('siteStorageNotice').textContent = storageWarning;
       el('siteStorageNotice').hidden = false;
@@ -81,9 +83,9 @@ export function initSiteEditor(): void {
       : 'New favorite';
     el<HTMLButtonElement>('siteRemove').disabled = id === null;
     preview();
-    el('siteStorage').textContent = readable
-      ? 'Favorites and preferences stay in this browser. No account is needed.'
-      : storageWarning;
+    el('siteStorage').textContent = storageFailed
+      ? storageWarning
+      : 'Favorites and preferences stay in this browser. No account is needed.';
   };
   el('siteBtn').addEventListener('click', () => {
     const active = book.sites.find((favorite) => favorite.id === book.selectedId);

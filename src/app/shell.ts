@@ -55,6 +55,8 @@ export function resize(): void {
 export function relayout(keepNight?: number | null): void {
   const v = canvasView();
   if (!v || !data.ready) return;
+  // Remove the old absolute minimap bounds before shrinking content (e.g. Month → Year).
+  el('riverMinimap').hidden = true;
   v.layout();
   sizer.style.height = Math.max(0, v.total - size.H) + 'px';
   if (keepNight != null && keepNight >= 0) v.scrollTo(keepNight, true);

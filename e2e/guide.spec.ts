@@ -32,10 +32,13 @@ for (const width of [1512, 390]) {
           const c = getComputedStyle(node);
           const a = lum(c.color),
             b = lum(c.backgroundColor);
-          return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+          return { contrast: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05), lightness: b };
         });
       });
-      expect(contrast.every((value) => value >= 4.5)).toBe(true);
+      expect(contrast.every((value) => value.contrast >= 4.5)).toBe(true);
+      expect(
+        contrast.every((value, i) => i === 0 || contrast[i - 1].lightness > value.lightness),
+      ).toBe(true);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
       if (process.env.SCREENSHOTS)
         await page.screenshot({

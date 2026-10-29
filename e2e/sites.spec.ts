@@ -144,4 +144,6 @@ test('storage write failure still permits a temporary site', async ({ page }) =>
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#siteStorageNotice')).toContainText('cannot be kept');
   await expect(page.locator('#siteBtn')).toContainText('Temporary site');
+  await page.locator('#siteBtn').click();
+  await expect(page.locator('#siteStorage')).toContainText('cannot be kept');
 });

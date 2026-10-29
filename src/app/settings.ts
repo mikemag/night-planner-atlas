@@ -53,20 +53,24 @@ export const store = {
   },
 };
 
+function choice<T extends string | number>(key: string, allowed: readonly T[], fallback: T): T {
+  const value = store.get<unknown>(key, fallback);
+  return allowed.includes(value as T) ? (value as T) : fallback;
+}
+
 export function loadSettings(): Settings {
-  const view = store.get<string>('view', 'river');
   const savedSite = store.get<unknown>('site', null);
   const legacy = isSite(savedSite) ? savedSite : DEFAULT_SITE;
   const { book } = readSiteBook(store.raw('favorites'), legacy);
   const site = book.sites.find((site) => site.id === book.selectedId) ?? legacy;
   return {
-    view: ['river', 'calendar', 'lunations', 'notes'].includes(view) ? (view as ViewId) : 'river',
+    view: choice<ViewId>('view', ['river', 'calendar', 'lunations', 'notes'], 'river'),
     site: siteRecord(site),
-    focus: store.get('focus', 0),
-    moonAlt: store.get('moonAlt', 0),
-    crescent: store.get('crescent', 0),
-    calOrient: store.get<CalOrient>('calOrient', 'v'),
-    calZoom: store.get<CalZoom>('calZoom', 'month'),
-    riverZoom: store.get<string>('riverZoom', 'month') === 'year' ? 'year' : 'month',
+    focus: choice('focus', [0, 3, 5, 7, 10], 0),
+    moonAlt: choice('moonAlt', [0, 5, 10, 15], 0),
+    crescent: choice('crescent', [0, 0.1, 0.2, 0.3], 0),
+    calOrient: choice<CalOrient>('calOrient', ['v', 'h'], 'v'),
+    calZoom: choice<CalZoom>('calZoom', ['month', 'year'], 'month'),
+    riverZoom: choice<RiverZoom>('riverZoom', ['year', 'month'], 'month'),
   };
 }

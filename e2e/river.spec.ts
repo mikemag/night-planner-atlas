@@ -492,7 +492,8 @@ for (const width of [1512, 390]) {
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     };
-    await selectDate('2026-10-30');
+    // Keep the later Monday inside the phone canvas after the taller shared controls.
+    await selectDate('2026-10-31');
     let labels = await gutter();
     const november = labels.find((t) => t.text === (width === 390 ? 'Nov ’26' : 'Nov 2026'))!;
     expect(november.fontSize).toBe(11.5);
@@ -699,6 +700,10 @@ test.describe('new-moon event markers', () => {
       await page.locator('#cv').press('ArrowRight');
       await zoom(page, 'Year');
       await painted(page);
+      expect(await page.locator('#scroller').evaluate((el) => el.scrollTop)).toBe(0);
+      expect(
+        await page.locator('#scroller').evaluate((el) => el.scrollHeight - el.clientHeight),
+      ).toBeLessThanOrEqual(1);
       const year = await page.evaluate(() => {
         const a = window.__npa!;
         return {
