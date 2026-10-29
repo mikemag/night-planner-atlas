@@ -320,10 +320,9 @@ export function siteLabel(): void {
   updateSiteClock();
 }
 
-export function applySite(site: Site): void {
+export function applySite(site: Site, persist = true): void {
   S.site = site;
-  store.set('site', site);
-  el('sitePop').hidden = true;
+  if (persist) store.set('site', site);
   siteLabel();
   restart();
 }

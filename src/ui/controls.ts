@@ -1,6 +1,5 @@
-import { DEFAULT_SITE, type ViewId } from '../app/settings';
+import type { ViewId } from '../app/settings';
 import {
-  applySite,
   canvasView,
   draw,
   goTonight,
@@ -24,7 +23,7 @@ import { calendar } from '../views/calendar';
 import { river } from '../views/river';
 import { el, scroller } from './dom';
 import { hideTip, showNote, showTip } from './tooltip';
-import { bindSiteZone } from './site-zone';
+import { initSiteEditor } from './site-editor';
 
 const VIEW_KEYS: ViewId[] = ['calendar', 'river', 'lunations', 'notes'];
 
@@ -172,6 +171,7 @@ function initKeyboard(): void {
   window.addEventListener('keydown', (e) => {
     const target = e.target as HTMLElement | null;
     if (
+      document.querySelector('dialog[open]') ||
       !data.ready ||
       !data.range ||
       e.altKey ||
@@ -246,88 +246,5 @@ function initHeader(): void {
   el('insWeekends').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button[data-i]');
     if (b) select(Number(b.dataset.i), true);
-  });
-}
-
-function initSiteEditor(): void {
-  const pop = el('sitePop');
-  const name = el<HTMLInputElement>('siteName'),
-    lat = el<HTMLInputElement>('siteLat'),
-    lon = el<HTMLInputElement>('siteLon'),
-    elevation = el<HTMLInputElement>('siteElevation'),
-    tz = el<HTMLInputElement>('siteTz'),
-    err = el('siteErr');
-  const zoneStatus = el('siteZoneStatus');
-  const lookup = bindSiteZone(
-    () => {
-      const la = Number(lat.value),
-        lo = Number(lon.value);
-      return lat.value.trim() !== '' &&
-        lon.value.trim() !== '' &&
-        la >= -65 &&
-        la <= 65 &&
-        lo >= -180 &&
-        lo <= 180
-        ? { lat: la, lon: lo }
-        : null;
-    },
-    tz,
-    zoneStatus,
-    el<HTMLDataListElement>('siteZoneChoices'),
-  );
-  lat.addEventListener('input', lookup.infer);
-  lon.addEventListener('input', lookup.infer);
-  el('siteBtn').addEventListener('click', () => {
-    pop.hidden = !pop.hidden;
-    if (!pop.hidden) {
-      lookup.cancel();
-      name.value = S.site.name;
-      lat.value = String(S.site.lat);
-      lon.value = String(S.site.lon);
-      elevation.value = S.site.elevation == null ? '' : String(S.site.elevation);
-      tz.value = S.site.tz;
-      zoneStatus.textContent =
-        'Saved IANA zone. Coordinate edits infer a new zone; manual overrides are kept.';
-      err.hidden = true;
-      name.focus();
-    }
-  });
-  el('siteCancel').addEventListener('click', () => {
-    lookup.cancel();
-    pop.hidden = true;
-  });
-  el('siteReset').addEventListener('click', () => applySite({ ...DEFAULT_SITE }));
-  el('siteApply').addEventListener('click', () => {
-    const la = lat.value.trim() === '' ? NaN : Number(lat.value),
-      lo = lon.value.trim() === '' ? NaN : Number(lon.value),
-      zone = tz.value.trim(),
-      elevationText = elevation.value.trim(),
-      metres = elevationText === '' ? undefined : Number(elevationText);
-    const fail = (msg: string) => {
-      err.textContent = msg;
-      err.hidden = false;
-    };
-    if (!(la >= -65 && la <= 65))
-      return fail('Latitude must be between −65° and 65° for this planner.');
-    if (!(lo >= -180 && lo <= 180)) return fail('Longitude must be between −180° and 180°.');
-    if (
-      elevation.validity.badInput ||
-      (metres != null && (!Number.isFinite(metres) || metres < -500 || metres > 10000))
-    )
-      return fail(
-        'Elevation must be between −500 and 10,000 metres above sea level, or left blank.',
-      );
-    try {
-      new Intl.DateTimeFormat('en-US', { timeZone: zone });
-    } catch {
-      return fail(`“${zone}” is not a time zone name. Try America/Los_Angeles.`);
-    }
-    applySite({
-      name: name.value.trim() || 'Custom site',
-      lat: la,
-      lon: lo,
-      tz: zone,
-      ...(metres == null ? {} : { elevation: metres }),
-    });
   });
 }

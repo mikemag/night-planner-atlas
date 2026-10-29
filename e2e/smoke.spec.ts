@@ -95,8 +95,7 @@ test('a new site recomputes every night', async ({ page }) => {
   const errors = await open(page);
   await page.locator('#siteBtn').click();
   await page.locator('#siteName').fill('Edinburgh');
-  await page.locator('#siteLat').fill('55.95');
-  await page.locator('#siteLon').fill('-3.19');
+  await page.locator('#siteLocation').fill('55.95, -3.19');
   await page.locator('#siteTz').fill('Europe/London');
   await page.locator('#siteApply').click();
   await expect(page.locator('#siteBtn')).toContainText('Edinburgh · 55.95°N 3.19°W');
@@ -152,8 +151,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   await page.locator('#siteBtn').click();
   await expect(page.locator('#siteElevation')).toHaveValue('2000');
-  await expect(page.locator('#siteLat')).toHaveValue('47.60621');
-  await expect(page.locator('#siteLon')).toHaveValue('-122.34253');
+  await expect(page.locator('#siteLocation')).toHaveValue('47.60621, -122.34253');
   await page.locator('#siteElevation').fill('');
   await page.locator('#siteApply').click();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
@@ -164,9 +162,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
   expect(errors).toEqual([]);
 });
 
-test('elevation validates range, accepts below sea level, and resets with the site', async ({
-  page,
-}) => {
+test('elevation validates range, accepts below sea level, and can be cleared', async ({ page }) => {
   const errors = await open(page);
   await page.locator('#siteBtn').click();
   for (const value of ['-501', '10001']) {
@@ -182,7 +178,8 @@ test('elevation validates range, accepts below sea level, and resets with the si
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   await expect(page.locator('#siteBtn')).toContainText('-400 m');
   await page.locator('#siteBtn').click();
-  await page.locator('#siteReset').click();
+  await page.locator('#siteElevation').fill('');
+  await page.locator('#siteApply').click();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
   expect(errors).toEqual([]);
@@ -201,7 +198,6 @@ test('sites saved before elevation was supported retain their coordinates and us
   await expect(page.locator('#siteBtn')).toContainText('Legacy site');
   await page.locator('#siteBtn').click();
   await expect(page.locator('#siteElevation')).toHaveValue('');
-  await expect(page.locator('#siteLat')).toHaveValue('55.95');
-  await expect(page.locator('#siteLon')).toHaveValue('-3.19');
+  await expect(page.locator('#siteLocation')).toHaveValue('55.95, -3.19');
   expect(errors).toEqual([]);
 });

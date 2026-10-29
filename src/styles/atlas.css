@@ -728,45 +728,109 @@ input {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--tip-ink);
 }
-.pop {
-  position: fixed;
-  z-index: 30;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 290px;
-  max-width: calc(100vw - 32px);
+.site-dialog {
+  width: min(520px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
-  overflow-y: auto;
-  background: var(--raised);
+  overflow: auto;
+  padding: 20px;
   border: 1px solid var(--hair-2);
-  border-radius: 10px;
+  border-radius: 12px;
+  background: var(--raised);
+  color: var(--ink);
   box-shadow: var(--shadow);
-  padding: 12px;
+}
+.site-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+.site-dialog form {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+}
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dialog-heading h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.site-dialog label {
+  display: grid;
+  gap: 4px;
+  color: var(--ink-2);
   font-size: 12px;
 }
-.pop label {
-  display: grid;
-  gap: 3px;
-  color: var(--ink-2);
-}
-.pop input {
+.site-dialog input,
+.site-dialog select {
+  width: 100%;
+  min-width: 0;
   border: 1px solid var(--hair-2);
   background: var(--panel);
   border-radius: 6px;
-  padding: 5px 7px;
+  padding: 8px;
 }
-.pop .row {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-.pop p {
+.site-dialog p {
   margin: 0;
-  color: var(--ink-3);
-  font-size: 11.5px;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dialog-actions .btn {
+  min-height: 34px;
+}
+.dialog-footer {
+  justify-content: flex-end;
+  border-top: 1px solid var(--hair);
+  padding-top: 12px;
+}
+.btn.primary {
+  background: var(--ink);
+  color: var(--panel);
+  border-color: var(--ink);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.site-edit-target {
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+#siteCoordinates {
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--panel);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.removal-confirm {
+  border: 1px solid var(--select);
+  border-radius: 6px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+.coordinate-help {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.coordinate-help summary {
+  cursor: pointer;
+}
+.storage-notice {
+  margin: 0;
+  color: var(--ink);
+  font-size: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--select);
+  border-radius: 6px;
 }
 .err {
   color: #c93a3a;

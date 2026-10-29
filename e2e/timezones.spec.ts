@@ -12,8 +12,7 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#loading')).toBeHidden();
     await page.locator('#siteBtn').click();
     const point = async (lat: string, lon: string, zone: string) => {
-      await page.locator('#siteLat').fill(lat);
-      await page.locator('#siteLon').fill(lon);
+      await page.locator('#siteLocation').fill(`${lat}, ${lon}`);
       await expect(page.locator('#siteTz')).toHaveValue(zone);
     };
     await point('47.60621', '-122.34253', 'America/Los_Angeles');
@@ -28,8 +27,7 @@ for (const width of [1512, 390]) {
     await point('-31.677', '128.883', 'Australia/Eucla');
     await point('21.3069', '-157.8583', 'Pacific/Honolulu');
     // A manual override during a pending lookup must win, even after its debounce expires.
-    await page.locator('#siteLat').fill('47.60621');
-    await page.locator('#siteLon').fill('-122.34253');
+    await page.locator('#siteLocation').fill('47.60621, -122.34253');
     await page.locator('#siteTz').fill('Etc/UTC');
     await page.waitForTimeout(350);
     await expect(page.locator('#siteTz')).toHaveValue('Etc/UTC');
@@ -47,8 +45,7 @@ test('a failed lookup leaves deliberate manual entry usable', async ({ page }) =
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
   await page.locator('#siteBtn').click();
-  await page.locator('#siteLat').fill('55.95');
-  await page.locator('#siteLon').fill('-3.19');
+  await page.locator('#siteLocation').fill('55.95, -3.19');
   await expect(page.locator('#siteZoneStatus')).toContainText('lookup is unavailable');
   await page.locator('#siteTz').fill('Europe/London');
   await page.locator('#siteApply').click();
@@ -66,8 +63,7 @@ test('startup loads lookup bytes before the first site edit, and ambiguous zones
   await expect(page.locator('#loading')).toBeHidden();
   await context.setOffline(true);
   await page.locator('#siteBtn').click();
-  await page.locator('#siteLat').fill('27.7172');
-  await page.locator('#siteLon').fill('85.3240');
+  await page.locator('#siteLocation').fill('27.7172, 85.3240');
   await expect(page.locator('#siteTz')).toHaveValue('Asia/Kathmandu');
   await context.setOffline(false);
   await page.route(/timezones\.worker.*\.js$/, (route) =>
@@ -79,8 +75,7 @@ test('startup loads lookup bytes before the first site edit, and ambiguous zones
   await page.reload();
   await expect(page.locator('#loading')).toBeHidden();
   await page.locator('#siteBtn').click();
-  await page.locator('#siteLat').fill('35.8');
-  await page.locator('#siteLon').fill('-110.5');
+  await page.locator('#siteLocation').fill('35.8, -110.5');
   await expect(page.locator('#siteZoneStatus')).toContainText('More than one zone');
   await expect(page.locator('#siteTz')).toHaveValue('');
   await expect(page.locator('#siteZoneChoices option')).toHaveCount(2);

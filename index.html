@@ -99,6 +99,8 @@
         </span>
       </div>
 
+      <p id="siteStorageNotice" class="storage-notice" role="status" hidden></p>
+
       <div class="body" id="viewBody">
         <section class="stage" id="stage">
           <div class="stage-head">
@@ -152,55 +154,105 @@
               <div class="bar"><i id="loadingBar"></i></div>
             </div>
           </div>
-          <div class="pop" id="sitePop" hidden>
-            <strong>Observing site</strong>
-            <label for="siteName">Name<input id="siteName" autocomplete="off" /></label>
-            <label for="siteLat">Latitude (°N)<input id="siteLat" inputmode="decimal" /></label>
-            <label for="siteLon"
-              >Longitude (°E, negative = west)<input id="siteLon" inputmode="decimal"
-            /></label>
-            <label for="siteElevation"
-              >Elevation (m above sea level, optional)
-              <input
-                id="siteElevation"
-                type="number"
-                inputmode="decimal"
-                min="-500"
-                max="10000"
-                step="any"
-                aria-describedby="siteElevationHint"
-              />
-            </label>
-            <p id="siteElevationHint">
-              Blank uses sea level. A level horizon is assumed; no terrain lookup.
-            </p>
-            <label for="siteTz"
-              >Time zone (IANA, editable)<input
-                id="siteTz"
-                list="siteZoneChoices"
-                autocomplete="off"
-                aria-describedby="siteZoneStatus"
-            /></label>
-            <datalist id="siteZoneChoices"></datalist>
-            <p id="siteZoneStatus" role="status"></p>
-            <p class="site-attribution">
-              Time-zone boundaries:
-              <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, via
-              <a href="https://github.com/evansiroky/timezone-boundary-builder"
-                >timezone-boundary-builder</a
-              >
-              and <a href="https://github.com/ringsaturn/tzf-dist">tzf-dist</a> ·
-              <a href="./licenses/timezone-notices.txt">ODbL 1.0 and notices</a> ·
-              <a href="./data/timezones-2026e.tzb" download>Boundary data 2026e (4 MB)</a>.
-            </p>
-            <p>Saved only in this browser; it is never sent anywhere. The default is Seattle.</p>
-            <p class="err" id="siteErr" hidden></p>
-            <div class="row">
-              <button class="btn" id="siteReset">Reset to Seattle</button
-              ><button class="btn" id="siteCancel">Cancel</button
-              ><button class="btn" id="siteApply">Apply</button>
-            </div>
-          </div>
+          <dialog class="site-dialog" id="sitePop" aria-labelledby="siteTitle">
+            <form id="siteForm" novalidate>
+              <div class="dialog-heading">
+                <h2 id="siteTitle">Observing sites</h2>
+                <button
+                  class="icon-btn"
+                  id="siteClose"
+                  type="button"
+                  aria-label="Close site selector"
+                >
+                  ×
+                </button>
+              </div>
+              <label for="siteFavorite">Saved sites<select id="siteFavorite"></select></label>
+              <div class="dialog-actions" role="group" aria-label="Site actions">
+                <button class="btn" type="button" id="siteAdd">Add site</button>
+                <button class="btn" type="button" id="siteDuplicate">Duplicate</button>
+                <button class="btn" type="button" id="siteRemove">Remove…</button>
+              </div>
+              <div id="siteRemoval" class="removal-confirm" hidden>
+                <p>
+                  Remove <strong id="siteRemoveName"></strong> from favorites? Your current night
+                  plan stays open.
+                </p>
+                <div class="dialog-actions">
+                  <button class="btn" id="siteKeep" type="button">Keep site</button>
+                  <button class="btn" id="siteConfirmRemove" type="button">Remove favorite</button>
+                </div>
+              </div>
+              <p class="site-edit-target" id="siteEditTarget"></p>
+              <label for="siteName"
+                >Name<input id="siteName" autocomplete="off" maxlength="100"
+              /></label>
+              <label for="siteLocation"
+                >Coordinates or full Google Maps link
+                <input
+                  id="siteLocation"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="siteLocationHint siteCoordinates"
+                />
+              </label>
+              <p id="siteLocationHint">Latitude, longitude: <code>47.60621, -122.34253</code>.</p>
+              <details class="coordinate-help">
+                <summary>Copying coordinates and supported Maps links</summary>
+                <p>
+                  In desktop Google Maps, right-click the intended point, then click its coordinate
+                  line to copy it. Full Maps search links with
+                  <code>query=latitude,longitude</code> or <code>q=latitude,longitude</code> work
+                  too. Short links and map-camera positions need clearer input. Pasted links are
+                  read locally and never opened by the planner.
+                </p>
+              </details>
+              <output id="siteCoordinates" for="siteLocation"></output>
+              <label for="siteElevation"
+                >Elevation (m above sea level, optional)
+                <input
+                  id="siteElevation"
+                  type="number"
+                  inputmode="decimal"
+                  min="-500"
+                  max="10000"
+                  step="any"
+                  aria-describedby="siteElevationHint"
+                />
+              </label>
+              <p id="siteElevationHint">
+                Blank uses sea level. A level horizon is assumed; no terrain lookup.
+              </p>
+              <label for="siteTz"
+                >Time zone (IANA, editable)<input
+                  id="siteTz"
+                  list="siteZoneChoices"
+                  autocomplete="off"
+                  aria-describedby="siteZoneStatus"
+              /></label>
+              <datalist id="siteZoneChoices"></datalist>
+              <p id="siteZoneStatus" role="status"></p>
+              <p class="site-attribution">
+                Time-zone boundaries:
+                <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>,
+                via
+                <a href="https://github.com/evansiroky/timezone-boundary-builder"
+                  >timezone-boundary-builder</a
+                >
+                and <a href="https://github.com/ringsaturn/tzf-dist">tzf-dist</a> ·
+                <a href="./licenses/timezone-notices.txt">ODbL 1.0 and notices</a> ·
+                <a href="./data/timezones-2026e.tzb" download>Boundary data 2026e (4 MB)</a>.
+              </p>
+              <p id="siteStorage"></p>
+              <p class="err" id="siteErr" role="alert" hidden></p>
+              <div class="dialog-actions dialog-footer">
+                <button class="btn" type="button" id="siteCancel">Cancel</button>
+                <button class="btn primary" type="submit" id="siteApply">
+                  Save &amp; use site
+                </button>
+              </div>
+            </form>
+          </dialog>
         </section>
 
         <aside class="inspector" id="inspector" aria-live="polite">

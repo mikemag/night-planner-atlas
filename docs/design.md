@@ -193,9 +193,20 @@ Calendar's Time ↓.
   clears that height; Moonrise and Moonset use the upper edge at the natural horizon.
   _Ignore a moon under_ (10–30% lit) is for people who don't mind a thin crescent. Both change
   every number and the weekend picks, not just the drawing.
-- **Site.** Name, latitude, longitude, IANA time zone and optional elevation in metres above sea
-  level, saved only in the browser. Blank elevation uses sea level; existing saved sites keep
-  their coordinates. Elevation adjusts observer position and idealized refraction while assuming
+- **Site.** A keyboard-accessible dialog holds named local favorites, with add, edit, duplicate
+  and confirmed removal. The name, coordinates, IANA zone and optional elevation are saved
+  together; the existing saved site becomes the initial favorite. Choosing a favorite fills a
+  draft; Save & use applies its complete record. Cancel and Escape discard form edits.
+  Removing an active favorite leaves the current plan open until another site is used.
+  One field accepts decimal latitude/longitude or documented full coordinate-bearing Google Maps
+  search links, parsed entirely locally with a coordinate preview. Camera-only, ambiguous and
+  short links receive guidance instead of a guessed location; imported URLs are not retained.
+  A same-origin worker infers the zone from bundled boundary data, including offline. A visible
+  editable zone supports manual overrides; ambiguous results require a choice. The location UI
+  credits the ODbL data and links its matching dataset, with full notices available in the guide.
+  Unknown/damaged favorites are left untouched, and unavailable storage is explained.
+  Blank elevation uses sea level; existing saved sites keep their coordinates.
+  Elevation adjusts observer position and idealized refraction while assuming
   a level horizon, with no terrain lookup. The default is Seattle. Beside the location, a reserved
   readout shows the site's current local date/time, abbreviation, UTC offset and IANA zone.
   It updates each minute, on returning to the page and immediately on site changes; chart
