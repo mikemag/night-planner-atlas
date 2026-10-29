@@ -191,6 +191,9 @@ Calendar's Time ↓.
   and an optional temporary site without overwriting saved preferences or favorites. Keeping view
   settings and saving the included site are separate deliberate actions. Theme stays personal.
   A notice can restore the viewer's saved plan. Copy failure selects the link for manual copying.
+  Links use readable named fields such as `#npa=1&view=river&start=2026-09`, omitting fixed defaults
+  to keep them short; `crescent` is an integer percentage. Earlier encoded JSON links still open.
+  Plans remain self-contained, with no link-shortening service or server-stored lookup.
 - **How it works.** One offline page with in-page navigation, practical reading instructions,
   a worked Seattle night, and expandable calculation/reference detail. Its sky ramp shares chart
   tokens and contrast-selected ink; an upper-edge/center diagram explains Moon events. Measured

@@ -59,9 +59,17 @@ test('a site-free link restores dates and controls later while preserving recipi
   await page.getByRole('button', { name: 'Share', exact: true }).click();
   await expect(page.getByLabel('Include this site', { exact: true })).not.toBeChecked();
   const link = await page.getByLabel('Share link', { exact: true }).inputValue();
-  const payload = JSON.parse(decodeURIComponent(new URL(link).hash.slice(5)));
-  expect(payload).not.toHaveProperty('site');
-  expect(payload).toMatchObject({ start: '2026-09', night: '2026-10-31', expanded: true });
+  const payload = Object.fromEntries(new URLSearchParams(new URL(link).hash.slice(1)));
+  for (const key of ['site', 'name', 'lat', 'lon', 'tz', 'elevation'])
+    expect(payload).not.toHaveProperty(key);
+  expect(payload).toMatchObject({
+    npa: '1',
+    view: 'river',
+    start: '2026-09',
+    night: '2026-10-31',
+    expanded: '1',
+    crescent: '20',
+  });
   const target = await receiver(browser);
   try {
     await target.page.goto(link);
@@ -221,11 +229,12 @@ test('bad links preserve saved data and clipboard failure gives a manual copy pa
   await expect(page.locator('#shareBtn')).toBeFocused();
   const link = await page.locator('#shareLink').inputValue();
   const url = new URL(link);
-  const next = JSON.parse(decodeURIComponent(url.hash.slice(5)));
-  next.night = '2026-10-09';
-  next.expanded = false;
-  next.focus = 7;
-  url.hash = '#npa=' + encodeURIComponent(JSON.stringify(next));
+  const next = new URLSearchParams(url.hash.slice(1));
+  expect(next.get('npa')).toBe('1');
+  next.set('night', '2026-10-09');
+  next.delete('expanded');
+  next.set('focus', '7');
+  url.hash = next.toString();
   await page.evaluate((hash) => {
     location.hash = hash;
   }, url.hash);

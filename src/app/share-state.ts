@@ -13,6 +13,16 @@ export interface SharedPlan extends Omit<Settings, 'site'> {
 }
 
 const PREFIX = '#npa=';
+// These defaults belong to this link version, independent of personal/app defaults.
+const DEFAULTS = {
+  view: 'river',
+  riverZoom: 'month',
+  calZoom: 'month',
+  calOrient: 'v',
+  focus: 0,
+  moonAlt: 0,
+  crescent: 0,
+} as const;
 const INVALID =
   'This shared plan is invalid or uses an unsupported version. Your saved settings were not changed.';
 const among = <T extends string | number>(value: unknown, choices: readonly T[]): value is T =>
@@ -76,6 +86,45 @@ export function readSharedPlan(hash: string): SharedPlan | null {
   if (!hash.startsWith(PREFIX)) return null;
   if (hash.length > 8192) throw new Error(INVALID);
   try {
+    const params = new URLSearchParams(hash.slice(1));
+    if (params.get('npa') === '1') {
+      for (const key of params.keys())
+        if (params.getAll(key).length !== 1) throw new Error(INVALID);
+      const number = (key: string, fallback?: number) => {
+        const value = params.get(key);
+        if (value === null) return fallback;
+        if (!/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:e[+-]?\d+)?$/i.test(value)) throw new Error(INVALID);
+        return Number(value);
+      };
+      const expanded = params.get('expanded');
+      if (expanded !== null && expanded !== '0' && expanded !== '1') throw new Error(INVALID);
+      const hasSite = ['name', 'lat', 'lon', 'tz', 'elevation'].some((key) => params.has(key));
+      return validate({
+        v: 1,
+        start: params.get('start'),
+        view: params.get('view') ?? DEFAULTS.view,
+        riverZoom: params.get('riverZoom') ?? DEFAULTS.riverZoom,
+        calZoom: params.get('calZoom') ?? DEFAULTS.calZoom,
+        calOrient: params.get('calOrient') ?? DEFAULTS.calOrient,
+        focus: number('focus', DEFAULTS.focus),
+        moonAlt: number('moonAlt', DEFAULTS.moonAlt),
+        crescent: number('crescent', 0)! / 100,
+        night: params.get('night'),
+        expanded: expanded === '1',
+        ...(hasSite
+          ? {
+              site: {
+                name: params.get('name'),
+                lat: number('lat'),
+                lon: number('lon'),
+                tz: params.get('tz'),
+                ...(params.has('elevation') ? { elevation: number('elevation') } : {}),
+              },
+            }
+          : {}),
+      });
+    }
+    // Keep previously copied JSON links working; new links use readable fields.
     return validate(JSON.parse(decodeURIComponent(hash.slice(PREFIX.length))));
   } catch {
     throw new Error(INVALID);
@@ -86,7 +135,16 @@ export function createShareLink(base: string, plan: SharedPlan): string {
   const clean = validate(plan);
   const url = new URL(base);
   url.search = '';
-  url.hash = PREFIX + encodeURIComponent(JSON.stringify(clean));
+  const params = new URLSearchParams({ npa: '1', view: clean.view, start: clean.start });
+  if (clean.night) params.set('night', clean.night);
+  for (const key of ['riverZoom', 'calZoom', 'calOrient', 'focus', 'moonAlt'] as const)
+    if (clean[key] !== DEFAULTS[key]) params.set(key, String(clean[key]));
+  if (clean.crescent !== DEFAULTS.crescent) params.set('crescent', String(clean.crescent * 100));
+  if (clean.expanded) params.set('expanded', '1');
+  if (clean.site)
+    for (const [key, value] of Object.entries(clean.site)) params.set(key, String(value));
+  // A slash is safe in a fragment value; keep IANA names like America/Los_Angeles readable.
+  url.hash = params.toString().replaceAll('%2F', '/');
   if (url.hash.length > 8192) throw new Error(INVALID);
   return url.href;
 }
