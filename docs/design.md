@@ -38,7 +38,13 @@ One encoding everywhere, so a night looks the same in every view and in the sing
   and **tonight and now** are blue.
 - **Time** is the site's local clock time, including daylight saving time. The one-hour jump on a
   clock-change night is real, and the River labels it.
-- Both themes are designed. Canvas colors come from the theme tokens in `src/styles/atlas.css`,
+- Light, Dark and Observing are designed palettes, selected by a visible control and saved in
+  this browser. System follows the device's light/dark preference. Explicit choices apply before
+  the first paint and switching palettes preserves the browsed night and selection.
+  Observing uses warm neutral lightness steps designed for a separately enabled OS red-only
+  accessibility filter; it does not enable the device filter. Accepted moonlight gains a dashed
+  boundary so hue is not its only cue. Normal Light and Dark retain their rich colors.
+  Canvas colors come from the theme tokens in `src/styles/atlas.css`,
   and the sky ramp is tuned per theme so the day band doesn't glare in dark mode. Labels drawn on
   sky colors pick white or ink by the background's luminance.
 

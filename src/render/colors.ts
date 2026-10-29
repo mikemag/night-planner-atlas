@@ -11,6 +11,8 @@ export interface Palette {
   moon: string;
   /** Green moonlight accepted by planning thresholds; "r, g, b" for rgba(). */
   acceptedMoon: string;
+  /** An extra dashed boundary cue in the observing palette; transparent in ordinary themes. */
+  acceptedEdge: string;
   good: string;
   ink: string;
   ink2: string;
@@ -34,6 +36,7 @@ export const C: Palette = {
   dark: '',
   moon: '',
   acceptedMoon: '',
+  acceptedEdge: '',
   good: '',
   ink: '',
   ink2: '',
@@ -61,6 +64,7 @@ export function readColors(): void {
     dark: g('--sky-dark'),
     moon: g('--moon-rgb'),
     acceptedMoon: g('--moon-accepted-rgb'),
+    acceptedEdge: g('--moon-accepted-edge'),
     good: g('--good'),
     ink: g('--ink'),
     ink2: g('--ink-2'),

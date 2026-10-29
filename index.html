@@ -9,6 +9,16 @@
       content="Plan dark-sky nights by month and year: twilight, moonlight and moon-free true dark for any site, in River, Calendar and Lunations views."
     />
     <meta name="color-scheme" content="light dark" />
+    <script>
+      // Apply explicit themes before CSS paints, including when a saved observing mode is used.
+      try {
+        const theme = JSON.parse(localStorage.getItem('npa:theme') || '"system"');
+        if (['light', 'dark', 'observing'].includes(theme))
+          document.documentElement.dataset.theme = theme;
+      } catch {
+        // Storage is optional; the system theme remains usable.
+      }
+    </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/src/styles/atlas.css" />
   </head>
@@ -19,6 +29,24 @@
           <h1>Night Planner Atlas</h1>
           <button class="site-btn" id="siteBtn" title="Change site">Seattle</button>
         </div>
+        <label class="ctl theme-control" for="themeSel"
+          >Theme
+          <select
+            id="themeSel"
+            aria-label="Theme"
+            aria-describedby="themeHint"
+            title="Observing is designed for your device’s red-only accessibility filter. Enable the filter separately."
+          >
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="observing">Observing · OS red filter</option>
+          </select>
+        </label>
+        <span class="sr-only" id="themeHint"
+          >Observing is designed for your device’s red-only accessibility filter. Enable the filter
+          separately; this setting changes the planner’s palette only.</span
+        >
         <div class="seg" id="viewSeg" role="tablist" aria-label="Approach">
           <button data-view="calendar">Calendar</button>
           <button data-view="river">River</button>

@@ -17,6 +17,7 @@ import {
   toggleRiverNight,
 } from '../app/shell';
 import { S, data } from '../app/state';
+import { loadTheme, setTheme, type Theme } from '../app/theme';
 import { cv } from '../render/surface';
 import { calendar } from '../views/calendar';
 import { river } from '../views/river';
@@ -210,6 +211,9 @@ function initKeyboard(): void {
 }
 
 function initHeader(): void {
+  const theme = el<HTMLSelectElement>('themeSel');
+  theme.value = loadTheme();
+  theme.addEventListener('change', () => setTheme(theme.value as Theme));
   el('viewSeg').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button');
     if (b?.dataset.view) setView(b.dataset.view as ViewId);

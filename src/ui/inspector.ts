@@ -148,29 +148,29 @@ export function altitudeChartSVG(n: Night, isTonight: boolean): string {
       ? ''
       : `<rect x="${X(a).toFixed(1)}" y="${pt}" width="${Math.max(0, X(b) - X(a)).toFixed(1)}" height="${ph}" fill="${color}" opacity="${op}"/>`;
   let s = `<svg class="ins-chart" viewBox="0 0 ${Wd} ${Hd}" role="img" aria-label="Sun and Moon center altitudes through the night; Moon events use its upper edge">`;
-  s += `<rect width="${Wd}" height="${Hd}" rx="10" fill="#0c111c"/>`;
+  s += `<rect width="${Wd}" height="${Hd}" rx="10" fill="${C.dark}"/>`;
+  s += band(ev.sunset, ev.civilDusk, C.civil, 1) + band(ev.civilDawn, ev.sunrise, C.civil, 1);
   s +=
-    band(ev.sunset, ev.civilDusk, '#a0703f', 0.55) +
-    band(ev.civilDawn, ev.sunrise, '#a0703f', 0.55);
+    band(ev.civilDusk, ev.nauticalDusk, C.naut, 1) + band(ev.nauticalDawn, ev.civilDawn, C.naut, 1);
   s +=
-    band(ev.civilDusk, ev.nauticalDusk, '#2f63b8', 0.5) +
-    band(ev.nauticalDawn, ev.civilDawn, '#2f63b8', 0.5);
-  s +=
-    band(ev.nauticalDusk, ev.astroDusk, '#3d3a9a', 0.55) +
-    band(ev.astroDawn, ev.nauticalDawn, '#3d3a9a', 0.55);
+    band(ev.nauticalDusk, ev.astroDusk, C.astro, 1) +
+    band(ev.astroDawn, ev.nauticalDawn, C.astro, 1);
   if (n.td) s += band(n.td[0], n.td[1], C.dark, 1);
   const bands = moonlightBands(n);
   for (const [a, b] of bands.ordinary) s += band(a, b, `rgb(${C.moon})`, moonAlpha(n.illum));
-  for (const [a, b] of bands.accepted)
+  for (const [a, b] of bands.accepted) {
     s += band(a, b, `rgb(${C.acceptedMoon})`, moonAlpha(n.illum));
+    if (C.acceptedEdge !== 'transparent')
+      s += `<rect x="${X(a).toFixed(1)}" y="${pt}" width="${Math.max(0, X(b) - X(a)).toFixed(1)}" height="${ph}" fill="none" stroke="${C.acceptedEdge}" stroke-dasharray="2 3"/>`;
+  }
   s += `<line x1="${pl}" x2="${pl + pw}" y1="${Y(0)}" y2="${Y(0)}" stroke="rgba(200,208,222,.55)"/>`;
   s += `<line x1="${pl}" x2="${pl + pw}" y1="${Y(-18)}" y2="${Y(-18)}" stroke="rgba(200,208,222,.45)" stroke-dasharray="5 4"/>`;
   const path = (idx: 1 | 2) =>
     samples
       .map((p, k) => `${k ? 'L' : 'M'}${X(p[0]).toFixed(1)} ${Y(p[idx]).toFixed(1)}`)
       .join(' ');
-  s += `<path d="${path(1)}" fill="none" stroke="#f3c64d" stroke-width="2" stroke-linejoin="round"/>`;
-  s += `<path d="${path(2)}" fill="none" stroke="#eef0f4" stroke-width="2" stroke-linejoin="round"/>`;
+  s += `<path d="${path(1)}" fill="none" stroke="${C.acceptedEdge !== 'transparent' ? C.select : '#f3c64d'}" stroke-width="2" stroke-linejoin="round" stroke-dasharray="5 3"/>`;
+  s += `<path d="${path(2)}" fill="none" stroke="${C.acceptedEdge !== 'transparent' ? C.ink : '#eef0f4'}" stroke-width="2" stroke-linejoin="round"/>`;
   const lab = (t: string, a: number) =>
     `<text x="${pl - 5}" y="${Y(a) + 3}" font-size="9" fill="#9aa4b6" text-anchor="end">${t}</text>`;
   s += lab('0°', 0) + lab('−18°', -18) + lab(`${hi}°`, hi) + lab(`${lo}°`, lo);

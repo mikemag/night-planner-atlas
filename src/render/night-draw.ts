@@ -61,7 +61,24 @@ export function drawNight(
   }
   if (bands.accepted.length) {
     const green = `rgba(${C.acceptedMoon},${moonAlpha(n.illum).toFixed(3)})`;
-    for (const [a, b] of bands.accepted) seg(wallH(a, n), wallH(b, n), green);
+    for (const [a, b] of bands.accepted) {
+      const start = wallH(a, n),
+        end = wallH(b, n);
+      seg(start, end, green);
+      if (C.acceptedEdge !== 'transparent') {
+        const p0 = Math.max(0, P(start)),
+          p1 = Math.min(L, P(end));
+        if (p1 <= p0) continue;
+        ctx.save();
+        ctx.strokeStyle = C.acceptedEdge;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 3]);
+        if (o === 'h')
+          ctx.strokeRect(x + p0 + 0.5, y + 0.5, Math.max(0, p1 - p0 - 1), Math.max(0, h - 1));
+        else ctx.strokeRect(x + 0.5, y + p0 + 0.5, Math.max(0, w - 1), Math.max(0, p1 - p0 - 1));
+        ctx.restore();
+      }
+    }
   }
   if (opt.curve && o === 'h') {
     const aMin = -25,
