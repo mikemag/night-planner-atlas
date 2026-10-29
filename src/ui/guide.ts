@@ -1,8 +1,8 @@
 import { C, inkOn } from '../render/colors';
 import { el } from './dom';
 import guide from './guide.html?raw';
-import astronomyNotices from '../../public/licenses/astronomy-engine.txt?raw';
-import timezoneNotices from '../../public/licenses/timezone-notices.txt?raw';
+import astronomyNotices from '/licenses/astronomy-engine.txt?raw';
+import timezoneNotices from '/licenses/timezone-notices.txt?raw';
 import reference from '../model/testdata/usno.json';
 
 export function initGuide(): void {

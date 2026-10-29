@@ -3,6 +3,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   // Relative asset URLs, so the built site works from any path.
   base: './',
+  // Public license texts are also embedded verbatim in the offline guide.
+  assetsInclude: ['**/licenses/*.txt'],
   build: {
     target: 'es2022',
     sourcemap: true,
