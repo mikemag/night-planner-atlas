@@ -24,6 +24,7 @@ import { river } from '../views/river';
 import { el, scroller } from './dom';
 import { hideTip, showNote, showTip } from './tooltip';
 import { initSiteEditor } from './site-editor';
+import { initRiverMinimap } from './river-minimap';
 
 const VIEW_KEYS: ViewId[] = ['calendar', 'river', 'lunations', 'notes'];
 
@@ -33,6 +34,7 @@ export function initControls(): void {
   initKeyboard();
   initHeader();
   initSiteEditor();
+  initRiverMinimap();
   void prepareTimeZones().catch(() => {
     /* Manual zone entry remains available. */
   });
@@ -172,6 +174,7 @@ function initKeyboard(): void {
     const target = e.target as HTMLElement | null;
     if (
       document.querySelector('dialog[open]') ||
+      target?.closest('#riverMinimap') ||
       !data.ready ||
       !data.range ||
       e.altKey ||

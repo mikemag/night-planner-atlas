@@ -124,6 +124,8 @@ flattened.
   inside its outline to drag without recentering. Clicking outside the viewport centers that date
   and can continue into a drag. Dragging tracks continuous date position, including unequal
   focus/context rows, and clamps at the range ends. Selection and the inspector stay unchanged.
+  A keyboard scrollbar overlays the same minimap when focused: arrows browse nights, Page Up/Down
+  browse screens and Home/End reach the range ends without selecting a different night.
 - **Fixed readout.** River has no floating night tooltip. A reserved strip below the chart shows
   the pointed-at date, site-local clock time, sky stage and explicitly labeled Moon center
   altitude in Month. "Astronomical darkness" describes the sky stage independently of
@@ -220,7 +222,11 @@ Calendar's Time ↓.
   selection does not affect that clock.
 - **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 switch views, Esc
   collapses an expanded River night or Calendar week. Enter/Space toggles the selected River
-  Month night when the chart has focus.
+  Month night when the chart has focus. The chart and minimap retain a visible focus outline.
+  River's selected-night summary includes the local zone, full windows and usable duration;
+  pointer previews do not update that live announcement. Site dialogs contain their keyboard
+  navigation and return focus to the location button on closing. Muted date/control text keeps
+  readable contrast in each palette, with additional forced-color focus/boundary cues.
 
 ## Why River is the default
 

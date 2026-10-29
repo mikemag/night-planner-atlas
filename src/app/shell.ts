@@ -1,4 +1,5 @@
 import { MON3, MONL, fmtDur, nightTitle } from '../model/format';
+import { windowsText } from '../model/describe';
 import type { Site } from '../model/night';
 import {
   bestWeekends,
@@ -13,6 +14,7 @@ import { el, scroller } from '../ui/dom';
 import { inspect } from '../ui/inspector';
 import { initGuide, updateGuideColors } from '../ui/guide';
 import { updateRiverReadout } from '../ui/river-readout';
+import { updateRiverMinimap } from '../ui/river-minimap';
 import { initSiteClock, updateSiteClock } from '../ui/site-clock';
 import { hideTip } from '../ui/tooltip';
 import { calendar } from '../views/calendar';
@@ -68,11 +70,12 @@ export function draw(): void {
     ctx.fillStyle = C.panel;
     ctx.fillRect(0, 0, size.W, size.H);
     v.draw(scroller.scrollTop);
+    updateRiverMinimap();
     if (v === river) {
       updateRiverReadout();
       const n = data.range!.nights[S.sel];
       if (n) {
-        const status = `${nightTitle(n)}.${n.quarter === 0 ? ' New moon night.' : ''} ${fmtDur(n.mfMs)} usable dark.${S.riverZoom === 'month' && S.riverExpanded ? ' Expanded.' : ''}`;
+        const status = `${nightTitle(n)}.${n.quarter === 0 ? ' New moon night.' : ''} Times in ${S.site.tz}. ${fmtDur(n.mfMs)} usable dark. ${windowsText(n)}.${S.riverZoom === 'month' && S.riverExpanded ? ' Expanded.' : ''}`;
         const live = el('riverSelection');
         if (live.textContent !== status) live.textContent = status;
       }
@@ -254,6 +257,8 @@ export function setView(view: ViewId): void {
   for (const b of el('viewSeg').children)
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === view));
   const v = canvasView(view);
+  el('riverMinimap').hidden = view !== 'river';
+  cv.setAttribute('aria-describedby', view === 'river' ? 'chartHelp riverSelection' : 'chartHelp');
   scroller.hidden = !v;
   if (view !== 'river') {
     cv.removeAttribute('role');

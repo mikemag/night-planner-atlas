@@ -9,7 +9,7 @@
   --raised: #ffffff;
   --ink: #111726;
   --ink-2: #485266;
-  --ink-3: #7a8497;
+  --ink-3: #58657a;
   --hair: #d9dee6;
   --hair-2: #c4cbd6;
   --chip: #dfe4ec;
@@ -39,7 +39,7 @@
     --raised: #151a23;
     --ink: #e7ebf2;
     --ink-2: #a5aebe;
-    --ink-3: #6c7688;
+    --ink-3: #8b96a9;
     --hair: #1d242f;
     --hair-2: #2b3441;
     --chip: #171d27;
@@ -68,7 +68,7 @@
   --raised: #151a23;
   --ink: #e7ebf2;
   --ink-2: #a5aebe;
-  --ink-3: #6c7688;
+  --ink-3: #8b96a9;
   --hair: #1d242f;
   --hair-2: #2b3441;
   --chip: #171d27;
@@ -427,7 +427,18 @@ input {
   display: block;
 }
 .scroller canvas:focus-visible {
-  outline: none;
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+.river-minimap-access {
+  position: absolute;
+  right: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.river-minimap-access:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
 }
 .sizer {
   width: 1px;
@@ -1177,5 +1188,64 @@ kbd {
   }
   .reference-queries {
     columns: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .seg button {
+    min-height: 32px;
+  }
+  .seg.small button {
+    min-width: 32px;
+  }
+  .controls select,
+  .theme-control select {
+    min-height: 32px;
+    height: 32px;
+  }
+  .icon-btn {
+    min-width: 32px;
+    min-height: 32px;
+  }
+  .dialog-actions .btn {
+    min-height: 40px;
+  }
+  .site-btn {
+    min-height: 28px;
+    text-align: left;
+  }
+  .weekends-tray > summary {
+    min-height: 36px;
+    padding-block: 8px;
+  }
+}
+@media (forced-colors: active) {
+  :focus-visible,
+  .scroller canvas:focus-visible,
+  .river-minimap-access:focus-visible {
+    outline-color: Highlight;
+  }
+  button,
+  input,
+  select,
+  .seg button[aria-pressed='true'] {
+    border: 1px solid ButtonText;
+  }
+  .river-detail,
+  .site-dialog {
+    border-color: CanvasText;
+  }
+  .river-leader,
+  .river-window-bracket {
+    stroke: CanvasText;
+  }
+  .river-label-backing {
+    fill: Canvas;
+  }
+  .river-annotations text {
+    fill: CanvasText !important;
+  }
+  .guide-sky-ramp span {
+    border: 1px solid CanvasText;
   }
 }

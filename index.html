@@ -129,8 +129,32 @@
             <canvas
               id="cv"
               tabindex="0"
+              aria-describedby="chartHelp riverSelection"
               aria-label="Night planner chart. Arrow keys move between nights; Enter or Space expands the selected night in River Month; Escape collapses it."
             ></canvas>
+            <p class="sr-only" id="chartHelp">
+              Arrow keys select nights and weeks. In River Month, Enter or Space toggles the
+              selected night’s boundary times. Use the selected-night summary for the site-local
+              windows; pointer previews do not change selection.
+            </p>
+            <div
+              id="riverMinimap"
+              class="river-minimap-access"
+              role="scrollbar"
+              tabindex="0"
+              aria-label="Browse River dates"
+              aria-orientation="vertical"
+              aria-controls="scroller"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="0"
+              aria-describedby="riverMinimapHelp"
+              hidden
+            ></div>
+            <p class="sr-only" id="riverMinimapHelp">
+              Arrow Up/Down browse a night, Page Up/Down a screen, and Home/End reach the range
+              ends. Browsing does not change the selected night.
+            </p>
             <div class="sizer" id="sizer"></div>
             <div class="sr-only" id="riverSelection" role="status" aria-live="polite"></div>
             <section
