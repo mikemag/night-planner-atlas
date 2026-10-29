@@ -10,7 +10,7 @@ for (const width of [1512, 390]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
-    await page.locator('#siteBtn').click();
+    await page.locator('#siteSel').selectOption('manage');
     const point = async (lat: string, lon: string, zone: string) => {
       await page.locator('#siteLocation').fill(`${lat}, ${lon}`);
       await expect(page.locator('#siteTz')).toHaveValue(zone);
@@ -44,7 +44,7 @@ test('a failed lookup leaves deliberate manual entry usable', async ({ page }) =
   await page.route('**/*.wasm', (route) => route.abort());
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#siteBtn').click();
+  await page.locator('#siteSel').selectOption('manage');
   await page.locator('#siteLocation').fill('55.95, -3.19');
   await expect(page.locator('#siteZoneStatus')).toContainText('lookup is unavailable');
   await page.locator('#siteTz').fill('Europe/London');
@@ -62,7 +62,7 @@ test('startup loads lookup bytes before the first site edit, and ambiguous zones
   await (await wasm).finished();
   await expect(page.locator('#loading')).toBeHidden();
   await context.setOffline(true);
-  await page.locator('#siteBtn').click();
+  await page.locator('#siteSel').selectOption('manage');
   await page.locator('#siteLocation').fill('27.7172, 85.3240');
   await expect(page.locator('#siteTz')).toHaveValue('Asia/Kathmandu');
   await context.setOffline(false);
@@ -74,7 +74,7 @@ test('startup loads lookup bytes before the first site edit, and ambiguous zones
   );
   await page.reload();
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#siteBtn').click();
+  await page.locator('#siteSel').selectOption('manage');
   await page.locator('#siteLocation').fill('35.8, -110.5');
   await expect(page.locator('#siteZoneStatus')).toContainText('More than one zone');
   await expect(page.locator('#siteTz')).toHaveValue('');

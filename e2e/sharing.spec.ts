@@ -121,7 +121,7 @@ test('including a site requires a preview and saving it never replaces existing 
   browser,
 }, info) => {
   await openAuthor(page);
-  await page.locator('#siteBtn').click();
+  await page.locator('#siteSel').selectOption('manage');
   await page.locator('#siteAdd').click();
   await page.locator('#siteName').fill('Private meadow');
   await page.locator('#siteLocation').fill('47.123, -121.987');
@@ -147,7 +147,7 @@ test('including a site requires a preview and saving it never replaces existing 
     target.page.on('request', (r) => requests.push(r.url()));
     await target.page.goto(link);
     await expect(target.page.locator('#loading')).toBeHidden();
-    await expect(target.page.locator('#siteBtn')).toContainText('Private meadow');
+    await expect(target.page.locator('#siteSel option:checked')).toContainText('Private meadow');
     expect(await favorites(target.page)).toEqual(ownBook);
     expect(await target.page.evaluate(() => JSON.parse(localStorage.getItem('npa:site')!))).toEqual(
       ownSite,

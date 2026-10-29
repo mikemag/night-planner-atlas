@@ -34,14 +34,14 @@ test('River keyboard tasks include visible focus, minimap browsing and contained
   await expect(page.locator('#cv')).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.locator('#cv')).toHaveAttribute('aria-expanded', 'false');
-  await page.locator('#siteBtn').focus();
-  await page.keyboard.press('Enter');
+  await page.locator('#siteSel').focus();
+  await page.locator('#siteSel').selectOption('manage');
   await expect(page.getByRole('dialog', { name: 'Observing sites' })).toBeVisible();
   await page.locator('#siteDuplicate').focus();
   await page.keyboard.press('ArrowRight');
   expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(selected);
   await page.keyboard.press('Escape');
-  await expect(page.locator('#siteBtn')).toBeFocused();
+  await expect(page.locator('#siteSel')).toBeFocused();
 });
 
 for (const width of [320, 390]) {
@@ -53,7 +53,7 @@ for (const width of [320, 390]) {
       await page.getByLabel('Theme', { exact: true }).selectOption(theme);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
       const targets = await page
-        .locator('#focusSeg button, #themeSel, #siteBtn')
+        .locator('#focusSeg button, #themeSel, #siteSel')
         .evaluateAll((nodes) =>
           nodes.map((el) => {
             const r = el.getBoundingClientRect();
@@ -62,7 +62,7 @@ for (const width of [320, 390]) {
         );
       expect(targets.every((r) => r.width >= 24 && r.height >= 24)).toBe(true);
     }
-    await page.locator('#siteBtn').click();
+    await page.locator('#siteSel').selectOption('manage');
     await expect(page.locator('#siteApply')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   });
@@ -83,6 +83,6 @@ test('forced colors and reduced motion retain visible chart focus and readable e
     'solid',
   );
   await expect(page.locator('#riverSelection')).toContainText('usable dark');
-  await page.locator('#siteBtn').click();
+  await page.locator('#siteSel').selectOption('manage');
   await expect(page.getByLabel('Coordinates or full Google Maps link')).toBeVisible();
 });

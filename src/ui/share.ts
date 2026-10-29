@@ -74,7 +74,6 @@ export function initSharing(): void {
     } else
       message.textContent = 'Browser storage is unavailable; these view settings remain temporary.';
   });
-  el('shareReviewSite').addEventListener('click', () => el('siteBtn').click());
   el('shareRestore').addEventListener('click', () => {
     Object.assign(S, loadSettings(), {
       sharedSettings: false,

@@ -212,10 +212,12 @@ Calendar's Time ↓.
   clears that height; Moonrise and Moonset use the upper edge at the natural horizon.
   _Ignore a moon under_ (10–30% lit) is for people who don't mind a thin crescent. Both change
   every number and the weekend picks, not just the drawing.
-- **Site.** A keyboard-accessible dialog holds named local favorites, with add, edit, duplicate
-  and confirmed removal. The name, coordinates, IANA zone and optional elevation are saved
-  together; the existing saved site becomes the initial favorite. Choosing a favorite fills a
-  draft; Save & use applies its complete record. Cancel and Escape discard form edits.
+- **Site.** A native dropdown switches directly between named local favorites. **Manage sites…**
+  opens the keyboard-accessible editor, with add, edit, duplicate and confirmed removal. The name,
+  coordinates, IANA zone and optional elevation are saved together; the existing saved site becomes
+  the initial favorite. Shared or unsaved sites remain visible as the current selection.
+  In the editor, choosing a favorite fills a draft; Save & use applies its complete record.
+  Cancel and Escape discard form edits and return focus to the opener.
   Removing an active favorite leaves the current plan open until another site is used.
   One field accepts decimal latitude/longitude or documented full coordinate-bearing Google Maps
   search links, parsed entirely locally with a coordinate preview. Camera-only, ambiguous and

@@ -7,8 +7,9 @@ import { isSite, parseSiteInput, type Coordinates } from '../model/site-input';
 import { el } from './dom';
 import { bindSiteZone } from './site-zone';
 
-/** Favorites are saved together; every form edit stays in a draft until Save & use. */
+/** Pick saved sites directly; management edits stay in a draft until Save & use. */
 export function initSiteEditor(): void {
+  const picker = el<HTMLSelectElement>('siteSel');
   const dialog = el<HTMLDialogElement>('sitePop');
   const form = el<HTMLFormElement>('siteForm');
   const favorites = el<HTMLSelectElement>('siteFavorite');
@@ -24,6 +25,24 @@ export function initSiteEditor(): void {
   let editingId: string | null = null;
   let point: Coordinates | null = null;
   let coordinateError = '';
+  let opener: HTMLElement = picker;
+  const matchesCurrent = (site: Site) =>
+    JSON.stringify(siteRecord(site)) === JSON.stringify(siteRecord(S.site));
+  const activeFavorite = () =>
+    book.sites.find((site) => site.id === book.selectedId && matchesCurrent(site)) ??
+    book.sites.find(matchesCurrent);
+  const siteCaption = (site: Site) =>
+    `${site.name} · ${Math.abs(site.lat).toFixed(2)}°${site.lat >= 0 ? 'N' : 'S'} ${Math.abs(site.lon).toFixed(2)}°${site.lon >= 0 ? 'E' : 'W'}${site.elevation == null ? '' : ` · ${site.elevation} m`}`;
+  const refreshPicker = () => {
+    const active = activeFavorite();
+    picker.replaceChildren();
+    if (!active) picker.appendChild(new Option(siteCaption(S.site), 'current'));
+    for (const site of book.sites)
+      picker.appendChild(new Option(siteCaption(site), `site:${site.id}`));
+    picker.appendChild(new Option('Manage sites…', 'manage'));
+    picker.value = active ? `site:${active.id}` : 'current';
+    picker.title = siteCaption(S.site);
+  };
   const lookup = bindSiteZone(
     () => point,
     zone,
@@ -87,19 +106,34 @@ export function initSiteEditor(): void {
       ? storageWarning
       : 'Favorites and preferences stay in this browser. No account is needed.';
   };
-  el('siteBtn').addEventListener('click', () => {
-    const active = book.sites.find((favorite) => favorite.id === book.selectedId);
-    const matches =
-      active && JSON.stringify(siteRecord(active)) === JSON.stringify(siteRecord(S.site));
-    fill(S.site, matches ? active.id : null);
+  const openEditor = (source: HTMLElement) => {
+    opener = source;
+    refreshPicker();
+    fill(S.site, activeFavorite()?.id ?? null);
     dialog.showModal();
     favorites.focus();
+  };
+  picker.addEventListener('change', () => {
+    if (picker.value === 'manage') {
+      openEditor(picker);
+      return;
+    }
+    const favorite = book.sites.find((site) => `site:${site.id}` === picker.value);
+    if (!favorite) return;
+    book.selectedId = favorite.id;
+    const saved = persist();
+    applySite(siteRecord(favorite), saved);
   });
+  el('shareReviewSite').addEventListener('click', (event) =>
+    openEditor(event.currentTarget as HTMLElement),
+  );
+  window.addEventListener('npa-site-change', refreshPicker);
+  refreshPicker();
   for (const id of ['siteCancel', 'siteClose'])
     el(id).addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => {
     lookup.cancel();
-    el('siteBtn').focus({ preventScroll: true });
+    opener.focus({ preventScroll: true });
   });
   favorites.addEventListener('change', () => {
     const favorite = book.sites.find((site) => site.id === favorites.value);
@@ -130,6 +164,7 @@ export function initSiteEditor(): void {
     book.sites = book.sites.filter((site) => site.id !== editingId);
     if (book.selectedId === editingId) book.selectedId = null;
     persist();
+    refreshPicker();
     const next = book.sites.find((site) => site.id === book.selectedId) ?? book.sites[0];
     fill(next ?? S.site, next?.id ?? null);
     favorites.focus();

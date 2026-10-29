@@ -204,12 +204,11 @@ input {
   letter-spacing: -0.012em;
   white-space: nowrap;
 }
-.site-btn {
+.site-picker {
   min-width: 0;
-  max-width: 100%;
+  max-width: min(100%, 420px);
   overflow: hidden;
   text-overflow: ellipsis;
-  appearance: none;
   border: 0;
   background: none;
   padding: 2px 4px;
@@ -219,9 +218,13 @@ input {
   cursor: pointer;
   white-space: nowrap;
 }
-.site-btn:hover {
+.site-picker:hover {
   color: var(--ink);
   background: var(--chip);
+}
+.site-picker option {
+  color: var(--ink);
+  background: var(--raised);
 }
 .site-heading {
   min-width: 0;
@@ -1213,8 +1216,9 @@ kbd {
   .dialog-actions .btn {
     min-height: 40px;
   }
-  .site-btn {
-    min-height: 28px;
+  .site-picker {
+    height: 32px;
+    min-height: 32px;
     text-align: left;
   }
   .weekends-tray > summary {

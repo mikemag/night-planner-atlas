@@ -326,9 +326,8 @@ export function shiftRange(dir: number): void {
 // ---------- site
 
 export function siteLabel(): void {
-  const s = S.site;
-  el('siteBtn').textContent =
-    `${s.name} · ${Math.abs(s.lat).toFixed(2)}°${s.lat >= 0 ? 'N' : 'S'} ${Math.abs(s.lon).toFixed(2)}°${s.lon >= 0 ? 'E' : 'W'}${s.elevation == null ? '' : ` · ${s.elevation} m`} ▾`;
+  // The picker owns the in-memory favorites, including changes storage could not keep.
+  window.dispatchEvent(new Event('npa-site-change'));
   updateSiteClock();
 }
 

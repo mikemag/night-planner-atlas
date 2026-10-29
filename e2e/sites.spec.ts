@@ -1,6 +1,80 @@
 import { expect, test } from '@playwright/test';
 
 for (const width of [1512, 390]) {
+  test(`the site dropdown switches complete records directly and keeps management separate at ${width}px`, async ({
+    page,
+    context,
+  }, info) => {
+    const record = {
+      name: 'Dark ridge',
+      lat: 55.95,
+      lon: -3.19,
+      tz: 'Europe/London',
+      elevation: 1234,
+    };
+    const sites = [
+      {
+        id: 'west',
+        name: 'Dark ridge',
+        lat: 47.60621,
+        lon: -122.34253,
+        tz: 'America/Los_Angeles',
+      },
+      { id: 'east', ...record },
+    ];
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
+    await page.addInitScript((sites) => {
+      if (!localStorage.getItem('npa:favorites'))
+        localStorage.setItem(
+          'npa:favorites',
+          JSON.stringify({ version: 1, sites, selectedId: 'west' }),
+        );
+    }, sites);
+    await page.goto('./');
+    await expect(page.locator('#loading')).toBeHidden();
+    const picker = page.getByRole('combobox', { name: 'Observing site', exact: true });
+    await expect(picker).toHaveValue('site:west');
+    await expect(picker.locator('option')).toHaveCount(3);
+    await expect(picker.locator('option').last()).toHaveText('Manage sites…');
+    await context.setOffline(true);
+    await picker.selectOption('site:east');
+    await expect(page.locator('#sitePop')).not.toBeVisible();
+    await expect(page.locator('#loading')).toBeHidden();
+    await expect(page.locator('#siteClock')).toContainText('Europe/London');
+    expect(await page.evaluate(() => window.__npa!.S.site)).toEqual(record);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('npa:site')!))).toEqual(
+      record,
+    );
+    const stored = await page.evaluate(() => localStorage.getItem('npa:favorites'));
+    expect(JSON.parse(stored!)).toEqual({ version: 1, sites, selectedId: 'east' });
+    await picker.selectOption('manage');
+    await expect(page.getByRole('dialog', { name: 'Observing sites' })).toBeVisible();
+    await expect(picker).toHaveValue('site:east');
+    await expect(page.locator('#siteLocation')).toHaveValue('55.95, -3.19');
+    await expect(page.locator('#siteElevation')).toHaveValue('1234');
+    await page.locator('#siteName').fill('Unsaved edit');
+    await page.keyboard.press('Escape');
+    await expect(picker).toBeFocused();
+    expect(await page.evaluate(() => localStorage.getItem('npa:favorites'))).toBe(stored);
+    expect(await page.evaluate(() => window.__npa!.S.site)).toEqual(record);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    if (process.env.SCREENSHOTS)
+      await page.screenshot({
+        path: `test-results/screenshots/${info.project.name}-site-picker-${width}.png`,
+      });
+    await context.setOffline(false);
+    await page.reload();
+    await expect(page.locator('#loading')).toBeHidden();
+    await expect(picker).toHaveValue('site:east');
+    await picker.selectOption('site:west');
+    await expect(page.locator('#loading')).toBeHidden();
+    await expect(page.locator('#siteClock')).toContainText('America/Los_Angeles');
+    expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
+    expect(
+      await page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!).sites),
+    ).toEqual(sites);
+  });
+
   test(`favorites preserve full records through drafts, copies and removal at ${width}px`, async ({
     page,
   }, info) => {
@@ -21,13 +95,13 @@ for (const width of [1512, 390]) {
     });
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
-    await page.locator('#siteBtn').click();
+    await page.locator('#siteSel').selectOption('manage');
     await expect(page.locator('#siteFavorite option')).toHaveCount(1);
     await page.locator('#siteName').fill('Unsaved edit');
     await page.keyboard.press('Escape');
-    await expect(page.locator('#siteBtn')).toBeFocused();
-    await expect(page.locator('#siteBtn')).toContainText('Legacy ridge');
-    await page.locator('#siteBtn').click();
+    await expect(page.locator('#siteSel')).toBeFocused();
+    await expect(page.locator('#siteSel option:checked')).toContainText('Legacy ridge');
+    await page.locator('#siteSel').selectOption('manage');
     await expect(page.locator('#siteName')).toHaveValue('Legacy ridge');
     await page.locator('#siteAdd').click();
     await page
@@ -55,20 +129,20 @@ for (const width of [1512, 390]) {
     expect(JSON.parse(stored).sites).toHaveLength(2);
     await page.reload();
     await expect(page.locator('#loading')).toBeHidden();
-    await expect(page.locator('#siteBtn')).toContainText('Baker ridge');
-    await page.locator('#siteBtn').click();
+    await expect(page.locator('#siteSel option:checked')).toContainText('Baker ridge');
+    await page.locator('#siteSel').selectOption('manage');
     await expect(page.locator('#siteElevation')).toHaveValue('2000');
     await page.locator('#siteDuplicate').click();
     await page.locator('#siteCancel').click();
     expect(
       await page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!).sites.length),
     ).toBe(2);
-    await page.locator('#siteBtn').click();
+    await page.locator('#siteSel').selectOption('manage');
     await page.locator('#siteDuplicate').click();
     await page.locator('#siteName').fill('Baker copy');
     await page.locator('#siteApply').click();
     await expect(page.locator('#loading')).toBeHidden();
-    await page.locator('#siteBtn').click();
+    await page.locator('#siteSel').selectOption('manage');
     await page.locator('#siteRemove').click();
     await page.locator('#siteKeep').click();
     await expect(page.locator('#siteFavorite option')).toHaveCount(3);
@@ -76,7 +150,7 @@ for (const width of [1512, 390]) {
     await page.locator('#siteConfirmRemove').click();
     await expect(page.locator('#siteFavorite option')).toHaveCount(2);
     // Removing the active favorite leaves the current plan intact until another site is used.
-    await expect(page.locator('#siteBtn')).toContainText('Baker copy');
+    await expect(page.locator('#siteSel option:checked')).toContainText('Baker copy');
     const legacyId = await page
       .locator('#siteFavorite option')
       .filter({ hasText: 'Legacy ridge' })
@@ -87,7 +161,7 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#siteTz')).toHaveValue('Europe/London');
     await page.locator('#siteApply').click();
     await expect(page.locator('#loading')).toBeHidden();
-    await expect(page.locator('#siteBtn')).toContainText('Legacy ridge');
+    await expect(page.locator('#siteSel option:checked')).toContainText('Legacy ridge');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   });
 }
@@ -95,7 +169,7 @@ for (const width of [1512, 390]) {
 test('bad pasted links leave the current site unchanged and make no requests', async ({ page }) => {
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#siteBtn').click();
+  await page.locator('#siteSel').selectOption('manage');
   const requests: string[] = [];
   page.on('request', (request) => requests.push(request.url()));
   for (const link of [
@@ -105,7 +179,7 @@ test('bad pasted links leave the current site unchanged and make no requests', a
     await page.locator('#siteLocation').fill(link);
     await page.locator('#siteApply').click();
     await expect(page.locator('#siteErr')).toBeVisible();
-    await expect(page.locator('#siteBtn')).toContainText('Seattle');
+    await expect(page.locator('#siteSel option:checked')).toContainText('Seattle');
   }
   expect(requests).toEqual([]);
   expect(new URL(page.url()).search).toBe('');
@@ -119,7 +193,7 @@ test('failed writes and damaged storage are visible and never erase existing dat
   });
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#siteBtn').click();
+  await page.locator('#siteSel').selectOption('manage');
   await expect(page.locator('#siteStorage')).toContainText('left unchanged');
   await page.locator('#siteName').fill('Temporary ridge');
   await page.locator('#siteApply').click();
@@ -127,7 +201,7 @@ test('failed writes and damaged storage are visible and never erase existing dat
   expect(await page.evaluate(() => localStorage.getItem('npa:favorites'))).toBe(
     '{unreadable old data',
   );
-  await expect(page.locator('#siteBtn')).toContainText('Temporary ridge');
+  await expect(page.locator('#siteSel option:checked')).toContainText('Temporary ridge');
 });
 
 test('storage write failure still permits a temporary site', async ({ page }) => {
@@ -138,12 +212,16 @@ test('storage write failure still permits a temporary site', async ({ page }) =>
   });
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#siteBtn').click();
+  await page.locator('#siteSel').selectOption('manage');
+  await page.locator('#siteDuplicate').click();
   await page.locator('#siteName').fill('Temporary site');
   await page.locator('#siteApply').click();
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#siteStorageNotice')).toContainText('cannot be kept');
-  await expect(page.locator('#siteBtn')).toContainText('Temporary site');
-  await page.locator('#siteBtn').click();
+  await expect(page.locator('#siteSel option:checked')).toContainText('Temporary site');
+  await page.locator('#siteSel').selectOption('site:initial-site');
+  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#siteSel option:checked')).toContainText('Seattle');
+  await page.locator('#siteSel').selectOption('manage');
   await expect(page.locator('#siteStorage')).toContainText('cannot be kept');
 });
