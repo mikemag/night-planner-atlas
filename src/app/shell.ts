@@ -16,7 +16,6 @@ import { hideTip } from '../ui/tooltip';
 import { calendar } from '../views/calendar';
 import { lunations } from '../views/lunations';
 import { river } from '../views/river';
-import { renderTable } from '../views/table';
 import type { CanvasView } from '../views/view';
 import { store, type ViewId } from './settings';
 import { S, data, type AppState } from './state';
@@ -25,7 +24,7 @@ const sizer = el('sizer');
 
 const canvasViews: Partial<Record<ViewId, CanvasView>> = { river, calendar, lunations };
 
-/** The canvas view for `view`, or null for the table and notes. */
+/** The canvas view for `view`, or null for notes. */
 export function canvasView(view: ViewId = S.view): CanvasView | null {
   return canvasViews[view] ?? null;
 }
@@ -108,7 +107,6 @@ export function select(i: number, scroll: boolean, top?: boolean): void {
     scroller.scrollTop = river.ys[i] - keepY;
   }
   if (scroll && v) v.scrollTo(i, !!top);
-  if (S.view === 'table') renderTable(currentMonthIndex());
   draw();
 }
 
@@ -134,12 +132,12 @@ export function goTonight(): void {
   draw();
 }
 
-/** The month shown at the top of the view (or of the selection, in the table). */
+/** The month shown at the top of the view. */
 function currentMonthIndex(): number {
   const r = data.range;
   if (!r) return -1;
   const v = canvasView();
-  const i = S.view === 'table' ? (S.sel >= 0 ? S.sel : r.tonightIdx) : v ? v.topNight() : 0;
+  const i = v ? v.topNight() : 0;
   const n = r.nights[Math.max(0, i)];
   return r.months.findIndex((mo) => mo.y === n.y && mo.m === n.m);
 }
@@ -168,12 +166,6 @@ export function stepMonth(dir: number): void {
   }
   const k = Math.max(0, Math.min(r.months.length - 1, currentMonthIndex() + dir));
   const i = r.months[k].idx[0];
-  if (S.view === 'table') {
-    S.sel = i;
-    inspect(i);
-    renderTable(currentMonthIndex());
-    return;
-  }
   const v = canvasView();
   if (v === river) scroller.scrollTop = river.ys[i];
   else v?.scrollTo(i, true);
@@ -189,7 +181,6 @@ const VIEW_INFO: Record<ViewId, [string, string]> = {
     'One row per night, clock time across — the moon’s diagonal and the seasons show as shapes.',
   ],
   lunations: ['Lunations', 'One row per lunar cycle, aligned on new moon; weekends tinted.'],
-  table: ['Table', 'The same numbers as a plain table, one month at a time.'],
   notes: ['Notes', 'What each approach is for, and which one I would build.'],
 };
 
@@ -272,9 +263,8 @@ export function setView(view: ViewId): void {
   el(view === 'river' ? 'riverWeekendSlot' : 'inspector').appendChild(el('weekendList'));
   if (view !== 'river') el('riverDetail').hidden = true;
   el('riverReadout').hidden = view !== 'river';
-  el('tableView').hidden = view !== 'table';
   el('notesView').hidden = view !== 'notes';
-  el('legend').style.display = view === 'notes' || view === 'table' ? 'none' : '';
+  el('legend').style.display = view === 'notes' ? 'none' : '';
   el('riverMoonKey').hidden = view !== 'river';
   el('periodBox').style.visibility = view === 'notes' ? 'hidden' : '';
   el('viewTitle').textContent = VIEW_INFO[view][0];
@@ -286,7 +276,6 @@ export function setView(view: ViewId): void {
     if (keep >= 0) v.scrollTo(keep, true);
     draw();
   }
-  if (view === 'table') renderTable(currentMonthIndex());
 }
 
 /** New-moon focus: ±N nights, or 0 for off. */

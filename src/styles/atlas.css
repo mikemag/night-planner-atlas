@@ -484,54 +484,6 @@ input {
   color: var(--good);
   margin-left: 6px;
 }
-.table-wrap {
-  overflow: auto;
-  flex: 1;
-  min-height: 0;
-}
-.nt {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.nt th,
-.nt td {
-  padding: 5px 10px;
-  border-bottom: 1px solid var(--hair);
-  text-align: right;
-  white-space: nowrap;
-}
-.nt th {
-  position: sticky;
-  top: 0;
-  background: var(--panel);
-  color: var(--ink-3);
-  font-weight: 600;
-  font-size: 11px;
-  z-index: 1;
-}
-.nt td:first-child,
-.nt th:first-child {
-  text-align: left;
-}
-.nt tr.wk td:first-child {
-  font-weight: 650;
-}
-.nt tr.sel td {
-  background: var(--weekend);
-}
-.nt tbody tr {
-  cursor: pointer;
-}
-.nt tbody tr:hover td {
-  background: var(--chip);
-}
-.nt .mf {
-  font-weight: 650;
-  color: var(--ink);
-}
-
 .inspector {
   min-height: 0;
   overflow: auto;

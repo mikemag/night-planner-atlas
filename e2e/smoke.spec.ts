@@ -9,7 +9,6 @@ const VIEWS = [
   { id: 'river', tab: 'River' },
   { id: 'calendar', tab: 'Calendar' },
   { id: 'lunations', tab: 'Lunations' },
-  { id: 'table', tab: 'Table' },
   { id: 'notes', tab: 'Notes' },
 ] as const;
 
@@ -49,9 +48,7 @@ for (const view of VIEWS) {
     const errors = await open(page);
     await page.locator('#viewSeg').getByRole('button', { name: view.tab, exact: true }).click();
     await expect(page.locator('#viewTitle')).toHaveText(view.tab);
-    if (view.id === 'table') {
-      await expect(page.locator('#tableView tbody tr')).toHaveCount(30);
-    } else if (view.id === 'notes') {
+    if (view.id === 'notes') {
       await expect(
         page.getByRole('heading', { name: 'Three ways to plan a month of nights' }),
       ).toBeVisible();

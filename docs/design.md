@@ -169,15 +169,9 @@ Calendar's Time ↓.
 - _Weak at_ dates: weekdays land in different columns on every row, and full-moon nights are
   deliberately left out.
 
-### Table
-
-The numbers behind the charts, one month at a time: sunset, astronomical dusk and dawn, sunrise,
-illumination, moonrise, moonset, true dark, moon-free total and windows. It is also the accessible
-twin of the charts.
-
 ### Shared pieces
 
-- **Inspector** (right panel in Calendar, Lunations and Table). The selected night as the familiar
+- **Inspector** (right panel in Calendar and Lunations). The selected night as the familiar
   altitude chart: sun and moon
   center altitude over the phase bands, with ordinary moonlight in warm grey and accepted
   moonlit time in illumination-scaled green. The sampled curves
@@ -195,7 +189,7 @@ twin of the charts.
   level, saved only in the browser. Blank elevation uses sea level; existing saved sites keep
   their coordinates. Elevation adjusts observer position and idealized refraction while assuming
   a level horizon, with no terrain lookup. The default is Seattle.
-- **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–5 switch views, Esc
+- **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 switch views, Esc
   collapses an expanded River night or Calendar week. Enter/Space toggles the selected River
   Month night when the chart has focus.
 

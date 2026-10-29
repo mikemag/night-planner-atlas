@@ -63,7 +63,7 @@ reloads revalidate against the server. Vite's hashed `/assets/` files use a year
 caching. The unversioned favicon caches for an hour. No catch-all rewrite is needed: views
 live at `/`, and unknown paths should return 404. Hosting deploys are atomic.
 
-After every deployment, open the printed HTTPS URL. Check River, Calendar, Lunations, Table
+After every deployment, open the printed HTTPS URL. Check River, Calendar, Lunations
 and Notes at desktop and phone widths in both themes, with no horizontal page scroll. Change
 the site, IANA zone, optional elevation and planning controls, reload, and check persistence.
 With a browser zone different from the observing site, verify the inspector's site-local times.

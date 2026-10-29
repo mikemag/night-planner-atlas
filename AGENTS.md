@@ -8,7 +8,7 @@ views. It is Mike's project, developed with agents. It is private for now and wi
 
 - `index.html` and `src/` are the site: TypeScript built with Vite into static files in `dist/`.
   `src/model/` is the night model and has no DOM; `src/app/` holds settings, shared state and the
-  shell; `src/views/` the River, Calendar, Lunations and Table views; `src/render/` the canvas and
+  shell; `src/views/` the River, Calendar and Lunations views; `src/render/` the canvas and
   theme colors; `src/ui/` the inspector, tooltip and controls. `src/styles/atlas.css` holds the
   styles and theme tokens.
 - `docs/design.md` describes the views, their shared visual language and the reasoning behind
@@ -60,7 +60,7 @@ views. It is Mike's project, developed with agents. It is private for now and wi
 - Performance is part of correctness. Computing a range must never freeze interaction, and
   layouts must not jump as data arrives.
 - Accessibility: every view is reachable by keyboard, labels drawn on sky colors keep their
-  contrast (use `inkOn`), and the Table view carries the same numbers as the charts.
+  contrast (use `inkOn`).
 
 ## Dependencies and credits
 

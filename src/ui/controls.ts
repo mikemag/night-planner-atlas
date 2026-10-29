@@ -23,7 +23,7 @@ import { river } from '../views/river';
 import { el, scroller } from './dom';
 import { hideTip, showNote, showTip } from './tooltip';
 
-const VIEW_KEYS: ViewId[] = ['calendar', 'river', 'lunations', 'table', 'notes'];
+const VIEW_KEYS: ViewId[] = ['calendar', 'river', 'lunations', 'notes'];
 
 /** Wire every control, pointer and keyboard event to the shell. */
 export function initControls(): void {
@@ -196,7 +196,7 @@ function initKeyboard(): void {
       );
     } else if (e.key === 't' || e.key === 'T') {
       goTonight();
-    } else if (e.key >= '1' && e.key <= '5') {
+    } else if (e.key >= '1' && e.key <= '4') {
       setView(VIEW_KEYS[+e.key - 1]);
     } else if (e.key === 'Escape') {
       if (S.view === 'river' && S.riverZoom === 'month' && S.riverExpanded) {
@@ -234,10 +234,6 @@ function initHeader(): void {
   });
   el('rangePrev').addEventListener('click', () => shiftRange(-1));
   el('rangeNext').addEventListener('click', () => shiftRange(1));
-  el('tableView').addEventListener('click', (e) => {
-    const tr = (e.target as Element).closest<HTMLElement>('tr[data-i]');
-    if (tr) select(Number(tr.dataset.i), false);
-  });
   el('insWeekends').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button[data-i]');
     if (b) select(Number(b.dataset.i), true);

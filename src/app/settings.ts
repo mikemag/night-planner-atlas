@@ -1,6 +1,6 @@
 import type { Site } from '../model/night';
 
-export type ViewId = 'river' | 'calendar' | 'lunations' | 'table' | 'notes';
+export type ViewId = 'river' | 'calendar' | 'lunations' | 'notes';
 export type RiverZoom = 'year' | 'month';
 export type CalZoom = 'month' | 'year';
 export type CalOrient = 'v' | 'h';
@@ -44,8 +44,9 @@ export const store = {
 };
 
 export function loadSettings(): Settings {
+  const view = store.get<string>('view', 'river');
   return {
-    view: store.get<ViewId>('view', 'river'),
+    view: ['river', 'calendar', 'lunations', 'notes'].includes(view) ? (view as ViewId) : 'river',
     site: store.get<Site | null>('site', null) || DEFAULT_SITE,
     focus: store.get('focus', 0),
     moonAlt: store.get('moonAlt', 0),

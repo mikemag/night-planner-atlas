@@ -19,7 +19,6 @@ track where it is going.
   months with monthly totals. Expand any week for times.
 - **Lunations**: one row per lunar cycle, aligned on new moon, with the best Friday–Saturday of
   each cycle.
-- **Table**: the same numbers, one month at a time.
 
 All views share one visual language and the same controls: new-moon focus (±N nights), when the
 moon counts as up, and whether to ignore a thin crescent. Click any night for its altitude chart
@@ -74,7 +73,7 @@ index.html              the page (Vite entry)
 src/
   model/                the night model: time zones, nights, ranges, formatting (no DOM)
   app/                  settings, shared state, and the shell that ties views together
-  views/                River, Calendar, Lunations and Table
+  views/                River, Calendar and Lunations
   render/               canvas surface, theme colors, drawing one night
   ui/                   inspector, tooltip, controls
   styles/atlas.css      theme tokens, layout, components
