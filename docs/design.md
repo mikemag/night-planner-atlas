@@ -196,7 +196,10 @@ Calendar's Time ↓.
 - **Site.** Name, latitude, longitude, IANA time zone and optional elevation in metres above sea
   level, saved only in the browser. Blank elevation uses sea level; existing saved sites keep
   their coordinates. Elevation adjusts observer position and idealized refraction while assuming
-  a level horizon, with no terrain lookup. The default is Seattle.
+  a level horizon, with no terrain lookup. The default is Seattle. Beside the location, a reserved
+  readout shows the site's current local date/time, abbreviation, UTC offset and IANA zone.
+  It updates each minute, on returning to the page and immediately on site changes; chart
+  selection does not affect that clock.
 - **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 switch views, Esc
   collapses an expanded River night or Calendar week. Enter/Space toggles the selected River
   Month night when the chart has focus.

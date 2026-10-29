@@ -223,6 +223,21 @@ input {
   color: var(--ink);
   background: var(--chip);
 }
+.site-heading {
+  min-width: 0;
+  max-width: 100%;
+}
+.site-clock {
+  display: block;
+  max-width: 350px;
+  min-height: 30px;
+  font-size: 10.5px;
+  line-height: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+  padding-inline: 4px;
+}
 .seg {
   display: inline-flex;
   background: var(--chip);

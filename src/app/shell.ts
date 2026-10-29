@@ -12,6 +12,7 @@ import { ctx, cv, size, sizeSurface } from '../render/surface';
 import { el, scroller } from '../ui/dom';
 import { inspect } from '../ui/inspector';
 import { updateRiverReadout } from '../ui/river-readout';
+import { initSiteClock, updateSiteClock } from '../ui/site-clock';
 import { hideTip } from '../ui/tooltip';
 import { calendar } from '../views/calendar';
 import { lunations } from '../views/lunations';
@@ -315,6 +316,7 @@ export function siteLabel(): void {
   const s = S.site;
   el('siteBtn').textContent =
     `${s.name} · ${Math.abs(s.lat).toFixed(2)}°${s.lat >= 0 ? 'N' : 'S'} ${Math.abs(s.lon).toFixed(2)}°${s.lon >= 0 ? 'E' : 'W'}${s.elevation == null ? '' : ` · ${s.elevation} m`} ▾`;
+  updateSiteClock();
 }
 
 export function applySite(site: Site): void {
@@ -387,6 +389,7 @@ export function onTheme(): void {
 export function boot(): void {
   readColors();
   siteLabel();
+  initSiteClock();
   for (const x of el('focusSeg').children)
     x.setAttribute('aria-pressed', String(Number((x as HTMLElement).dataset.val) === S.focus));
   el<HTMLSelectElement>('moonAltSel').value = String(S.moonAlt);
