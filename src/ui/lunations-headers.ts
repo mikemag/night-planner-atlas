@@ -1,12 +1,12 @@
 import { MON3, WD3, fmtClock, fmtDur } from '../model/format';
-import type { NightRange } from '../model/range';
+import { FULL_CYCLE, lunationWindow, visibleLunations, type NightRange } from '../model/range';
 import { el } from './dom';
 
 let signature = '';
 
 /** Real headings, total explanations and weekend buttons remain usable without hover. */
 export function prepareLunationsHeaders(r: NightRange, N: number): void {
-  const cycles = r.lunations.filter((L) => L.i + N >= 0 && L.i - N < r.nights.length);
+  const cycles = visibleLunations(r, N);
   const key = JSON.stringify([N, cycles, r.site.tz, r.nights[0].id, r.nights.at(-1)!.id]);
   if (key === signature) return;
   signature = key;
@@ -15,11 +15,16 @@ export function prepareLunationsHeaders(r: NightRange, N: number): void {
     header.className = 'lunation-heading';
     header.dataset.cycle = String(k);
     const p = r.tz.wallParts(L.t + 30_000);
-    const first = r.nights[Math.max(0, L.i - N)];
-    const last = r.nights[Math.min(r.nights.length - 1, L.i + N)];
-    const count = Math.min(r.nights.length - 1, L.i + N) - Math.max(0, L.i - N) + 1;
+    const window = lunationWindow(L, N);
+    const firstIndex = Math.max(0, window.first),
+      lastIndex = Math.min(r.nights.length - 1, window.last);
+    const first = r.nights[firstIndex];
+    const last = r.nights[lastIndex];
+    const count = lastIndex - firstIndex + 1;
+    header.dataset.first = String(firstIndex);
+    header.dataset.last = String(lastIndex);
     const range = `${MON3[first.m - 1]} ${first.d}${first.y !== last.y ? ', ' + first.y : ''} – ${MON3[last.m - 1]} ${last.d}, ${last.y}`;
-    const partial = count < 2 * N + 1;
+    const partial = firstIndex !== window.first || lastIndex !== window.last;
     const name = document.createElement('div');
     name.className = 'lunation-name';
     const title = document.createElement('h2');
@@ -35,10 +40,10 @@ export function prepareLunationsHeaders(r: NightRange, N: number): void {
     const duration = document.createElement('strong');
     duration.textContent = fmtDur(L.total);
     const caption = document.createElement('span');
-    caption.textContent = `usable in ±${N}`;
+    caption.textContent = N >= FULL_CYCLE ? 'usable · full cycle' : `usable in ±${N}`;
     summary.append(duration, caption);
     const explanation = document.createElement('p');
-    explanation.textContent = `${fmtDur(L.total)} is the sum of usable dark across the ${count} displayed evening dates: ${range}. Planning thresholds apply. Separate windows and nights are added together.${partial ? ` Partial range: ${count} of ${2 * N + 1} nights are loaded.` : ''}`;
+    explanation.textContent = `${fmtDur(L.total)} is the sum of usable dark across the ${count} displayed evening dates: ${range}. Planning thresholds apply. Separate windows and nights are added together.${N >= FULL_CYCLE ? ' Each night belongs to the new moon nearest its site-local midnight; cycles do not overlap. Empty edge positions are outside this cycle.' : ''}${partial ? ` Partial range: ${count} of ${window.last - window.first + 1} nights are loaded.` : ''}`;
     summary.title = explanation.textContent;
     total.append(summary, explanation);
     const pick = document.createElement(L.best ? 'button' : 'span');

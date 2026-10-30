@@ -85,8 +85,26 @@ From astronomical dusk to astronomical dawn. Absent when the Sun doesn't reach �
 - Illumination (fraction lit) and phase angle (0° new, 180° full) are taken at local midnight.
   Phase names use illumination thresholds: under 3% is new, over 97% is full, and within
   6 percentage points of half lit is a quarter; the phase angle distinguishes waxing and waning.
-- New and full moons come from `SearchMoonQuarter`. Each night is assigned the nearest new moon
-  by local midnight, which drives new-moon focus and the Lunations rows.
+- New and full moons come from `SearchMoonQuarter`. Event-to-night assignment and the day offsets
+  used by River/Calendar focus retain their existing convention. Lunations uses the actual new-moon
+  instants and each night's site-local midnight for ownership, as described below.
+
+## Centered lunar cycles
+
+- Each whole observing night belongs to the new moon closest in elapsed time to its site-local
+  midnight. Exact ties belong to the earlier new moon. A cycle's boundaries are the midpoints
+  between neighboring new-moon instants; a boundary never splits an observing night.
+- The model records each cycle's inclusive first/last evening-date indices before clipping to the
+  loaded range. It includes any cycle owning a loaded night, even when its new-moon night lies
+  outside that range. Extra adjacent new-moon searches establish the complete bounds of edge
+  cycles without changing the existing in-range phase events or their assigned nights.
+- **Full cycle** displays all owned loaded nights, exactly once across the entire range. Rows share
+  31 positions (−15 through +15) with the new-moon night at zero. A complete cycle normally owns
+  29 or 30 nights; unused edge positions are padding. Owned nights beyond the loaded range are
+  missing data and mark a partial cycle, distinct from padding outside that cycle.
+- **±N focus** crops the owned dates to N nights either side of the new-moon night. The phone's
+  initial ±3 choice remains a display default, with explicit saved/shared choices taking precedence.
+  Focusing does not reassign ownership or change any night's Sun/Moon events, intervals or duration.
 
 ## Moon-free true dark
 
@@ -101,10 +119,12 @@ From astronomical dusk to astronomical dawn. Absent when the Sun doesn't reach �
 
 - **Month totals** sum moon-free true dark over the month's nights. "Nights ≥ 4 h" counts nights
   with at least 4 hours of it.
-- **Lunation totals** sum it over the displayed ±N window.
-- **Best weekend** (Lunations) is the Friday and Saturday pair in the window with the most
+- **Lunation totals** sum it over the displayed owned nights: the full cycle or its ±N crop,
+  clipped to the loaded range. Full-cycle totals add up to the total for all loaded nights.
+- **Best weekend** (Lunations) is the Friday and Saturday pair in the displayed owned dates with the most
   combined moon-free time. **Dark weekends ahead** makes the same pick within ±7 nights of each
-  new moon, from tonight on.
+  new moon, from tonight on. A Lunations pair must have both nights in the same cycle and displayed
+  window; pairs spanning an ownership boundary are excluded. Ties retain the earlier Friday.
 - **Moonlight wash** (display only): opacity 0.17 + 0.40 × illumination^0.8, drawn over true dark
   while the Moon’s upper edge is above the natural horizon (0°), independent of planning thresholds.
   The intersection of that moonlight with accepted planning windows uses a green wash in ordinary
@@ -206,6 +226,12 @@ moon-up and moon-free windows/totals, lunation totals and weekend picks. Sun eve
 samples, phases, illumination, time zones, range alignment and true-dark intervals are unchanged.
 Adding optional elevation preserves these sea-level golden records exactly; elevated sites
 have separate tests. The external USNO fixture is not regenerated from Atlas.
+
+Full-cycle ownership adds first/last indices to the golden lunation records. In the three captured
+ranges, the existing cycle counts, usable totals and weekend picks remain identical; the restored
+dates around full moon contribute no usable time there. Per-night records, solar/lunar event
+times, phase assignments and focus offsets are unchanged. Separate ownership tests cover edge
+cycles whose new moon lies outside the loaded range, exact ties, leap day and clock changes.
 
 Computing the 14-month range, about 425 nights, took **1.11 s** in a local Node measurement,
 versus about half a second before this change. Re-deriving a range after switching thresholds

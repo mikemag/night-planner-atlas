@@ -11,6 +11,7 @@ import {
   bestWeekends,
   computeRangeSync,
   deriveRange,
+  FULL_CYCLE,
   type Axis,
   type Lunation,
   type NightRange,
@@ -46,6 +47,8 @@ export interface NightRecord {
 export interface LunationRecord {
   t: number;
   i: number;
+  first: number;
+  last: number;
   total: number;
   best: { i: number; sum: number } | null;
 }
@@ -94,6 +97,8 @@ export function nightRecord(n: Night, i: number): NightRecord {
 const lunationRecord = (L: Lunation): LunationRecord => ({
   t: L.t,
   i: L.i,
+  first: L.first,
+  last: L.last,
   total: L.total,
   best: L.best,
 });
@@ -105,13 +110,13 @@ const variant = (r: NightRange): Variant => ({
 
 /** Compute a site's default range and capture it the way the prototype capture did. */
 export function captureGolden(site: Site, now: number): GoldenCapture {
-  const r = computeRangeSync(site, 0, { moonAlt: 0, crescent: 0 }, 14, now);
+  const r = computeRangeSync(site, 0, { moonAlt: 0, crescent: 0 }, FULL_CYCLE, now);
   const def = variant(r);
-  deriveRange(r, { moonAlt: 10, crescent: 0 }, 14);
+  deriveRange(r, { moonAlt: 10, crescent: 0 }, FULL_CYCLE);
   const moonAlt10 = variant(r);
-  deriveRange(r, { moonAlt: 0, crescent: 0.2 }, 14);
+  deriveRange(r, { moonAlt: 0, crescent: 0.2 }, FULL_CYCLE);
   const crescent20 = variant(r);
-  deriveRange(r, { moonAlt: 0, crescent: 0 }, 14);
+  deriveRange(r, { moonAlt: 0, crescent: 0 }, FULL_CYCLE);
   bestWeekends(r, 5);
   return {
     now,
@@ -171,6 +176,8 @@ function lunationLine(L: LunationRecord): string {
   return JSON.stringify({
     t: L.t,
     i: L.i,
+    first: L.first,
+    last: L.last,
     total: ms(L.total),
     best: L.best && { i: L.best.i, sum: ms(L.best.sum) },
   });

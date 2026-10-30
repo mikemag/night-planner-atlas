@@ -33,6 +33,9 @@ export interface Lunation {
   /** New moon instant and the night it falls in (may be outside the range). */
   t: number;
   i: number;
+  /** Inclusive owned evening-date indices, before clipping to the loaded range. */
+  first: number;
+  last: number;
   best: WeekendPick | null;
   total: number;
 }
@@ -99,9 +102,56 @@ export function nightDates(spec: RangeSpec): Array<[number, number, number]> {
   return list;
 }
 
-/** Lunation window: ±focus nights around new moon, or ±14 when focus is off. */
+/** Full cycle reserves 31 aligned positions; ownership determines which are occupied. */
+export const FULL_CYCLE = 15;
+
+/** Column extent: ±focus nights, or enough positions for the complete centered cycle. */
 export function lunWindow(focus: number): number {
-  return focus > 0 ? focus : 14;
+  return focus > 0 ? focus : FULL_CYCLE;
+}
+
+/** Displayed owned dates, before clipping at the loaded range's edges. */
+export function lunationWindow(L: Lunation, N: number): { first: number; last: number } {
+  return N >= FULL_CYCLE
+    ? { first: L.first, last: L.last }
+    : { first: Math.max(L.first, L.i - N), last: Math.min(L.last, L.i + N) };
+}
+
+export function visibleLunations(r: NightRange, N: number): Lunation[] {
+  return r.lunations.filter((L) => {
+    const { first, last } = lunationWindow(L, N);
+    return last >= 0 && first < r.nights.length;
+  });
+}
+
+/**
+ * Partition whole nights by the new moon nearest their site-local midnight. The first/last
+ * new moons are neighbors outside the candidate cycles. Exact ties belong to the earlier moon.
+ */
+export function centeredLunations(
+  nights: ReadonlyArray<Pick<Night, 'y' | 'm' | 'd'>>,
+  tz: TimeZone,
+  newMoons: ReadonlyArray<Pick<Quarter, 't' | 'i'>>,
+): Lunation[] {
+  const firstDate = Date.UTC(nights[0].y, nights[0].m - 1, nights[0].d);
+  const boundary = (t: number): number => {
+    const p = tz.wallParts(t);
+    const date = Date.UTC(p.y, p.m - 1, p.d);
+    // The night's midnight is on the following date. Normally this is the current evening
+    // date; account also for zones where a repeated midnight falls after the boundary instant.
+    return Math.round((date - firstDate) / MS_D) - (tz.utcForWall(date) > t ? 1 : 0);
+  };
+  return newMoons
+    .slice(1, -1)
+    .map((q, k) => ({
+      t: q.t,
+      i: q.i,
+      first: boundary((newMoons[k].t + q.t) / 2),
+      last: boundary((q.t + newMoons[k + 2].t) / 2) - 1,
+      best: null,
+      total: 0,
+    }))
+    .filter((L) => L.last >= 0 && L.first < nights.length);
 }
 
 /** "Tonight" is today's local date after noon and yesterday's before it. */
@@ -151,9 +201,19 @@ export function buildStructures(
   for (const n of nights) n.quarter = -1;
   for (const q of quarters) if (q.i >= 0 && q.i < nights.length) nights[q.i].quarter = q.q;
   const nm = quarters.filter((q) => q.q === 0);
-  const lunations: Lunation[] = nm
-    .filter((q) => q.i + 7 >= 0 && q.i - 7 < nights.length)
-    .map((q) => ({ t: q.t, i: q.i, best: null, total: 0 }));
+  const nextNewMoon = (from: number): Quarter => {
+    let q = SearchMoonQuarter(new Date(from));
+    while (q.quarter !== 0) q = NextMoonQuarter(q);
+    const t = q.time.date.getTime();
+    return { q: 0, t, i: nightIndexForTime(nights, t) };
+  };
+  // Keep the existing quarter events/assigned nights. Extra neighbors establish complete
+  // ownership bounds for partial cycles at either loaded-range edge.
+  const lunations = centeredLunations(nights, tz, [
+    nextNewMoon(nm[0].t - 40 * MS_D),
+    ...nm,
+    nextNewMoon(nm.at(-1)!.t + MS_D),
+  ]);
   nights.forEach((n, i) => {
     let best: number | null = null;
     for (const q of nm) {
@@ -205,16 +265,17 @@ export function monthStats(r: NightRange, mo: Month): void {
   mo.fm = quarters.filter((q) => q.q === 2 && q.i >= first && q.i <= last).map((q) => q.i);
 }
 
-/** Moon-free total within ±N nights of the new moon, and the best Friday + Saturday pair. */
+/** Usable total and best Friday + Saturday pair among this cycle's displayed owned nights. */
 export function bestWeekend(r: NightRange, L: Lunation, N: number): void {
   const { nights } = r;
   let best: WeekendPick | null = null,
     total = 0;
-  for (let k = -N; k <= N; k++) {
-    const i = L.i + k;
-    if (i < 0 || i >= nights.length) continue;
+  const window = lunationWindow(L, N);
+  const first = Math.max(0, window.first),
+    last = Math.min(nights.length - 1, window.last);
+  for (let i = first; i <= last; i++) {
     total += nights[i].mfMs;
-    if (nights[i].dow === 5 && k + 1 <= N && i + 1 < nights.length) {
+    if (nights[i].dow === 5 && i + 1 <= last) {
       const sum = nights[i].mfMs + nights[i + 1].mfMs;
       if (!best || sum > best.sum) best = { i, sum };
     }

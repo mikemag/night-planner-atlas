@@ -488,7 +488,7 @@ export function syncSettingsControls(): void {
     const focus = Number((x as HTMLElement).dataset.val);
     x.setAttribute('aria-pressed', String(focus === activeFocus()));
     if (focus === 0) {
-      const label = S.view === 'lunations' ? '±14' : 'Off';
+      const label = S.view === 'lunations' ? 'Full cycle' : 'Off';
       if (x.textContent !== label) x.textContent = label;
     }
   }

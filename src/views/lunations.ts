@@ -1,6 +1,6 @@
 import { S, activeFocus, atlas } from '../app/state';
 import { MON3, WD3, fmtHrs } from '../model/format';
-import { lunWindow, type Lunation } from '../model/range';
+import { lunWindow, lunationWindow, visibleLunations, type Lunation } from '../model/range';
 import { MS_H } from '../model/time';
 import { C } from '../render/colors';
 import { drawNight, hourTicks, moonGlyph } from '../render/night-draw';
@@ -65,13 +65,14 @@ class LunationsView implements CanvasView {
   layout(): void {
     const r = atlas();
     const g = this.geom();
-    this.cycles = r.lunations.filter((L) => L.i + g.N >= 0 && L.i - g.N < r.nights.length);
+    this.cycles = visibleLunations(r, g.N);
     const selected = this.cycleFor(S.sel);
     const n = S.lunationsExpanded && selected >= 0 ? r.nights[S.sel] : null;
+    const window = selected >= 0 ? lunationWindow(this.cycles[selected], g.N) : null;
     prepareLunationsDetail(
       n ?? null,
       this.detailGeom(),
-      !!n && Math.abs(S.sel - this.cycles[selected].i) > g.N,
+      !!n && !!window && (S.sel < window.first || S.sel > window.last),
     );
     prepareLunationsHeaders(r, g.N);
     let y = 8;
@@ -108,9 +109,13 @@ class LunationsView implements CanvasView {
   }
 
   cycleFor(i: number): number {
+    const owner = this.cycles.findIndex((L) => i >= L.first && i <= L.last);
+    if (owner >= 0) return owner;
     let best = -1;
+    const mid = atlas().nights[i]?.mid;
+    const distance = (L: Lunation) => (mid == null ? Math.abs(L.i - i) : Math.abs(L.t - mid));
     for (let k = 0; k < this.cycles.length; k++)
-      if (best < 0 || Math.abs(this.cycles[k].i - i) < Math.abs(this.cycles[best].i - i)) best = k;
+      if (best < 0 || distance(this.cycles[k]) < distance(this.cycles[best])) best = k;
     return best;
   }
 
@@ -187,11 +192,19 @@ class LunationsView implements CanvasView {
     if (key === 'ArrowUp' || key === 'ArrowDown') {
       const next = Math.max(0, Math.min(this.cycles.length - 1, k + (key === 'ArrowUp' ? -1 : 1)));
       const off = Math.max(-N, Math.min(N, S.sel - this.cycles[k].i));
-      return Math.max(0, Math.min(atlas().nights.length - 1, this.cycles[next].i + off));
+      const window = lunationWindow(this.cycles[next], N);
+      return Math.max(
+        0,
+        window.first,
+        Math.min(atlas().nights.length - 1, window.last, this.cycles[next].i + off),
+      );
     }
-    const indices = this.cycles
-      .flatMap((L) => Array.from({ length: 2 * N + 1 }, (_, c) => L.i + c - N))
-      .filter((i) => i >= 0 && i < atlas().nights.length);
+    const indices = this.cycles.flatMap((L) => {
+      const window = lunationWindow(L, N);
+      const first = Math.max(0, window.first),
+        last = Math.min(atlas().nights.length - 1, window.last);
+      return Array.from({ length: last - first + 1 }, (_, c) => first + c);
+    });
     return key === 'ArrowLeft'
       ? ([...indices].reverse().find((i) => i < S.sel) ?? indices[0])
       : (indices.find((i) => i > S.sel) ?? indices.at(-1)!);
@@ -215,6 +228,7 @@ class LunationsView implements CanvasView {
     const maxHours = Math.max(2, Math.ceil(r.maxMF / MS_H / 2) * 2);
     for (let k = this.cycleAt(st); k < this.cycles.length; k++) {
       const L = this.cycles[k];
+      const window = lunationWindow(L, g.N);
       const y = this.TOP + this.ys[k] - st;
       if (y > H) break;
       const dates = y + g.header;
@@ -227,6 +241,7 @@ class LunationsView implements CanvasView {
       ctx.clip();
       for (let c = 0; c < g.cols; c++) {
         const i = L.i + c - g.N;
+        if (i < window.first || i > window.last) continue;
         const x = X(c);
         if (x + g.cw < g.x0 || x > W) continue;
         const n = r.nights[i];
@@ -415,6 +430,8 @@ class LunationsView implements CanvasView {
     const c = Math.floor((px - g.x0 + scroller.scrollLeft) / g.cw);
     if (c < 0 || c >= g.cols) return null;
     const i = this.cycles[k].i + c - g.N;
+    const window = lunationWindow(this.cycles[k], g.N);
+    if (i < window.first || i > window.last) return null;
     if (i < 0 || i >= atlas().nights.length) return null;
     return { i };
   }

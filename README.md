@@ -18,7 +18,8 @@ track where it is going.
 - **Calendar**: a month grid where each day holds that evening's night, and a Year view of mini
   months with monthly totals. Expand any week for times.
 - **Lunations**: one row per lunar cycle, aligned on new moon, with the best Friday–Saturday of
-  each cycle. Taller night columns run from evening down to morning, with usable-hour bars below;
+  each cycle. Full cycle shows every night exactly once, assigned to its nearest new moon, with
+  padding keeping new moon centered. Taller night columns run from evening down to morning, with usable-hour bars below;
   select a night for its horizontal timeline. Phones start at ±3 nights, with wider windows available.
 
 All views share one visual language and the same controls: new-moon focus (±N nights), when the
@@ -29,7 +30,7 @@ controls, privacy and credits, with technical detail available on demand.
 
 | Year at a glance (River)                        | Calendar                                           | Lunations                                           |
 | ----------------------------------------------- | -------------------------------------------------- | --------------------------------------------------- |
-| ![River, Year zoom](docs/images/river-year.png) | ![Calendar, month](docs/images/calendar-month.png) | ![Lunations, ±14 nights](docs/images/lunations.png) |
+| ![River, Year zoom](docs/images/river-year.png) | ![Calendar, month](docs/images/calendar-month.png) | ![Lunations, Full cycle](docs/images/lunations.png) |
 
 - [docs/design.md](docs/design.md): the views, the shared visual language, and the reasoning
   behind them.

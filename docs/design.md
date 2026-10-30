@@ -170,9 +170,14 @@ the moon-free total, and the window.
 
 ### Lunations
 
-One row per lunar cycle, aligned so the new-moon night is the center column. Columns count nights
-from new moon: ±N with new-moon focus, ±14 otherwise. Each cell is a night column, as in the
-Calendar's Time ↓.
+One row per lunar cycle, aligned so the new-moon night is the center column. **Full cycle** uses
+31 fixed positions, −15 through +15; each cell is a night column, as in Calendar's Time ↓.
+Each whole night belongs to the new moon nearest its site-local midnight, with exact ties going
+to the earlier event. This makes boundaries fall between nights around the midpoint of adjacent
+new moons. Every loaded night appears exactly once, including dates around full moon and range
+edges whose new moon lies outside the loaded dates. Complete cycles normally fill 29 or 30
+positions; quiet empty edge positions preserve equal column widths and the centered new moon.
+New-moon focus crops each cycle to ±N without changing ownership.
 
 - The full-width chart has no inspector sidebar. Every cycle has a 240 px sky band, on the same
   site-local clock scale throughout the loaded range. Evening is at the top and morning at the
@@ -181,7 +186,8 @@ Calendar's Time ↓.
 - A real heading above each row gives the exact new moon's local date/time, the displayed evening
   date range, usable total and best Friday–Saturday pair. The total opens an explanation by keyboard
   or tap and has the same explanation on hover. It sums the displayed nights, including all usable
-  pieces; partial range edges are explicitly labeled. Month boundaries also appear in the daily
+  pieces; partial range edges are explicitly labeled using the cycle's actual owned count, rather
+  than counting alignment padding as missing nights. Month boundaries also appear in the daily
   labels and as quiet dividers. Weekend rules and ranking are unchanged.
 - Beneath each sky band, one green bar per night shows usable hours. Its zero-based hours scale is
   shared by every cycle, with per-night numeric hours and a bracket marking the best weekend.
@@ -194,13 +200,13 @@ Calendar's Time ↓.
   previews pointed-at nights and otherwise summarizes selection; there is no floating night tooltip.
 - At phone width (600 px and below), the initial window is ±3, without changing River/Calendar or
   writing a preference. An explicit saved focus choice or shared link takes precedence, including
-  ±14. Resizing preserves the browsed cycle, position and selected night. Requested wider windows
+  Full cycle (the existing Off/zero preference). Resizing preserves the browsed cycle, position and selected night. Requested wider windows
   keep at least 40 px per column and pan together inside the chart; the page itself never scrolls
   horizontally. The clock rail, row headings and selected-night detail retain the viewport width.
   If selection is outside a reduced window, its expanded timeline remains available and says so.
 - _Best at_ the trip question: which new moon, and which weekend.
-- _Weak at_ dates: weekdays land in different columns on every row, and full-moon nights are
-  deliberately left out.
+- _Weak at_ weekday structure: weekdays land in different columns on every row. Full cycle needs
+  chart panning on phones; the initial ±3 crop favors new-moon planning there.
 
 ### Shared pieces
 

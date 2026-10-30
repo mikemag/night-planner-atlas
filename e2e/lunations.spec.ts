@@ -39,16 +39,90 @@ async function selected(page: Page) {
   return page.evaluate(() => {
     const a = window.__npa!;
     const rows = a.lunationRows;
-    const k = rows.cycles.findIndex((L) => Math.abs(L.i - a.S.sel) <= rows.geometry.N);
+    const k = rows.cycles.findIndex((L) => a.S.sel >= L.first && a.S.sel <= L.last);
+    const L = rows.cycles[k];
+    const first = Math.max(0, L.first, L.i - rows.geometry.N);
+    const last = Math.min(a.nights.length - 1, L.last, L.i + rows.geometry.N);
     return {
       n: a.nights[a.S.sel],
       k,
       cycle: rows.cycles[k],
       geometry: rows.geometry,
       top: rows.tops[k],
+      count: last - first + 1,
     };
   });
 }
+
+test('Full cycle covers every night once, restores formerly missing dates, and ignores padding', async ({
+  page,
+}) => {
+  await open(page);
+  await expect(page.locator('#focusSeg button[data-val="0"]')).toHaveText('Full cycle');
+  const count = await page.evaluate(() => window.__npa!.nights.length);
+  const displayed = await page.locator('.lunation-heading').evaluateAll((headers) =>
+    headers.flatMap((header) => {
+      const first = Number((header as HTMLElement).dataset.first);
+      const last = Number((header as HTMLElement).dataset.last);
+      return Array.from({ length: last - first + 1 }, (_, k) => first + k);
+    }),
+  );
+  expect(displayed).toEqual(Array.from({ length: count }, (_, i) => i));
+  const missing = await page.evaluate(() => {
+    const a = window.__npa!;
+    const rows = a.lunationRows;
+    const L = rows.cycles.find(
+      (L, k) => L.i >= 0 && L.i + 15 < a.nights.length && rows.cycles[k + 1]?.i - L.i === 30,
+    )!;
+    const i = L.i + 15;
+    const owner = rows.cycles.find((L) => i >= L.first && i <= L.last)!;
+    a.select(owner.i, true, true);
+    return {
+      i,
+      center: owner.i,
+      column: i - owner.i + rows.geometry.N,
+      pad: owner.first > owner.i - rows.geometry.N ? 0 : rows.geometry.cols - 1,
+    };
+  });
+  await painted(page);
+  const point = async (column: number) => {
+    const box = (await page.locator('#cv').boundingBox())!;
+    const g = (await selected(page)).geometry;
+    return { x: box.x + g.x0 + (column + 0.5) * g.cw, y: box.y + 32 + g.header + 28 + 120 };
+  };
+  const target = await point(missing.column);
+  await page.mouse.click(target.x, target.y);
+  await expect(page.locator('#lunationsDetail')).toBeVisible();
+  expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(missing.i);
+  const n = await page.evaluate(() => window.__npa!.nights[window.__npa!.S.sel]);
+  await expect(page.locator('#lunationsDetail').getByRole('heading')).toHaveText(nightTitle(n));
+  await page.locator('#cv').press('Escape');
+  await page.locator('#cv').press('ArrowRight');
+  expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(missing.i + 1);
+  await page.locator('#cv').press('ArrowLeft');
+  expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(missing.i);
+  await page.evaluate((i) => window.__npa!.select(i, true, true), missing.center);
+  await painted(page);
+  const padding = await point(missing.pad);
+  await page.mouse.click(padding.x, padding.y);
+  await expect(page.locator('#lunationsDetail')).toBeHidden();
+  expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(missing.center);
+
+  // An explicit Full cycle link keeps the whole cycle even on a fresh phone presentation.
+  await page.locator('#shareBtn').click();
+  const link = await page.locator('#shareLink').inputValue();
+  await page.locator('#shareCancel').click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(link);
+  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#focusSeg button[data-val="0"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  expect((await selected(page)).geometry.N).toBe(15);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  expect(await page.evaluate(() => localStorage.getItem('npa:focus'))).toBeNull();
+});
 
 for (const width of [1512, 390]) {
   test(`Lunations shows readable cycles and an ordered inline night at ${width}px`, async ({
@@ -58,7 +132,7 @@ for (const width of [1512, 390]) {
     page.on('pageerror', (e) => errors.push(e.message));
     await open(page, width);
     const before = await selected(page);
-    expect(before.geometry.N).toBe(width < 700 ? 3 : 14);
+    expect(before.geometry.N).toBe(width < 700 ? 3 : 15);
     expect(before.geometry.cw).toBeGreaterThanOrEqual(40);
     await expect(page.locator('#inspector')).toBeHidden();
     await expect(page.locator('#lunationsDetail')).toBeHidden();
@@ -162,7 +236,7 @@ test('phone defaults stay local to Lunations, survive sharing, and preserve the 
   });
   await page.setViewportSize({ width: 1512, height: 920 });
   await painted(page);
-  expect((await selected(page)).geometry.N).toBe(14);
+  expect((await selected(page)).geometry.N).toBe(15);
   expect((await selected(page)).n.id).toBe(initial.n.id);
   const anchor = await page.evaluate(() => {
     const rows = window.__npa!.lunationRows;
@@ -250,7 +324,7 @@ test('wider phone windows pan within the chart, keep headers and detail fixed, a
 }) => {
   await open(page, 390, 0);
   const before = await selected(page);
-  expect(before.geometry.N).toBe(14);
+  expect(before.geometry.N).toBe(15);
   const chart = page.locator('#scroller');
   expect(await chart.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeGreaterThan(700);
   const header = page.locator(`.lunation-heading[data-cycle="${before.k}"]`);
@@ -304,18 +378,16 @@ test('cycle totals explain the displayed dates and refresh with the window and t
     const sum = await page.evaluate(() => {
       const a = window.__npa!;
       const g = a.lunationRows.geometry;
-      const L = a.lunationRows.cycles.find((L) => Math.abs(L.i - a.S.sel) <= g.N)!;
+      const L = a.lunationRows.cycles.find((L) => a.S.sel >= L.first && a.S.sel <= L.last)!;
       return a.nights
-        .slice(Math.max(0, L.i - g.N), L.i + g.N + 1)
+        .slice(Math.max(0, L.first, L.i - g.N), Math.min(L.last, L.i + g.N) + 1)
         .reduce((sum, n) => sum + n.mfMs, 0);
     });
     const total = page.locator(`.lunation-heading[data-cycle="${value.k}"] .lunation-total`);
     await expect(total.locator('strong')).toHaveText(fmtDur(sum));
     await total.locator('summary').click();
     await expect(total.locator('p')).toBeVisible();
-    await expect(total.locator('p')).toContainText(
-      `${2 * value.geometry.N + 1} displayed evening dates`,
-    );
+    await expect(total.locator('p')).toContainText(`${value.count} displayed evening dates`);
     await total.locator('summary').press('Escape');
     await expect(total).not.toHaveAttribute('open', '');
   }
@@ -339,7 +411,7 @@ test('cycle totals explain the displayed dates and refresh with the window and t
   await page.locator('#focusSeg button[data-val="0"]').click();
   await expect(partial).toContainText('Partial');
   await partial.locator('summary').click();
-  await expect(partial.locator('.lunation-total p')).toContainText('of 29 nights are loaded');
+  await expect(partial.locator('.lunation-total p')).toContainText(/of (29|30) nights are loaded/);
 });
 
 test('no-dark and split-window nights retain useful inline explanations', async ({ page }) => {
