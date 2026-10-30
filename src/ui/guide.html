@@ -252,9 +252,18 @@
     </p>
     <p>
       <strong>Calendar</strong> puts evening dates into month grids, with Time ↓ or Time → and
-      expandable weeks. <strong>Lunations</strong> aligns cycles around new moon to compare seasonal
-      windows and weekends. These views keep a selected-night inspector with altitude curves and
-      stage times.
+      expandable weeks and a selected-night inspector with altitude curves and stage times.
+      <strong>Lunations</strong> aligns cycles around new moon to compare seasonal windows and
+      weekends. Evening runs down to morning on a shared clock scale; green bars beneath each cycle
+      show usable hours on a shared duration scale. Select a night to expand its horizontal timeline
+      with exact event times. Each cycle's total explains which evening dates it includes.
+    </p>
+    <p>
+      Lunations starts at <strong>±3 on phones</strong> unless you have chosen a focus window or
+      opened a shared plan. Wider windows pan together inside the chart while the clock rail stays
+      in place. Left/Right visit displayed nights and Up/Down move between cycles at the same
+      new-moon offset. Resizing keeps your selection; a selected night outside the displayed window
+      can still be expanded.
     </p>
     <p>
       <strong>Share</strong> copies a link to the loaded dates, view, zoom, focus, planning
@@ -264,11 +273,11 @@
     <dl class="guide-shortcuts">
       <div>
         <dt><kbd>←</kbd> <kbd>→</kbd></dt>
-        <dd>Previous / next night</dd>
+        <dd>Previous / next night (displayed nights in Lunations)</dd>
       </div>
       <div>
         <dt><kbd>↑</kbd> <kbd>↓</kbd></dt>
-        <dd>Move a week</dd>
+        <dd>Move a week; in Lunations, move a lunar cycle</dd>
       </div>
       <div>
         <dt><kbd>T</kbd></dt>
@@ -276,7 +285,7 @@
       </div>
       <div>
         <dt><kbd>Enter</kbd> / <kbd>Space</kbd></dt>
-        <dd>Toggle a River Month night when the chart has focus</dd>
+        <dd>Toggle a River Month or Lunations night when the chart has focus</dd>
       </div>
       <div>
         <dt><kbd>Esc</kbd></dt>

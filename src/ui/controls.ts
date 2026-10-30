@@ -14,13 +14,15 @@ import {
   shiftRange,
   stepMonth,
   toggleRiverNight,
+  toggleLunationsNight,
 } from '../app/shell';
 import { S, data } from '../app/state';
 import { loadTheme, setTheme, type Theme } from '../app/theme';
 import { prepareTimeZones } from '../app/timezones';
-import { cv } from '../render/surface';
+import { cv, size } from '../render/surface';
 import { calendar } from '../views/calendar';
 import { river } from '../views/river';
+import { lunations } from '../views/lunations';
 import { el, scroller } from './dom';
 import { hideTip, showNote, showTip } from './tooltip';
 import { initSiteEditor } from './site-editor';
@@ -48,8 +50,21 @@ export function initControls(): void {
     attributes: true,
     attributeFilter: ['data-theme', 'class'],
   });
+  let resizeFrame = 0;
   new ResizeObserver(() => {
-    if (canvasView()) resize();
+    // Resizing the canvas can affect scrollbars. Let layout settle outside observer delivery,
+    // and skip notifications for dimensions already handled by a view change.
+    if (resizeFrame) return;
+    resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      if (
+        canvasView() &&
+        (scroller.clientWidth !== size.W ||
+          scroller.clientHeight !== size.H ||
+          (window.devicePixelRatio || 1) !== size.dpr)
+      )
+        resize();
+    });
   }).observe(scroller);
   scroller.addEventListener(
     'scroll',
@@ -64,7 +79,8 @@ export function initControls(): void {
 
 function initCanvasPointer(): void {
   let dragMini = false;
-  let tap: { x: number; y: number; i: number; id: number; scroll: number } | null = null;
+  let tap: { x: number; y: number; i: number; id: number; scroll: number; left: number } | null =
+    null;
   cv.addEventListener('pointermove', (e) => {
     const v = canvasView();
     if (!data.ready || !v) return;
@@ -75,14 +91,14 @@ function initCanvasPointer(): void {
       river.dragMinimap(py);
       return;
     }
-    if (v === river && e.pointerType === 'touch') return;
+    if ((v === river || v === lunations) && e.pointerType === 'touch') return;
     const h = v.hit(px, py);
     const prev = S.hover;
     S.riverReadoutSelected = false;
     S.hover = h && !h.mini ? h : null;
     cv.style.cursor = h && (h.i != null || h.gutter || h.mini) ? 'pointer' : 'default';
     if (v === river && h?.mini) cv.style.cursor = river.miniContains(px, py) ? 'grab' : 'pointer';
-    if (v === river) hideTip();
+    if (v === river || v === lunations) hideTip();
     else if (h && h.i != null) showTip(h.i, h.hh, e.clientX, e.clientY);
     else if (h && h.gutter)
       showNote(
@@ -93,7 +109,7 @@ function initCanvasPointer(): void {
         e.clientY,
       );
     else hideTip();
-    if (v === river || JSON.stringify(prev) !== JSON.stringify(S.hover)) draw();
+    if (v === river || v === lunations || JSON.stringify(prev) !== JSON.stringify(S.hover)) draw();
   });
   cv.addEventListener('pointerleave', (e) => {
     S.hover = null;
@@ -126,8 +142,15 @@ function initCanvasPointer(): void {
       return;
     }
     if (h.i != null) {
-      if (v === river)
-        tap = { x: e.clientX, y: e.clientY, i: h.i, id: e.pointerId, scroll: scroller.scrollTop };
+      if (v === river || v === lunations)
+        tap = {
+          x: e.clientX,
+          y: e.clientY,
+          i: h.i,
+          id: e.pointerId,
+          scroll: scroller.scrollTop,
+          left: scroller.scrollLeft,
+        };
       else select(h.i, false);
     }
   });
@@ -144,10 +167,12 @@ function initCanvasPointer(): void {
       pending &&
       e.pointerId === pending.id &&
       Math.hypot(e.clientX - pending.x, e.clientY - pending.y) <= 8 &&
-      Math.abs(scroller.scrollTop - pending.scroll) <= 3
+      Math.abs(scroller.scrollTop - pending.scroll) <= 3 &&
+      Math.abs(scroller.scrollLeft - pending.left) <= 3
     ) {
       cv.focus({ preventScroll: true });
-      if (S.riverZoom === 'month') toggleRiverNight(pending.i);
+      if (S.view === 'lunations') toggleLunationsNight(pending.i);
+      else if (S.riverZoom === 'month') toggleRiverNight(pending.i);
       else select(pending.i, false);
     }
     endMiniDrag();
@@ -186,21 +211,23 @@ function initKeyboard(): void {
       return;
     if (
       (e.key === 'Enter' || e.key === ' ') &&
-      S.view === 'river' &&
-      S.riverZoom === 'month' &&
+      (S.view === 'lunations' || (S.view === 'river' && S.riverZoom === 'month')) &&
       (target === cv || target === document.body)
     ) {
       e.preventDefault();
-      toggleRiverNight();
+      if (S.view === 'lunations') toggleLunationsNight();
+      else toggleRiverNight();
       return;
     }
     const step = steps[e.key];
     if (step && canvasView()) {
       e.preventDefault();
-      if (target?.closest('#riverDetail')) cv.focus({ preventScroll: true });
+      if (target?.closest('#riverDetail, #lunationsDetail')) cv.focus({ preventScroll: true });
       const { nights, tonightIdx } = data.range;
       select(
-        Math.max(0, Math.min(nights.length - 1, (S.sel < 0 ? tonightIdx : S.sel) + step)),
+        S.view === 'lunations'
+          ? lunations.navigate(e.key)
+          : Math.max(0, Math.min(nights.length - 1, (S.sel < 0 ? tonightIdx : S.sel) + step)),
         true,
       );
     } else if (e.key === 't' || e.key === 'T') {
@@ -208,6 +235,18 @@ function initKeyboard(): void {
     } else if (e.key >= '1' && e.key <= '4') {
       setView(VIEW_KEYS[+e.key - 1]);
     } else if (e.key === 'Escape') {
+      const total =
+        S.view === 'lunations'
+          ? document.querySelector<HTMLDetailsElement>('.lunation-total[open]')
+          : null;
+      if (total) {
+        total.open = false;
+        return;
+      }
+      if (S.view === 'lunations' && S.lunationsExpanded) {
+        if (target?.closest('#lunationsDetail')) cv.focus({ preventScroll: true });
+        toggleLunationsNight();
+      }
       if (S.view === 'river' && S.riverZoom === 'month' && S.riverExpanded) {
         if (target?.closest('#riverDetail')) cv.focus({ preventScroll: true });
         toggleRiverNight();
@@ -249,5 +288,18 @@ function initHeader(): void {
   el('insWeekends').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button[data-i]');
     if (b) select(Number(b.dataset.i), true);
+  });
+  el('lunationsHeaders').addEventListener('click', (e) => {
+    const pick = (e.target as Element).closest<HTMLElement>('button[data-weekend]');
+    if (!pick) return;
+    cv.focus({ preventScroll: true });
+    const i = Number(pick.dataset.weekend);
+    if (S.lunationsExpanded && S.sel === i) select(i, true);
+    else toggleLunationsNight(i);
+  });
+  el('lunationsDetail').addEventListener('click', (e) => {
+    if (!(e.target as Element).closest('#lunationsCollapse')) return;
+    cv.focus({ preventScroll: true });
+    toggleLunationsNight();
   });
 }

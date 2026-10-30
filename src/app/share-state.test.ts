@@ -55,6 +55,13 @@ it('reads the original JSON link format', () => {
   expect(readSharedPlan(hash(plan))).toEqual(plan);
 });
 
+it('shares an expanded Lunations night independently of River zoom', () => {
+  const lunation: SharedPlan = { ...plan, view: 'lunations', riverZoom: 'year', focus: 3 };
+  const url = new URL(createShareLink('https://example.test/', lunation));
+  expect(readSharedPlan(url.hash)).toEqual(lunation);
+  expect(() => readSharedPlan(hash({ ...lunation, view: 'calendar' }))).toThrow();
+});
+
 it('round-trips names and precise site coordinates while keeping IANA zones readable', () => {
   const withSite = {
     ...plan,

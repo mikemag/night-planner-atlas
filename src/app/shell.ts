@@ -22,7 +22,7 @@ import { lunations } from '../views/lunations';
 import { river } from '../views/river';
 import type { CanvasView } from '../views/view';
 import { store, type ViewId } from './settings';
-import { S, data, type AppState } from './state';
+import { S, activeFocus, data, type AppState } from './state';
 
 const sizer = el('sizer');
 
@@ -46,15 +46,26 @@ export function resize(): void {
     S.view === 'river' && data.ready && river.hs.length === data.range?.nights.length
       ? river.anchor()
       : null;
+  const lunationAnchor = S.view === 'lunations' && data.ready ? lunations.anchor() : null;
   sizeSurface(scroller.clientWidth, scroller.clientHeight, window.devicePixelRatio || 1);
+  if (data.ready && S.view === 'lunations') bestWeekends(data.range!, lunWindow(activeFocus()));
+  syncSettingsControls();
   relayout();
   if (anchor) river.restoreAnchor(anchor);
+  if (lunationAnchor) lunations.restoreAnchor(lunationAnchor);
 }
 
 /** Lay out the current view; `keepNight` scrolls that night to the top afterwards. */
 export function relayout(keepNight?: number | null): void {
   const v = canvasView();
   if (!v || !data.ready) return;
+  if (v === lunations) {
+    const hint =
+      lunations.geom().width > size.W + 1
+        ? 'New moon centered · Evening ↓ morning · Swipe sideways; select a night for its timeline.'
+        : VIEW_INFO.lunations[1];
+    if (el('viewSub').textContent !== hint) el('viewSub').textContent = hint;
+  }
   // Remove the old absolute minimap bounds before shrinking content (e.g. Month → Year).
   el('riverMinimap').hidden = true;
   v.layout();
@@ -76,16 +87,23 @@ export function draw(): void {
     ctx.fillRect(0, 0, size.W, size.H);
     v.draw(scroller.scrollTop);
     updateRiverMinimap();
-    if (v === river) {
+    if (v === river || v === lunations) {
       updateRiverReadout();
       const n = data.range!.nights[S.sel];
       if (n) {
-        const status = `${nightTitle(n)}.${n.quarter === 0 ? ' New moon night.' : ''} Times in ${S.site.tz}. ${fmtDur(n.mfMs)} usable dark. ${windowsText(n)}.${S.riverZoom === 'month' && S.riverExpanded ? ' Expanded.' : ''}`;
+        const expanded =
+          v === lunations ? S.lunationsExpanded : S.riverZoom === 'month' && S.riverExpanded;
+        const status = `${nightTitle(n)}.${n.quarter === 0 ? ' New moon night.' : ''} Times in ${S.site.tz}. ${fmtDur(n.mfMs)} usable dark. ${windowsText(n)}.${expanded ? ' Expanded.' : ''}`;
         const live = el('riverSelection');
         if (live.textContent !== status) live.textContent = status;
       }
-      cv.setAttribute('role', S.riverZoom === 'month' ? 'button' : 'img');
-      if (S.riverZoom === 'month') cv.setAttribute('aria-expanded', String(S.riverExpanded));
+      const expandable = v === lunations || S.riverZoom === 'month';
+      cv.setAttribute('role', expandable ? 'button' : 'img');
+      if (expandable)
+        cv.setAttribute(
+          'aria-expanded',
+          String(v === lunations ? S.lunationsExpanded : S.riverExpanded),
+        );
       else cv.removeAttribute('aria-expanded');
     }
     updatePeriod();
@@ -105,6 +123,19 @@ function selectState(i: number): void {
 /** Select a night, carrying an open Month expansion along with keyboard navigation. */
 export function select(i: number, scroll: boolean, top?: boolean): void {
   const v = canvasView();
+  if (v === lunations) {
+    const k = lunations.cycleFor(S.sel);
+    const y = lunations.ys[k] - scroller.scrollTop;
+    selectState(i);
+    if (S.lunationsExpanded) {
+      relayout();
+      if (scroll && !top && y >= 0 && y < size.H - lunations.TOP)
+        scroller.scrollTop = lunations.ys[lunations.cycleFor(i)] - y;
+    }
+    if (scroll) lunations.scrollTo(i, !!top);
+    draw();
+    return;
+  }
   const moving = v === river && S.riverZoom === 'month' && S.riverExpanded && i !== S.sel;
   const oldY = river.ys[S.sel] - scroller.scrollTop;
   const keepY =
@@ -129,6 +160,20 @@ export function toggleRiverNight(i: number = S.sel): void {
   relayout();
   scroller.scrollTop = river.ys[i] - keepY;
   if (S.riverExpanded) river.reveal(i);
+  draw();
+}
+
+/** Open one night below its lunar cycle; a second activation closes it. */
+export function toggleLunationsNight(i: number = S.sel): void {
+  if (!data.ready || i < 0 || S.view !== 'lunations') return;
+  const k = lunations.cycleFor(i);
+  const keepY = lunations.ys[k] - scroller.scrollTop;
+  S.lunationsExpanded = !(S.lunationsExpanded && S.sel === i);
+  selectState(i);
+  relayout();
+  scroller.scrollTop = lunations.ys[k] - keepY;
+  if (S.lunationsExpanded) lunations.reveal(i);
+  else lunations.scrollTo(i, false);
   draw();
 }
 
@@ -170,8 +215,7 @@ export function stepMonth(dir: number): void {
   const r = data.range;
   if (!data.ready || !r) return;
   if (S.view === 'lunations') {
-    const { rh } = lunations.geom();
-    scroller.scrollTop = Math.max(0, scroller.scrollTop + dir * (rh + 10));
+    lunations.stepCycle(dir);
     return;
   }
   const k = Math.max(0, Math.min(r.months.length - 1, currentMonthIndex() + dir));
@@ -190,7 +234,10 @@ const VIEW_INFO: Record<ViewId, [string, string]> = {
     'River',
     'One row per night, clock time across — the moon’s diagonal and the seasons show as shapes.',
   ],
-  lunations: ['Lunations', 'One row per lunar cycle, aligned on new moon; weekends tinted.'],
+  lunations: [
+    'Lunations',
+    'New moon centered · Evening ↓ morning · Select a night for its timeline.',
+  ],
   notes: ['How it works', 'Calculations, conventions, accuracy and practical help.'],
 };
 
@@ -262,29 +309,53 @@ export function setView(view: ViewId): void {
   for (const b of el('viewSeg').children)
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === view));
   const v = canvasView(view);
+  const inline = view === 'river' || view === 'lunations';
   el('riverMinimap').hidden = view !== 'river';
-  cv.setAttribute('aria-describedby', view === 'river' ? 'chartHelp riverSelection' : 'chartHelp');
+  cv.setAttribute('aria-describedby', inline ? 'chartHelp riverSelection' : 'chartHelp');
+  el('chartHelp').textContent =
+    view === 'lunations'
+      ? 'Time runs from evening at the top to morning at the bottom of each cycle. Left and Right select displayed nights; Up and Down move between lunar cycles at the same offset. Enter or Space toggles the selected night’s horizontal timeline; Escape collapses it. Wider phone windows pan horizontally inside the chart.'
+      : 'Arrow keys select nights and weeks. In River Month, Enter or Space toggles the selected night’s boundary times. Use the selected-night summary for the site-local windows; pointer previews do not change selection.';
+  cv.setAttribute(
+    'aria-label',
+    view === 'lunations'
+      ? 'Lunations chart. Select a night to expand its timeline.'
+      : 'Night planner chart. Arrow keys move between nights; Enter or Space expands the selected night in River Month; Escape collapses it.',
+  );
   scroller.hidden = !v;
   if (view !== 'river') {
     cv.removeAttribute('role');
     cv.removeAttribute('aria-expanded');
   }
   el('viewBody').classList.toggle('river-mode', view === 'river');
+  el('viewBody').classList.toggle('lunations-mode', view === 'lunations');
   el('viewBody').classList.toggle('guide-mode', view === 'notes');
-  el('inspector').hidden = view === 'river' || view === 'notes';
+  el('inspector').hidden = view !== 'calendar';
+  el('lunationsHeaders').hidden = view !== 'lunations';
+  if (view !== 'lunations') el('lunationsDetail').hidden = true;
+  el('sizer').style.width = '1px';
+  scroller.scrollLeft = 0;
   el('riverWeekends').hidden = view !== 'river';
   el(view === 'river' ? 'riverWeekendSlot' : 'inspector').appendChild(el('weekendList'));
   if (view !== 'river') el('riverDetail').hidden = true;
-  el('riverReadout').hidden = view !== 'river';
+  el('riverReadout').hidden = !inline;
+  el('riverReadout').setAttribute(
+    'aria-label',
+    view === 'lunations' ? 'Lunations readout' : 'River readout',
+  );
   el('notesView').hidden = view !== 'notes';
   el('legend').style.display = view === 'notes' ? 'none' : '';
   el('riverMoonKey').hidden = view !== 'river';
+  el('durationCaption').textContent =
+    view === 'lunations' ? 'Usable dark duration' : 'Moon-free duration';
   el('periodBox').hidden = view === 'notes';
   el('planningControls').hidden = view === 'notes';
   el('viewTitle').textContent = VIEW_INFO[view][0];
   el('viewSub').textContent = VIEW_INFO[view][1];
   viewControls();
+  syncSettingsControls();
   if (!data.ready) return;
+  bestWeekends(data.range!, lunWindow(activeFocus()));
   if (v) {
     resize();
     if (keep >= 0) v.scrollTo(keep, true);
@@ -295,14 +366,16 @@ export function setView(view: ViewId): void {
 /** New-moon focus: ±N nights, or 0 for off. */
 export function setFocus(focus: number): void {
   const anchor = S.view === 'river' && data.ready ? river.anchor() : null;
+  const lunationAnchor = S.view === 'lunations' && data.ready ? lunations.anchor() : null;
   S.focus = focus;
+  S.focusExplicit = true;
   remember('focus', focus);
-  for (const x of el('focusSeg').children)
-    x.setAttribute('aria-pressed', String(Number((x as HTMLElement).dataset.val) === focus));
+  syncSettingsControls();
   if (data.ready && data.range) {
-    bestWeekends(data.range, lunWindow(focus));
-    relayout(anchor ? null : S.sel >= 0 ? S.sel : data.range.tonightIdx);
+    bestWeekends(data.range, lunWindow(activeFocus()));
+    relayout(anchor || lunationAnchor ? null : S.sel >= 0 ? S.sel : data.range.tonightIdx);
     if (anchor) river.restoreAnchor(anchor);
+    if (lunationAnchor) lunations.restoreAnchor(lunationAnchor);
   }
 }
 
@@ -311,7 +384,7 @@ export function setThreshold(key: 'moonAlt' | 'crescent', value: number): void {
   S[key] = value;
   remember(key, value);
   if (data.ready && data.range) {
-    deriveRange(data.range, thresholds(), lunWindow(S.focus));
+    deriveRange(data.range, thresholds(), lunWindow(activeFocus()));
     inspect(S.sel);
     relayout();
   }
@@ -353,7 +426,7 @@ export function restart(): void {
   el('loadingText').textContent = 'Computing sun and moon for each night…';
   el('loadingBar').style.width = '0%';
   const token = ++computeToken;
-  computeRange(S.site, S.rangeShift, thresholds(), lunWindow(S.focus), Date.now(), {
+  computeRange(S.site, S.rangeShift, thresholds(), lunWindow(activeFocus()), Date.now(), {
     startMonth: S.rangeStart ? { y: S.rangeStart.y + S.rangeShift, m: S.rangeStart.m } : undefined,
     isCancelled: () => token !== computeToken,
     onProgress: (done, total) => {
@@ -363,7 +436,7 @@ export function restart(): void {
     .then((r) => {
       if (!r || token !== computeToken) return;
       // Controls remain usable while positions compute; publish the latest planning choices.
-      deriveRange(r, thresholds(), lunWindow(S.focus));
+      deriveRange(r, thresholds(), lunWindow(activeFocus()));
       data.range = r;
       S.pendingNight = null;
       data.ready = true;
@@ -375,7 +448,10 @@ export function restart(): void {
         `${MON3[spec.m - 1]} ${spec.y} – ${MON3[last.m - 1]} ${last.y}`;
       let i = selId ? nights.findIndex((n) => n.id === selId) : -1;
       if (i < 0) i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
-      if (!selId || nights[i].id !== selId) S.riverExpanded = false;
+      if (!selId || nights[i].id !== selId) {
+        S.riverExpanded = false;
+        S.lunationsExpanded = false;
+      }
       S.sel = i;
       inspect(i);
       setView(S.view);
@@ -408,8 +484,14 @@ export function onTheme(): void {
 }
 
 export function syncSettingsControls(): void {
-  for (const x of el('focusSeg').children)
-    x.setAttribute('aria-pressed', String(Number((x as HTMLElement).dataset.val) === S.focus));
+  for (const x of el('focusSeg').children) {
+    const focus = Number((x as HTMLElement).dataset.val);
+    x.setAttribute('aria-pressed', String(focus === activeFocus()));
+    if (focus === 0) {
+      const label = S.view === 'lunations' ? '±14' : 'Off';
+      if (x.textContent !== label) x.textContent = label;
+    }
+  }
   el<HTMLSelectElement>('moonAltSel').value = String(S.moonAlt);
   el<HTMLSelectElement>('crescentSel').value = String(S.crescent);
   for (const b of el('viewSeg').children)
@@ -432,6 +514,13 @@ export interface TestHooks {
   setView: typeof setView;
   setOpt: typeof setOpt;
   toggleRiverNight: typeof toggleRiverNight;
+  toggleLunationsNight: typeof toggleLunationsNight;
+  readonly lunationRows: {
+    tops: number[];
+    heights: number[];
+    geometry: ReturnType<typeof lunations.geom>;
+    cycles: typeof lunations.cycles;
+  };
   readonly riverRows: { tops: Float64Array; heights: Float64Array; header: number };
   relayout: typeof relayout;
   draw: typeof draw;
@@ -455,6 +544,15 @@ function exposeTestHooks(): void {
     setView,
     setOpt,
     toggleRiverNight,
+    toggleLunationsNight,
+    get lunationRows() {
+      return {
+        tops: lunations.ys,
+        heights: lunations.hs,
+        geometry: lunations.geom(),
+        cycles: lunations.cycles,
+      };
+    },
     get riverRows() {
       return { tops: river.ys, heights: river.hs, header: river.detailHeader };
     },

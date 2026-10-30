@@ -58,6 +58,11 @@ function choice<T extends string | number>(key: string, allowed: readonly T[], f
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
 
+/** A deliberate focus choice, including Off, takes precedence over responsive defaults. */
+export function hasFocusPreference(): boolean {
+  return [0, 3, 5, 7, 10].includes(store.get('focus', -1));
+}
+
 export function loadSettings(): Settings {
   const savedSite = store.get<unknown>('site', null);
   const legacy = isSite(savedSite) ? savedSite : DEFAULT_SITE;

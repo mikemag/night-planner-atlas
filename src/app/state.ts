@@ -1,6 +1,6 @@
 import type { NightRange } from '../model/range';
 import type { Hit } from '../views/view';
-import { loadSettings, type Settings } from './settings';
+import { hasFocusPreference, loadSettings, type Settings } from './settings';
 
 export interface UiState {
   /** Years to shift the loaded range from the default. */
@@ -17,6 +17,10 @@ export interface UiState {
   expandedWeek: string | null;
   /** Expand the selected night in River Month; Year always stays compact. */
   riverExpanded: boolean;
+  /** Lunations opens one horizontal night timeline beneath its cycle. */
+  lunationsExpanded: boolean;
+  /** Responsive defaults apply only until the user chooses a focus window. */
+  focusExplicit: boolean;
   hover: Hit | null;
   /** Show the selected night's River summary after a tap, click or keyboard navigation. */
   riverReadoutSelected: boolean;
@@ -36,9 +40,21 @@ export const S: AppState = {
   sel: -1,
   expandedWeek: null,
   riverExpanded: false,
+  lunationsExpanded: false,
+  focusExplicit: hasFocusPreference(),
   hover: null,
   riverReadoutSelected: false,
 };
+
+/** Phone Lunations starts at seven nights without changing other views or saved preferences. */
+export function activeFocus(): number {
+  return S.view === 'lunations' &&
+    !S.focusExplicit &&
+    !S.sharedSettings &&
+    window.matchMedia('(max-width: 600px)').matches
+    ? 3
+    : S.focus;
+}
 
 /**
  * The computed range. `ready` is false while a range computes; the previous range stays in

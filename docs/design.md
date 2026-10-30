@@ -174,10 +174,30 @@ One row per lunar cycle, aligned so the new-moon night is the center column. Col
 from new moon: ±N with new-moon focus, ±14 otherwise. Each cell is a night column, as in the
 Calendar's Time ↓.
 
-- In every row the moon-free window forms a diamond around new moon, so cycles and seasons
-  compare straight down the page.
-- The row header gives the new moon's date and the moon-free total in the window. The right column
-  names the best Friday–Saturday pair in the window, which is also bracketed under its cells.
+- The full-width chart has no inspector sidebar. Every cycle has a 240 px sky band, on the same
+  site-local clock scale throughout the loaded range. Evening is at the top and morning at the
+  bottom; a clock rail and stronger midnight guide make the direction explicit. The usable window
+  forms a diamond around new moon, so cycles and seasons compare straight down the page.
+- A real heading above each row gives the exact new moon's local date/time, the displayed evening
+  date range, usable total and best Friday–Saturday pair. The total opens an explanation by keyboard
+  or tap and has the same explanation on hover. It sums the displayed nights, including all usable
+  pieces; partial range edges are explicitly labeled. Month boundaries also appear in the daily
+  labels and as quiet dividers. Weekend rules and ranking are unchanged.
+- Beneath each sky band, one green bar per night shows usable hours. Its zero-based hours scale is
+  shared by every cycle, with per-night numeric hours and a bracket marking the best weekend.
+  Threshold-accepted moonlight contributes to these usable totals, just as it does in River.
+- Selecting a night opens one full-width horizontal timeline beneath its cycle, using River's
+  ordered event callouts, usable-window brackets, phase and illumination. Activate the night again,
+  use the Close control, or press Escape to collapse. Enter/Space toggles the selected night;
+  Left/Right visit displayed nights, skipping omitted dates, while Up/Down preserve the new-moon
+  offset in the preceding/following cycle. An open detail follows selection. The quiet fixed readout
+  previews pointed-at nights and otherwise summarizes selection; there is no floating night tooltip.
+- At phone width (600 px and below), the initial window is ±3, without changing River/Calendar or
+  writing a preference. An explicit saved focus choice or shared link takes precedence, including
+  ±14. Resizing preserves the browsed cycle, position and selected night. Requested wider windows
+  keep at least 40 px per column and pan together inside the chart; the page itself never scrolls
+  horizontally. The clock rail, row headings and selected-night detail retain the viewport width.
+  If selection is outside a reduced window, its expanded timeline remains available and says so.
 - _Best at_ the trip question: which new moon, and which weekend.
 - _Weak at_ dates: weekdays land in different columns on every row, and full-moon nights are
   deliberately left out.
@@ -185,7 +205,7 @@ Calendar's Time ↓.
 ### Shared pieces
 
 - **Sharing.** A versioned, validated URL fragment carries the first of 14 loaded months, current
-  view/zooms/orientation, focus, thresholds, selected evening date and River expansion. The site
+  view/zooms/orientation, focus, thresholds, selected evening date and River/Lunations expansion. The site
   record is omitted by default; the Share dialog explains that recipients use their own site and
   may see different results. Explicit inclusion previews name, coordinates, zone and optional
   elevation and explains copied-link/history exposure. Opening a link applies temporary controls
@@ -202,7 +222,7 @@ Calendar's Time ↓.
   checks. Site workflows, keyboard use, observing-filter setup, limitations, privacy and full
   offline third-party notices stay with the explanation. The page uses the full width and hides
   chart-specific controls while it is open.
-- **Inspector** (right panel in Calendar and Lunations). The selected night as the familiar
+- **Inspector** (right panel in Calendar). The selected night as the familiar
   altitude chart: sun and moon
   center altitude over the phase bands, with ordinary moonlight in warm grey and accepted
   moonlit time in illumination-scaled green. The sampled curves
@@ -242,9 +262,10 @@ Calendar's Time ↓.
   It updates each minute, on returning to the page and immediately on site changes; chart
   selection does not affect that clock.
 - **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 switch views, Esc
-  collapses an expanded River night or Calendar week. Enter/Space toggles the selected River
-  Month night when the chart has focus. The chart and minimap retain a visible focus outline.
-  River's selected-night summary includes the local zone, full windows and usable duration;
+  collapses an expanded River/Lunations night or Calendar week. Enter/Space toggles the selected
+  River Month or Lunations night when the chart has focus. Lunations uses Up/Down for cycles and
+  Left/Right for displayed nights. The chart and minimap retain a visible focus outline.
+  River and Lunations' selected-night summaries include the local zone, full windows and usable duration;
   pointer previews do not update that live announcement. Site dialogs contain their keyboard
   navigation and return focus to their opener on closing. Muted date/control text keeps
   readable contrast in each palette, with additional forced-color focus/boundary cues.
@@ -276,7 +297,7 @@ Rationale that isn't obvious from the result:
   moonlight, with green RGB values chosen for comparable luminance in each theme. Truly moon-free
   time stays plain black. Green duration bars and totals still identify all usable time.
 - **Altitude curves.** River's Moon-up shading carries the effect on usable dark time. Altitude
-  curves appear in expanded Calendar weeks and the inspector. River expansions use boundary
+  curves appear in expanded Calendar weeks and the inspector. River and Lunations expansions use boundary
   callouts on the shared clock axis rather than an altitude plot.
 - **Clock time versus elapsed time.** The month views use clock time, which is what you plan with.
   The inspector's chart uses elapsed time, so the repeated hour on a

@@ -130,7 +130,10 @@
                 ><i class="sw accepted-moonlight" id="acceptedMoonSw"></i>Moonlit, accepted by
                 settings</span
               >
-              <span><i class="sw line" style="background: var(--good)"></i>Moon-free duration</span>
+              <span
+                ><i class="sw line" style="background: var(--good)"></i
+                ><span id="durationCaption">Moon-free duration</span></span
+              >
               <span id="riverMoonKey"
                 ><b class="new-moon-label">New Moon</b><i class="sw new-moon-tick"></i>New-moon
                 night</span
@@ -168,6 +171,13 @@
               ends. Browsing does not change the selected night.
             </p>
             <div class="sizer" id="sizer"></div>
+            <div id="lunationsHeaders" hidden></div>
+            <section
+              id="lunationsDetail"
+              class="lunations-detail"
+              aria-label="Expanded Lunations night"
+              hidden
+            ></section>
             <div class="sr-only" id="riverSelection" role="status" aria-live="polite"></div>
             <section
               class="river-detail"

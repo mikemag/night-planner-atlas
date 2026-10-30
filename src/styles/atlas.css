@@ -989,6 +989,187 @@ button:disabled {
 .body.river-mode {
   grid-template-columns: minmax(0, 1fr);
 }
+.body.lunations-mode {
+  grid-template-columns: minmax(0, 1fr);
+}
+.lunations-mode .scroller {
+  overflow-x: auto;
+}
+.lunation-heading {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 4px 24px;
+  background: var(--panel);
+}
+.lunation-name {
+  min-width: 0;
+}
+.lunation-name h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.lunation-name p {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.lunation-total {
+  position: relative;
+  align-self: center;
+  font-size: 11px;
+}
+.lunation-total summary {
+  display: grid;
+  gap: 2px;
+  min-height: 32px;
+  padding: 2px 5px;
+  cursor: pointer;
+  list-style: none;
+}
+.lunation-total summary::-webkit-details-marker {
+  display: none;
+}
+.lunation-total strong {
+  color: var(--ink);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.lunation-total strong::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  background: var(--good);
+  vertical-align: middle;
+}
+.lunation-total summary span {
+  color: var(--ink-2);
+}
+.lunation-total summary span::after {
+  content: ' ⓘ';
+}
+.lunation-total > p {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  top: 100%;
+  width: min(280px, calc(100vw - 64px));
+  box-sizing: border-box;
+  padding: 12px;
+  margin: 4px 0 0;
+  border: 1px solid var(--hair-2);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: 0 4px 16px #0002;
+}
+.lunation-pick {
+  border: 1px solid var(--hair);
+  border-radius: 5px;
+  background: transparent;
+  padding: 7px 9px;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+}
+button.lunation-pick {
+  cursor: pointer;
+}
+button.lunation-pick:hover {
+  background: var(--chip);
+}
+.lunation-heading :is(button, summary):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.lunations-detail {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  height: 269px;
+  overflow: hidden;
+  border: 1px solid var(--select);
+  border-radius: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.lunations-night-heading {
+  box-sizing: border-box;
+  height: 44px;
+  padding: 4px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel);
+}
+.lunations-night-heading > div {
+  min-width: 0;
+}
+.lunations-night-heading h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+.lunations-night-heading p {
+  margin: 2px 0 0;
+  color: var(--ink-2);
+  font-size: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lunations-night-slot {
+  height: 46px;
+}
+.lunations-detail .river-annotations {
+  background: var(--panel);
+}
+@media (max-width: 700px) {
+  .lunations-mode .stage {
+    height: auto;
+  }
+  .lunations-mode .scroller {
+    flex: none;
+    height: 500px;
+  }
+  .lunation-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 3px 8px;
+    padding-block: 3px;
+  }
+  .lunation-name h2 {
+    font-size: 12px;
+  }
+  .lunation-name p {
+    margin-top: 2px;
+    font-size: 10px;
+  }
+  .lunation-total strong {
+    font-size: 13px;
+  }
+  .lunation-total summary span {
+    font-size: 10px;
+  }
+  .lunation-pick {
+    grid-column: 1 / -1;
+    padding-block: 5px;
+    min-height: 28px;
+  }
+  .lunations-night-heading h3 {
+    font-size: 12px;
+  }
+}
 .weekends-tray {
   flex: none;
   border: 1px solid var(--hair);

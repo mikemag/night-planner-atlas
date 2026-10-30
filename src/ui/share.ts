@@ -1,7 +1,7 @@
 import { createShareLink, readSharedPlan, type SharedPlan } from '../app/share-state';
-import { loadSettings, store } from '../app/settings';
+import { hasFocusPreference, loadSettings, store } from '../app/settings';
 import { restart, siteLabel, syncSettingsControls } from '../app/shell';
-import { S, data } from '../app/state';
+import { S, activeFocus, data } from '../app/state';
 import { nightTitle, pad2 } from '../model/format';
 import { siteRecord } from '../app/site-book';
 import { el } from './dom';
@@ -38,7 +38,8 @@ export function initSharing(): void {
           rangeStart: { y, m },
           rangeShift: 0,
           pendingNight: plan.night,
-          riverExpanded: plan.expanded,
+          riverExpanded: plan.view === 'river' && plan.expanded,
+          lunationsExpanded: plan.view === 'lunations' && plan.expanded,
           sharedSettings: true,
         });
         included = !!plan.site;
@@ -65,6 +66,7 @@ export function initSharing(): void {
     const saved = preferenceKeys.map((key) => store.set(key, S[key])).every(Boolean);
     if (saved) {
       S.sharedSettings = false;
+      S.focusExplicit = true;
       message.textContent =
         'View settings saved in this browser. ' +
         (included
@@ -81,6 +83,8 @@ export function initSharing(): void {
       rangeShift: 0,
       pendingNight: null,
       riverExpanded: false,
+      lunationsExpanded: false,
+      focusExplicit: hasFocusPreference(),
     });
     history.replaceState(null, '', location.pathname + location.search);
     notice.hidden = true;
@@ -112,11 +116,14 @@ export function initSharing(): void {
       riverZoom: S.riverZoom,
       calZoom: S.calZoom,
       calOrient: S.calOrient,
-      focus: S.focus,
+      focus: activeFocus(),
       moonAlt: S.moonAlt,
       crescent: S.crescent,
       night: r.nights[S.sel]?.id ?? null,
-      expanded: S.view === 'river' && S.riverZoom === 'month' && S.riverExpanded,
+      expanded:
+        S.view === 'lunations'
+          ? S.lunationsExpanded
+          : S.view === 'river' && S.riverZoom === 'month' && S.riverExpanded,
       ...(include.checked ? { site: siteRecord(S.site) } : {}),
     };
     el('shareSitePreview').hidden = !include.checked;

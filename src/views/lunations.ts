@@ -1,221 +1,422 @@
-import { S, atlas } from '../app/state';
-import { MON3, WD1, WD3, fmtDur, fmtHrs } from '../model/format';
-import { lunWindow } from '../model/range';
+import { S, activeFocus, atlas } from '../app/state';
+import { MON3, WD3, fmtHrs } from '../model/format';
+import { lunWindow, type Lunation } from '../model/range';
 import { MS_H } from '../model/time';
 import { C } from '../render/colors';
-import { drawNight } from '../render/night-draw';
-import { ctx, size, text } from '../render/surface';
-import { scroller } from '../ui/dom';
+import { drawNight, hourTicks, moonGlyph } from '../render/night-draw';
+import { ctx, size, snap, text } from '../render/surface';
+import { el, scroller } from '../ui/dom';
+import {
+  LUNATION_DETAIL_AXIS,
+  LUNATION_DETAIL_BAND,
+  LUNATION_DETAIL_HEADING,
+  LUNATION_DETAIL_HEIGHT,
+  placeLunationsDetail,
+  prepareLunationsDetail,
+} from '../ui/lunations-detail';
+import { placeLunationsHeaders, prepareLunationsHeaders } from '../ui/lunations-headers';
 import type { CanvasView, Hit } from './view';
 
-/** One row per lunar cycle, aligned so the new-moon night is the center column. */
+interface LunationAnchor {
+  t: number;
+  fraction: number;
+  offset: number;
+}
+
+/** Equal-width cycles, a shared vertical clock and one optional horizontal night timeline. */
 class LunationsView implements CanvasView {
-  TOP = 30;
-  LW = 132;
-  RW = 132;
-  PAD = 10;
+  TOP = 32;
+  DATE = 28;
+  SKY = 240;
+  GRAPH = 72;
+  FOOT = 18;
+  GAP = 16;
   total = 0;
+  cycles: Lunation[] = [];
+  ys: number[] = [];
+  hs: number[] = [];
+  private lastGeometry: ReturnType<LunationsView['geom']> | null = null;
 
   geom() {
     const { W } = size;
-    const N = lunWindow(S.focus),
-      cols = 2 * N + 1;
-    const LW = W < 760 ? 80 : this.LW,
-      RW = W < 760 ? 0 : this.RW;
-    const cw = (W - this.PAD * 2 - LW - RW) / cols;
-    const rh = cw >= 56 ? 150 : cw >= 36 ? 132 : 118;
-    return { N, cols, LW, RW, cw, rh, x0: this.PAD + LW };
+    const N = lunWindow(activeFocus());
+    const cols = 2 * N + 1;
+    const pad = 8;
+    const x0 = W < 700 ? 50 : 60;
+    const available = Math.max(1, W - x0 - pad);
+    // Seven phone columns fit; wider requested windows retain a readable, pannable width.
+    const cw = Math.max(40, available / cols);
+    const header = W < 700 ? 88 : 56;
+    const body = header + this.DATE + this.SKY + this.GRAPH + this.FOOT;
+    // Use the exact viewport width when it fits; rounding cw * cols upward can add a scrollbar.
+    return {
+      N,
+      cols,
+      cw,
+      x0,
+      pad,
+      available,
+      header,
+      body,
+      width: Math.max(W, x0 + cols * 40 + pad),
+    };
   }
 
   layout(): void {
-    const { rh } = this.geom();
-    this.total = this.TOP + atlas().lunations.length * (rh + 10) + 16;
+    const r = atlas();
+    const g = this.geom();
+    this.cycles = r.lunations.filter((L) => L.i + g.N >= 0 && L.i - g.N < r.nights.length);
+    const selected = this.cycleFor(S.sel);
+    const n = S.lunationsExpanded && selected >= 0 ? r.nights[S.sel] : null;
+    prepareLunationsDetail(
+      n ?? null,
+      this.detailGeom(),
+      !!n && Math.abs(S.sel - this.cycles[selected].i) > g.N,
+    );
+    prepareLunationsHeaders(r, g.N);
+    let y = 8;
+    this.ys = [];
+    this.hs = [];
+    for (let k = 0; k < this.cycles.length; k++) {
+      const h = g.body + this.GAP + (n && k === selected ? LUNATION_DETAIL_HEIGHT : 0);
+      this.ys.push(y);
+      this.hs.push(h);
+      y += h;
+    }
+    this.total = this.TOP + y;
+    el('sizer').style.width = `${Math.ceil(g.width)}px`;
+    if (!this.lastGeometry || this.lastGeometry.N !== g.N)
+      scroller.scrollLeft = Math.max(0, (g.cols * g.cw - g.available) / 2);
+    this.lastGeometry = g;
+  }
+
+  private detailGeom() {
+    const x0 = 64;
+    return {
+      width: size.W,
+      x0,
+      cw: Math.max(40, size.W - x0 - 12),
+      start: atlas().ax.start,
+      end: atlas().ax.end,
+      moonX: 32,
+    };
+  }
+
+  cycleAt(y: number): number {
+    for (let k = this.ys.length - 1; k >= 0; k--) if (this.ys[k] <= y) return k;
+    return 0;
+  }
+
+  cycleFor(i: number): number {
+    let best = -1;
+    for (let k = 0; k < this.cycles.length; k++)
+      if (best < 0 || Math.abs(this.cycles[k].i - i) < Math.abs(this.cycles[best].i - i)) best = k;
+    return best;
   }
 
   topNight(): number {
-    const { lunations } = atlas();
-    const { rh } = this.geom();
-    const k = Math.max(
+    return Math.max(
       0,
-      Math.min(lunations.length - 1, Math.floor(scroller.scrollTop / (rh + 10))),
+      Math.min(atlas().nights.length - 1, this.cycles[this.cycleAt(scroller.scrollTop)]?.i ?? 0),
     );
-    return Math.max(0, lunations[k] ? lunations[k].i : 0);
+  }
+
+  anchor(): LunationAnchor | null {
+    const g = this.lastGeometry;
+    if (!g || !this.cycles.length) return null;
+    const k = this.cycleAt(scroller.scrollTop);
+    return {
+      t: this.cycles[k].t,
+      fraction: (scroller.scrollTop - this.ys[k]) / this.hs[k],
+      offset: (scroller.scrollLeft + g.available / 2) / g.cw - g.N - 0.5,
+    };
+  }
+
+  restoreAnchor(anchor: LunationAnchor): void {
+    const k = this.cycles.findIndex((L) => L.t === anchor.t);
+    if (k < 0) return;
+    scroller.scrollTop = this.ys[k] + anchor.fraction * this.hs[k];
+    const g = this.geom();
+    scroller.scrollLeft = Math.max(0, (g.N + 0.5 + anchor.offset) * g.cw - g.available / 2);
   }
 
   scrollTo(i: number, top: boolean): void {
-    const { lunations } = atlas();
-    const { rh, N } = this.geom();
-    let k = lunations.findIndex((L) => i >= L.i - N && i <= L.i + N);
-    if (k < 0) k = lunations.findIndex((L) => L.i >= i);
+    const k = this.cycleFor(i);
     if (k < 0) return;
-    const y = k * (rh + 10);
-    const vis0 = scroller.scrollTop,
-      vis1 = vis0 + size.H - this.TOP;
-    if (top || y < vis0 || y + rh > vis1) scroller.scrollTop = Math.max(0, y - (top ? 0 : 40));
+    if (top) scroller.scrollTop = this.ys[k];
+    else this.reveal(i);
+    const g = this.geom();
+    const col = i - this.cycles[k].i + g.N;
+    if (col < 0 || col >= g.cols) return;
+    const x = col * g.cw;
+    if (x < scroller.scrollLeft) scroller.scrollLeft = x;
+    else if (x + g.cw > scroller.scrollLeft + g.available)
+      scroller.scrollLeft = x + g.cw - g.available;
+  }
+
+  reveal(i: number): void {
+    const k = this.cycleFor(i);
+    if (k < 0) return;
+    const g = this.geom();
+    const y = this.ys[k];
+    const expanded = S.lunationsExpanded && i === S.sel;
+    const bottom = y + g.body + (expanded ? LUNATION_DETAIL_HEIGHT : 0);
+    const available = size.H - this.TOP;
+    if (expanded) {
+      if (
+        bottom > scroller.scrollTop + available ||
+        bottom < scroller.scrollTop + LUNATION_DETAIL_HEIGHT
+      )
+        scroller.scrollTop = Math.max(y, bottom - available);
+    } else if (
+      y < scroller.scrollTop ||
+      y + g.header + this.DATE + this.SKY > scroller.scrollTop + available
+    )
+      scroller.scrollTop = y;
+  }
+
+  stepCycle(dir: number): void {
+    const k = Math.max(0, Math.min(this.cycles.length - 1, this.cycleAt(scroller.scrollTop) + dir));
+    scroller.scrollTop = this.ys[k] ?? 0;
+  }
+
+  /** Horizontal arrows visit shown dates; vertical arrows preserve the new-moon offset. */
+  navigate(key: string): number {
+    const { N } = this.geom();
+    const k = this.cycleFor(S.sel);
+    if (key === 'ArrowUp' || key === 'ArrowDown') {
+      const next = Math.max(0, Math.min(this.cycles.length - 1, k + (key === 'ArrowUp' ? -1 : 1)));
+      const off = Math.max(-N, Math.min(N, S.sel - this.cycles[k].i));
+      return Math.max(0, Math.min(atlas().nights.length - 1, this.cycles[next].i + off));
+    }
+    const indices = this.cycles
+      .flatMap((L) => Array.from({ length: 2 * N + 1 }, (_, c) => L.i + c - N))
+      .filter((i) => i >= 0 && i < atlas().nights.length);
+    return key === 'ArrowLeft'
+      ? ([...indices].reverse().find((i) => i < S.sel) ?? indices[0])
+      : (indices.find((i) => i > S.sel) ?? indices.at(-1)!);
   }
 
   draw(st: number): void {
     const r = atlas();
-    const { nights, lunations, tonightIdx } = r;
     const { W, H } = size;
-    const { N, cols, LW, RW, cw, rh, x0 } = this.geom();
+    const g = this.geom();
+    const left = scroller.scrollLeft;
+    const X = (c: number) => g.x0 + c * g.cw - left;
+    const selected = this.cycleFor(S.sel);
+    placeLunationsHeaders(this.ys, g.header, st, left, W, this.TOP);
+    if (S.lunationsExpanded && selected >= 0)
+      placeLunationsDetail(this.TOP + this.ys[selected] + g.body, st, left, W, this.TOP);
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, this.TOP, W, H - this.TOP);
     ctx.clip();
-    lunations.forEach((L, k) => {
-      const y = this.TOP + k * (rh + 10) - st + 6;
-      if (y + rh < this.TOP || y > H) return;
-      // row header
-      const nmWall = r.tz.wallParts(L.t);
-      const wd = WD3[new Date(Date.UTC(nmWall.y, nmWall.m - 1, nmWall.d)).getUTCDay()];
-      text('New moon', this.PAD, y + 12, 10, C.ink3, 'left', 650);
-      text(
-        `${wd} ${MON3[nmWall.m - 1]} ${nmWall.d}`,
-        this.PAD,
-        y + 30,
-        LW < 100 ? 12 : 15,
-        C.ink,
-        'left',
-        700,
-      );
-      const fi = Math.max(0, L.i - N),
-        la = Math.min(nights.length - 1, L.i + N);
-      text(
-        `${MON3[nights[fi].m - 1]} ${nights[fi].d} – ${MON3[nights[la].m - 1]} ${nights[la].d}`,
-        this.PAD,
-        y + 48,
-        11,
-        C.ink3,
-        'left',
-        500,
-      );
-      if (LW >= 100) {
-        ctx.fillStyle = C.good;
-        ctx.fillRect(this.PAD, y + rh - 26, 7, 7);
-        text(`${Math.round(L.total / MS_H)}h`, this.PAD + 12, y + rh - 22, 13, C.ink, 'left', 700);
-        text(`moon-free in ±${N}`, this.PAD, y + rh - 8, 10, C.ink3, 'left', 500);
-      }
-      // cells
-      const labH = 16,
-        footH = cw >= 24 ? 16 : 0,
-        g = cw >= 14 ? 2 : 1;
-      for (let c = 0; c < cols; c++) {
-        const off = c - N,
-          i = L.i + off;
-        const cx = x0 + c * cw;
-        if (i < 0 || i >= nights.length) {
+    const span = r.ax.end - r.ax.start;
+    const maxHours = Math.max(2, Math.ceil(r.maxMF / MS_H / 2) * 2);
+    for (let k = this.cycleAt(st); k < this.cycles.length; k++) {
+      const L = this.cycles[k];
+      const y = this.TOP + this.ys[k] - st;
+      if (y > H) break;
+      const dates = y + g.header;
+      const sky = dates + this.DATE;
+      const base = sky + this.SKY + 52;
+      const Y = (hh: number) => sky + ((hh - r.ax.start) / span) * this.SKY;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(g.x0, dates, g.available, this.DATE + this.SKY + this.GRAPH + this.FOOT);
+      ctx.clip();
+      for (let c = 0; c < g.cols; c++) {
+        const i = L.i + c - g.N;
+        const x = X(c);
+        if (x + g.cw < g.x0 || x > W) continue;
+        const n = r.nights[i];
+        if (!n) {
           ctx.fillStyle = C.chip;
-          ctx.fillRect(cx, y + labH, cw - g, rh - labH - footH);
+          ctx.fillRect(x, sky, g.cw - 2, this.SKY);
+          text('—', x + g.cw / 2, dates + 17, 11, C.ink3, 'center');
           continue;
         }
-        const n = nights[i];
-        const wk = n.dow === 5 || n.dow === 6;
-        if (wk) {
+        const weekend = n.dow === 5 || n.dow === 6;
+        if (weekend) {
           ctx.fillStyle = C.weekend;
-          ctx.fillRect(cx, y, cw - g, labH);
+          ctx.fillRect(x, dates, g.cw - 2, this.DATE);
         }
-        const lab = cw >= 40 ? `${WD1[n.dow]} ${n.d === 1 ? MON3[n.m - 1] + ' 1' : n.d}` : `${n.d}`;
         text(
-          lab,
-          cx + (cw - g) / 2,
-          y + labH / 2,
-          cw >= 30 ? 10.5 : 9,
-          wk ? C.ink : C.ink3,
+          WD3[n.dow],
+          x + (g.cw - 2) / 2,
+          dates + 7,
+          9.5,
+          weekend ? C.ink : C.ink3,
           'center',
-          wk ? 700 : 500,
+          weekend ? 650 : 450,
         );
-        drawNight(n, cx, y + labH, cw - g, rh - labH - footH, 'v', { labels: cw >= 58 });
-        if (footH)
-          text(
-            n.mfMs ? fmtHrs(n.mfMs) : '—',
-            cx + (cw - g) / 2,
-            y + rh - footH / 2,
-            cw >= 34 ? 10.5 : 9,
-            n.mfMs ? C.ink2 : C.ink3,
-            'center',
-            n.mfMs >= 4 * MS_H ? 650 : 500,
-          );
-        if (off === 0) {
-          ctx.fillStyle = C.ink;
-          ctx.fillRect(cx, y + rh + 2, cw - g, 2);
+        text(
+          n.d === 1 ? `${MON3[n.m - 1]} 1` : String(n.d),
+          x + (g.cw - 2) / 2,
+          dates + 20,
+          11,
+          C.ink,
+          'center',
+          n.d === 1 || c === g.N ? 700 : 500,
+        );
+        drawNight(n, x, sky, g.cw - 2, this.SKY, 'v', { labels: g.cw >= 58 });
+        const height = (n.mfMs / MS_H / maxHours) * 32;
+        ctx.fillStyle = C.good;
+        if (height > 0)
+          ctx.fillRect(x + 4, base - Math.max(1, height), g.cw - 10, Math.max(1, height));
+        text(
+          n.mfMs ? fmtHrs(n.mfMs) : '—',
+          x + (g.cw - 2) / 2,
+          base + 12,
+          10,
+          n.mfMs ? C.ink2 : C.ink3,
+          'center',
+          weekend ? 650 : 450,
+        );
+        if (n.d === 1) {
+          ctx.strokeStyle = C.hair2;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 4]);
+          ctx.beginPath();
+          ctx.moveTo(x - 1, sky);
+          ctx.lineTo(x - 1, base);
+          ctx.stroke();
+          ctx.setLineDash([]);
         }
-        if (i === tonightIdx) {
+        if (c === g.N) {
+          ctx.fillStyle = C.ink;
+          ctx.fillRect(x, sky - 2, g.cw - 2, 2);
+        }
+        if (i === r.tonightIdx) {
           ctx.strokeStyle = C.now;
           ctx.lineWidth = 2;
-          ctx.strokeRect(cx + 1, y + labH + 1, cw - g - 2, rh - labH - footH - 2);
+          ctx.strokeRect(x + 2, sky + 2, g.cw - 6, this.SKY - 4);
         }
-        if (i === S.sel) {
-          ctx.strokeStyle = C.select;
-          ctx.lineWidth = 2.5;
-          ctx.strokeRect(cx - 0.5, y - 0.5, cw - g + 1, rh + 1);
-        } else if (S.hover && S.hover.i === i) {
-          ctx.strokeStyle = C.hair2;
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(cx, y, cw - g, rh);
+        if (i === S.sel || S.hover?.i === i) {
+          ctx.strokeStyle = i === S.sel ? C.select : C.hair2;
+          ctx.lineWidth = i === S.sel ? 2 : 1;
+          ctx.strokeRect(x, dates, g.cw - 2, this.DATE + this.SKY + this.GRAPH - 2);
         }
       }
-      // best weekend summary
-      if (RW && L.best) {
-        const rx = x0 + cols * cw + 12;
-        const a = nights[L.best.i],
-          b = nights[L.best.i + 1];
-        text('Best weekend', rx, y + 12, 10, C.ink3, 'left', 650);
-        text(
-          `Fri–Sat ${MON3[a.m - 1]} ${a.d}–${b.m !== a.m ? MON3[b.m - 1] + ' ' : ''}${b.d}`,
-          rx,
-          y + 30,
-          12.5,
-          C.ink,
-          'left',
-          650,
-        );
-        ctx.fillStyle = C.good;
-        ctx.fillRect(rx, y + 44, 7, 7);
-        text(`${fmtDur(L.best.sum)}`, rx + 12, y + 48, 12.5, C.ink, 'left', 700);
-        text('moon-free, both nights', rx, y + 64, 10, C.ink3, 'left', 500);
-        // cells from the best weekend get a bracket
-        const c0 = L.best.i - L.i + N;
-        if (c0 >= 0 && c0 + 1 < cols) {
+      for (const tick of hourTicks(this.SKY / span)) {
+        if (!tick.major) continue;
+        ctx.strokeStyle = tick.midnight ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash(tick.midnight ? [] : [2, 4]);
+        ctx.beginPath();
+        ctx.moveTo(g.x0, snap(Y(tick.hh)));
+        ctx.lineTo(W - g.pad, snap(Y(tick.hh)));
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.fillStyle = C.hair;
+      ctx.fillRect(g.x0, base, g.available, 1);
+      if (L.best) {
+        const c = L.best.i - L.i + g.N;
+        ctx.strokeStyle = C.select;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(X(c) + 3, base + 24);
+        ctx.lineTo(X(c) + 3, base + 28);
+        ctx.lineTo(X(c + 2) - 5, base + 28);
+        ctx.lineTo(X(c + 2) - 5, base + 24);
+        ctx.stroke();
+      }
+      ctx.restore();
+      text('Evening', g.x0 - 7, dates + 12, 9, C.ink2, 'right', 550);
+      text('↓', g.x0 - 7, dates + 24, 10, C.ink2, 'right');
+      for (const tick of hourTicks(this.SKY / span)) {
+        if (tick.major)
+          text(
+            tick.label,
+            g.x0 - 7,
+            Y(tick.hh),
+            11,
+            tick.midnight ? C.ink : C.ink3,
+            'right',
+            tick.midnight ? 700 : 450,
+          );
+      }
+      text('Morning', g.x0 - 7, sky + this.SKY + 9, 9, C.ink2, 'right', 550);
+      text(`${maxHours}h`, g.x0 - 7, base - 32, 9, C.ink3, 'right');
+      text('0h', g.x0 - 7, base, 9, C.ink3, 'right');
+      if (S.lunationsExpanded && selected === k) this.drawDetail(y + g.body);
+      if (S.lunationsExpanded && selected === k && Math.abs(S.sel - L.i) <= g.N) {
+        const cx = X(S.sel - L.i + g.N) + (g.cw - 2) / 2;
+        if (cx >= g.x0 && cx <= W - g.pad) {
           ctx.fillStyle = C.select;
-          ctx.fillRect(x0 + c0 * cw, y + rh + 6, cw * 2 - g, 2);
+          ctx.beginPath();
+          ctx.moveTo(cx - 5, y + g.body - 9);
+          ctx.lineTo(cx + 5, y + g.body - 9);
+          ctx.lineTo(cx, y + g.body - 3);
+          ctx.fill();
         }
       }
-    });
+      ctx.fillStyle = C.hair;
+      ctx.fillRect(8, y + this.hs[k] - this.GAP / 2, W - 16, 1);
+    }
     ctx.restore();
-    // sticky header
     ctx.fillStyle = C.panel;
     ctx.fillRect(0, 0, W, this.TOP);
     ctx.fillStyle = C.hair;
     ctx.fillRect(0, this.TOP - 1, W, 1);
-    text('Nights from new moon →', this.PAD, this.TOP / 2, 10, C.ink3, 'left', 600);
-    for (let c = 0; c < cols; c++) {
-      const off = c - N;
-      if (cw < 22 && off % 2) continue;
+    text('Time ↓', 8, this.TOP / 2, 10, C.ink3, 'left', 600);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(g.x0, 0, g.available, this.TOP);
+    ctx.clip();
+    for (let c = 0; c < g.cols; c++) {
+      const off = c - g.N;
       text(
-        off === 0 ? 'New' : (off > 0 ? '+' : '−') + Math.abs(off),
-        x0 + c * cw + (cw - 2) / 2,
+        off === 0 ? 'New' : `${off > 0 ? '+' : '−'}${Math.abs(off)}`,
+        X(c) + (g.cw - 2) / 2,
         this.TOP / 2,
-        10.5,
+        11,
         off === 0 ? C.ink : C.ink3,
         'center',
         off === 0 ? 700 : 500,
       );
     }
-    if (RW) text('Trip pick', x0 + cols * cw + 12, this.TOP / 2, 10, C.ink3, 'left', 600);
+    ctx.restore();
+  }
+
+  private drawDetail(y: number): void {
+    const n = atlas().nights[S.sel];
+    if (!n) return;
+    const g = this.detailGeom();
+    const axis = y + LUNATION_DETAIL_HEADING;
+    const sky = axis + LUNATION_DETAIL_AXIS;
+    for (const tick of hourTicks(g.cw / (g.end - g.start))) {
+      if (tick.major)
+        text(
+          tick.label,
+          g.x0 + ((tick.hh - g.start) / (g.end - g.start)) * g.cw,
+          axis + 11,
+          10.5,
+          C.ink3,
+          'center',
+          tick.midnight ? 700 : 450,
+        );
+    }
+    drawNight(n, g.x0, sky, g.cw, LUNATION_DETAIL_BAND, 'h');
+    moonGlyph(n, g.moonX, sky + LUNATION_DETAIL_BAND / 2, 7);
+    ctx.fillStyle = C.select;
+    ctx.fillRect(1, y, 2, LUNATION_DETAIL_HEIGHT);
+    ctx.fillRect(size.W - 3, y, 2, LUNATION_DETAIL_HEIGHT);
   }
 
   hit(px: number, py: number): Hit | null {
-    const { nights, lunations } = atlas();
-    if (py < this.TOP) return null;
-    const { N, cols, cw, rh, x0 } = this.geom();
-    const cy = py - this.TOP + scroller.scrollTop - 6;
-    const k = Math.floor(cy / (rh + 10));
-    if (k < 0 || k >= lunations.length || cy - k * (rh + 10) > rh) return null;
-    const c = Math.floor((px - x0) / cw);
-    if (c < 0 || c >= cols) return null;
-    const i = lunations[k].i + c - N;
-    return i >= 0 && i < nights.length ? { i } : null;
+    const g = this.geom();
+    if (py < this.TOP || px < g.x0 || px >= size.W - g.pad) return null;
+    const cy = py - this.TOP + scroller.scrollTop;
+    const k = this.cycleAt(cy);
+    const offY = cy - this.ys[k];
+    if (offY < g.header || offY >= g.body - this.FOOT) return null;
+    const c = Math.floor((px - g.x0 + scroller.scrollLeft) / g.cw);
+    if (c < 0 || c >= g.cols) return null;
+    const i = this.cycles[k].i + c - g.N;
+    if (i < 0 || i >= atlas().nights.length) return null;
+    return { i };
   }
 }
 

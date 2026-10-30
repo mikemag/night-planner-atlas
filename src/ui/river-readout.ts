@@ -7,21 +7,23 @@ import { el } from './dom';
 export function updateRiverReadout(): void {
   const box = el('riverReadout');
   const hover = S.hover;
-  const i = hover?.i ?? (S.riverReadoutSelected ? S.sel : -1);
+  const i = hover?.i ?? (S.riverReadoutSelected || S.view === 'lunations' ? S.sel : -1);
   const n = atlas().nights[i];
   let value = '';
   if (n) {
     const date = `${WD3[n.dow]} ${MON3[n.m - 1]} ${n.d}, ${n.y}`;
-    if (hover?.hh != null && S.riverZoom !== 'year') {
+    if (S.view !== 'lunations' && hover?.hh != null && S.riverZoom !== 'year') {
       const alt = moonAltAt(n, hover.hh);
       const moon =
         alt == null ? '' : ` · Moon center ${Math.round(alt).toString().replace('-', '−')}°`;
       value = `${date} · ${fmtClock(hover.hh)} · ${phaseAt(n, hover.hh).replace('True dark', 'Astronomical darkness')}${moon}`;
     } else {
       const total = n.mfMs
-        ? `${fmtDur(n.mfMs)} moon-free`
+        ? `${fmtDur(n.mfMs)} ${S.view === 'lunations' ? 'usable dark' : 'moon-free'}`
         : n.tdMs
-          ? 'No moon-free true dark'
+          ? S.view === 'lunations'
+            ? 'No usable dark'
+            : 'No moon-free true dark'
           : 'No true dark';
       value = `${date} · ${total} · ${windowsText(n)}`;
     }

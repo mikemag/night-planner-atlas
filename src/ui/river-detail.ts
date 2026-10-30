@@ -40,7 +40,8 @@ export interface DetailGeometry {
   moonX: number;
 }
 
-function annotationChart(n: Night, g: DetailGeometry): SVGSVGElement {
+/** Shared ordered event callouts for River and Lunations' horizontal night timelines. */
+export function annotationChart(n: Night, g: DetailGeometry): SVGSVGElement {
   const X = (hh: number) => g.x0 + ((hh - g.start) / (g.end - g.start)) * g.cw;
   const events: Array<{
     instant: number;
