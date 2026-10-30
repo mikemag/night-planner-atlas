@@ -26,13 +26,13 @@ One encoding everywhere, so a night looks the same in every view and in the sing
   brightness, while a thin crescent barely lifts the black. The wash is drawn only over true dark,
   where moonlight is what matters. It follows the Moon’s upper edge at the natural horizon (0°),
   independently of planning thresholds.
-- **Moon-free true dark** is black, without an edge marker. Green marks duration bars and
-  totals rather than boundaries in the night bands.
+- **Moon-free true dark** is black, without an edge marker. Green identifies duration bars, total markers and usable-window brackets. Small numeric
+  labels use normal ink for contrast; the night bands retain their sky-stage colors.
 - **Accepted moonlight** uses a green wash with the same illumination-based opacity as ordinary
   moonlight. Only the intersection of natural-horizon moonlight, true dark and accepted planning
   windows is green. The green tint replaces the ordinary wash there rather than layering over it,
   so brightness continues to represent illumination. Raising the Moon-altitude threshold or ignoring
-  a crescent can add green time; truly moon-free time stays plain black. The inspector uses the same
+  a crescent can add green time; truly moon-free time stays plain black. Night details use the same
   treatment.
 - **Weekends** (Friday and Saturday nights) get an amber tint, **selection** is an amber outline,
   and **tonight and now** are blue.
@@ -116,7 +116,7 @@ flattened.
 - **Gutters.** The left gutter holds date and weekday (weekends tinted and bold) and a moon phase
   glyph, replaced by a tick for Year's new-moon event rows. The first of a month uses its month
   name in place of the weekday. On the right, a bar and
-  value give moon-free duration per night, in hours and minutes matching the inspector (for
+  value give moon-free duration per night, in hours and minutes matching the night detail (for
   example, "8h 5m"). The duration column is wider than in Year zoom to fit these values on phones.
   The pinned axis names the top visible month (abbreviated
   with its year on narrow screens). In Month zoom on desktop, a minimap of the whole range
@@ -126,7 +126,7 @@ flattened.
   shows the visible dates; its grab area is at least 24 px tall, even with an expanded night. Grab it anywhere
   inside its outline to drag without recentering. Clicking outside the viewport centers that date
   and can continue into a drag. Dragging tracks continuous date position, including unequal
-  focus/context rows, and clamps at the range ends. Selection and the inspector stay unchanged.
+  focus/context rows, and clamps at the range ends. Selection and the night detail stay unchanged.
   A keyboard scrollbar overlays the same minimap when focused: arrows browse nights, Page Up/Down
   browse screens and Home/End reach the range ends without selecting a different night.
 - **Fixed readout.** River has no floating night tooltip. A reserved strip below the chart shows
@@ -150,23 +150,45 @@ flattened.
 
 ### Calendar
 
-A month grid, Sunday first. Each day cell holds that evening's night: moon phase and illumination,
-the moon-free total, and the window.
+A full-width month grid, Sunday first. Each date is that evening's night. Its purpose is to
+compare the dates and weekends available to the observer; it keeps seven-day weeks on phones.
 
-- **Time ↓** (default) draws each night as a column with time running down. Cells in a week abut,
-  so each week reads as a small river and the moon's slide stays visible across it. **Time →**
-  draws a bar with time running across, matching the single-night chart; it is more compact and
-  its numbers are easier to read.
-- **Month header.** Moon-free total, nights with at least 4 h, new and full moon dates, and a
-  sparkline of moon-free hours per night (weekends solid).
-- **Expand a week** with the chevron in the left gutter. Time ↓ cells grow and gain window times,
-  sunset, sunrise, moonrise and moonset; Time → cells add a short list of facts.
-- **New-moon focus** dims nights outside ±N and squashes weeks that contain none.
-- **Year** zoom shows mini months with a small night column per day, weekend columns tinted, and
-  monthly totals: the calendar app's year view, with data.
-- _Best at_ familiarity: weekends are a column, and every cell carries its headline number.
-- _Weak at_ continuity: week wrapping breaks the moon's motion every seven days, and a readable
-  month fills a screen, so a year means paging rather than scanning.
+- **Time ↓** remains the default, with the saved **Time →** overview retained. Vertical nights
+  run from evening at the top to morning below, with a clock rail and a stronger midnight guide
+  at every width. The pinned strip keeps the month, time direction and weekdays in view.
+  Cells show date, phase and usable duration; small green bars use the same zero-based hours
+  scale as the month profiles. Narrow cells use decimal hours; the readout and expansion give
+  durations to the minute. Exact event labels belong in the selected-night expansion.
+- **Complete weeks.** Neighboring months' loaded nights appear dimmed. They remain selectable in
+  the week the observer activated, including across December/January. Dates beyond the computed
+  range show a dash and cannot be selected. Neighboring dates never enter the named month's total.
+- **Month headings** are real, responsive headings with an accessible explanation of the usable
+  total and nights with at least four hours. Totals include every evening date in the named month,
+  independently of focus. New/full moon dates refer to the actual site-local event dates; their
+  exact times are available in the heading's title. The green daily profile has a labeled hours
+  scale shared across the entire range, date labels, and solid Friday/Saturday bars with an amber
+  baseline key. Phone headings stack the information and profile instead of overlapping them.
+- **Select a night** to open one full-width horizontal timeline beneath its week. It uses the
+  same event renderer as River and the same panel/sky-strip renderer as Lunations: ordered Sun
+  and Moon events, separate usable-window brackets, phase, illumination, threshold notes and
+  clock-change notes. Time ↓ and Time → have identical detail. Activate the night again,
+  use Close or Escape to collapse; Enter/Space toggles. Left/Right select neighboring nights and
+  Up/Down move a week, carrying an open expansion. Selection and the browsed week survive resize,
+  orientation changes and theme changes. Native touch pans do not select or expand a night.
+- **Focus** dims nights outside ±N without removing dates or changing week heights. Calendar's
+  initial phone view retains the whole month; Lunations' automatic ±3 remains specific to it.
+- **Year** shows mini month grids with real month buttons and readable usable-hour and good-night
+  summaries. Tap, click or activate a month button by keyboard to open Month. A single activation
+  of a night opens its exact date, and Enter on the Year chart opens the selected night's month.
+  The saved overview orientation is preserved.
+- **Shared detail and readout.** Calendar has no inspector sidebar or floating night tooltip.
+  Its fixed strip previews a pointed-at night without changing selection and otherwise summarizes
+  the selected night's usable total and every separate window. River and Calendar share the
+  collapsible Dark weekends ahead tray. Expanded Calendar nights can be shared with the existing
+  site-optional plan links, without saving temporary recipient preferences.
+- _Best at_ finding dates within familiar weeks and comparing Friday/Saturday availability.
+- _Weak at_ continuity: weeks wrap the lunar pattern, while River and Lunations preserve it over
+  longer spans. A readable month can require vertical scrolling.
 
 ### Lunations
 
@@ -228,15 +250,12 @@ New-moon focus crops each cycle to ±N without changing ownership.
   checks. Site workflows, keyboard use, observing-filter setup, limitations, privacy and full
   offline third-party notices stay with the explanation. The page uses the full width and hides
   chart-specific controls while it is open.
-- **Inspector** (right panel in Calendar). The selected night as the familiar
-  altitude chart: sun and moon
-  center altitude over the phase bands, with ordinary moonlight in warm grey and accepted
-  moonlit time in illumination-scaled green. The sampled curves
-  illustrate position; all Moon event times and window boundaries are separately refined. Below
-  it: stage start times
-  and durations for evening and morning, moon phase with rise and set, and **Dark weekends
-  ahead**, the best Friday–Saturday pair near each upcoming new moon. River keeps that weekend
-  list in a separate collapsible tray and puts event details on the expanded timeline.
+- **Night details.** All three views share ordered event annotations on the same clock axis,
+  with illumination, phase, individual usable-window durations and threshold/clock-change notes.
+  Calendar and Lunations share the full-width panel beneath their week or cycle. River annotates
+  its selected row directly. A fixed readout previews nights without changing selection and lists
+  every separate usable window. River and Calendar keep **Dark weekends ahead** in a collapsible
+  tray, using the same Friday/Saturday ranking as before.
 - **Planning thresholds.** _Moon’s upper edge above_ (0°–15°) allows for a tree line or hills.
   The Moon counts as up while any part of its refracted disk
   clears that height; Moonrise and Moonset use the upper edge at the natural horizon.
@@ -302,11 +321,12 @@ Rationale that isn't obvious from the result:
   instead of hatching. Its opacity follows the same 0.17 + 0.40 × illumination^0.8 curve as ordinary
   moonlight, with green RGB values chosen for comparable luminance in each theme. Truly moon-free
   time stays plain black. Green duration bars and totals still identify all usable time.
-- **Altitude curves.** River's Moon-up shading carries the effect on usable dark time. Altitude
-  curves appear in expanded Calendar weeks and the inspector. River and Lunations expansions use boundary
-  callouts on the shared clock axis rather than an altitude plot.
-- **Clock time versus elapsed time.** The month views use clock time, which is what you plan with.
-  The inspector's chart uses elapsed time, so the repeated hour on a
-  fall-back night doesn't fold the curves.
+- **Night expansion.** Exact times have more space and a predictable order on a horizontal
+  timeline. Calendar's two seven-cell expansion treatments have been replaced by the same
+  event callouts used in River and Lunations. The sky bands retain the Moon's effect on usable
+  darkness; River's pointer readout supplies sampled Moon-center altitude when needed.
+- **Clock time versus elapsed time.** Charts use site-local clock time, which is what observers
+  plan with. Shared night details mark clock changes, and window durations add actual elapsed
+  time across repeated or skipped hours.
 - **Considered and not built.** A radial year clock was pretty, but it made times hard to read and
   nights hard to compare. A plain heat-map calendar loses _when_ in the night the dark falls.

@@ -13,8 +13,9 @@ export interface UiState {
   sharedSettings: boolean;
   /** Selected night index, or −1. */
   sel: number;
-  /** Key of the expanded calendar week, if any. */
-  expandedWeek: string | null;
+  /** Open one Calendar night beneath the week that was activated. */
+  calendarExpanded: boolean;
+  calendarWeek: string | null;
   /** Expand the selected night in River Month; Year always stays compact. */
   riverExpanded: boolean;
   /** Lunations opens one horizontal night timeline beneath its cycle. */
@@ -29,7 +30,7 @@ export interface UiState {
 export type AppState = Settings & UiState;
 
 /**
- * Settings and UI state. The shell and controls write it; views and the inspector read it.
+ * Settings and UI state. The shell and controls write it; views and shared night details read it.
  */
 export const S: AppState = {
   ...loadSettings(),
@@ -38,7 +39,8 @@ export const S: AppState = {
   pendingNight: null,
   sharedSettings: false,
   sel: -1,
-  expandedWeek: null,
+  calendarExpanded: false,
+  calendarWeek: null,
   riverExpanded: false,
   lunationsExpanded: false,
   focusExplicit: hasFocusPreference(),

@@ -16,16 +16,16 @@ track where it is going.
   march becomes diagonal stripes, the seasons an hourglass, and clock changes a visible step.
   Use Year for an overview, Month for nightly windows, and expand individual Month nights for boundary times.
 - **Calendar**: a month grid where each day holds that evening's night, and a Year view of mini
-  months with monthly totals. Expand any week for times.
+  months with monthly totals and direct month navigation. Select a night to open its horizontal
+  timeline beneath the week; dim neighboring dates complete the weeks.
 - **Lunations**: one row per lunar cycle, aligned on new moon, with the best Friday–Saturday of
   each cycle. Full cycle shows every night exactly once, assigned to its nearest new moon, with
   padding keeping new moon centered. Taller night columns run from evening down to morning, with usable-hour bars below;
   select a night for its horizontal timeline. Phones start at ±3 nights, with wider windows available.
 
 All views share one visual language and the same controls: new-moon focus (±N nights), when the
-moon counts as up, and whether to ignore a thin crescent. Expand a River or Lunations night for
-boundary times; Calendar retains the altitude-chart inspector. River keeps the darkest weekends
-in a collapsible tray. **How it works** explains the calculations, measured accuracy, conventions,
+moon counts as up, and whether to ignore a thin crescent. Expand a night in any view for the same ordered boundary times and separate usable windows.
+River and Calendar keep the darkest weekends in a collapsible tray. **How it works** explains the calculations, measured accuracy, conventions,
 controls, privacy and credits, with technical detail available on demand.
 
 | Year at a glance (River)                        | Calendar                                           | Lunations                                           |
@@ -84,7 +84,7 @@ src/
   app/                  settings, shared state, and the shell that ties views together
   views/                River, Calendar and Lunations
   render/               canvas surface, theme colors, drawing one night
-  ui/                   inspector, tooltip, controls
+  ui/                   shared night details, readout, controls
   styles/atlas.css      theme tokens, layout, components
 public/                 files served as-is (favicon)
 e2e/                    browser smoke tests

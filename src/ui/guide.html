@@ -83,10 +83,9 @@
         </figcaption>
       </figure>
       <p>
-        The inspector’s curves and River’s pointer altitude show the
-        <strong>apparent center</strong>, sampled every ten minutes. Those samples illustrate
-        position; event times and usable-window boundaries come from separate refined crossing
-        searches.
+        River’s pointer altitude shows the
+        <strong>apparent center</strong>, sampled every ten minutes. The samples describe position;
+        event times and usable-window boundaries come from separate refined crossing searches.
       </p>
       <p>
         Natural-horizon Moon events use 34 arcminutes of sea-level refraction. The elevated Moon
@@ -179,9 +178,8 @@
       that clock.
     </p>
     <p>
-      River uses local clock time across its rows and marks clock-change nights. A repeated or
-      skipped hour is real. The inspector instead plots elapsed time, so a repeated hour does not
-      fold its altitude curves.
+      All three views use site-local clock time and mark clock-change nights in their shared night
+      details. A repeated or skipped hour is real; duration totals add actual elapsed time.
     </p>
     <p>
       Choose a saved site in the location dropdown to switch immediately. Choose
@@ -251,8 +249,11 @@
       usable time within seven nights of each upcoming new moon.
     </p>
     <p>
-      <strong>Calendar</strong> puts evening dates into month grids, with Time ↓ or Time → and
-      expandable weeks and a selected-night inspector with altitude curves and stage times.
+      <strong>Calendar</strong> puts evening dates into complete month-grid weeks, with Time ↓ or
+      Time →. Muted neighboring dates preserve week context but do not enter the named month’s
+      total. Select a night for the same horizontal event timeline as River, beneath its week. The
+      monthly green profile has a labeled hours scale; focus keeps every date and week in place. In
+      Year, tap or activate a month to open it, or select a specific evening date.
       <strong>Lunations</strong> aligns cycles around new moon to compare seasonal windows and
       weekends. Evening runs down to morning on a shared clock scale; green bars beneath each cycle
       show usable hours on a shared duration scale. Select a night to expand its horizontal timeline
@@ -292,7 +293,9 @@
       </div>
       <div>
         <dt><kbd>Enter</kbd> / <kbd>Space</kbd></dt>
-        <dd>Toggle a River Month or Lunations night when the chart has focus</dd>
+        <dd>
+          Toggle a night in Calendar Month, River Month or Lunations; open Month from Calendar Year
+        </dd>
       </div>
       <div>
         <dt><kbd>Esc</kbd></dt>

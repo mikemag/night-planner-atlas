@@ -69,23 +69,16 @@ for (const width of [1512, 390]) {
         .map(([y, row]) => [y, { ...row, area: Math.round(row.area * 1e6) / 1e6 }] as const)
         .sort(([a], [b]) => a - b);
     };
-    const greenRgb = await page.evaluate(() =>
-      getComputedStyle(document.documentElement).getPropertyValue('--moon-accepted-rgb').trim(),
-    );
-    const greenRects = page.locator(`#insChart rect[fill="rgb(${greenRgb})"]`);
     await painted();
     const wash = await fills(false);
     const baseline = coverage(wash);
     expect(wash.length).toBeGreaterThan(0);
     expect(await fills(true)).toEqual([]);
-    await expect(greenRects).toHaveCount(0);
-    await expect(page.locator('#insChart pattern')).toHaveCount(0);
 
     await page.locator('#moonAltSel').selectOption('15');
     await painted();
     expect(coverage([...(await fills(false)), ...(await fills(true))])).toEqual(baseline);
     expect((await fills(true)).length).toBeGreaterThan(0);
-    expect(await greenRects.count()).toBeGreaterThan(0);
     if (process.env.SCREENSHOTS)
       await page.screenshot({
         path: `test-results/screenshots/${info.project.name}-moonlight-altitude-${width}.png`,
@@ -96,7 +89,6 @@ for (const width of [1512, 390]) {
     await painted();
     expect(coverage([...(await fills(false)), ...(await fills(true))])).toEqual(baseline);
     expect((await fills(true)).length).toBeGreaterThan(0);
-    expect(await greenRects.count()).toBeGreaterThan(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     if (process.env.SCREENSHOTS)
       await page.screenshot({

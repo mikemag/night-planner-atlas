@@ -64,7 +64,10 @@ function validate(value: unknown): SharedPlan {
   }
   if (
     p.expanded &&
-    (!p.night || (p.view !== 'lunations' && (p.view !== 'river' || p.riverZoom !== 'month')))
+    (!p.night ||
+      (p.view !== 'lunations' &&
+        !(p.view === 'river' && p.riverZoom === 'month') &&
+        !(p.view === 'calendar' && p.calZoom === 'month')))
   )
     throw new Error(INVALID);
   if (p.site !== undefined && (!isSite(p.site) || p.site.name.length > 200))

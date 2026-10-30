@@ -371,7 +371,7 @@ input {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 356px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 .stage {
@@ -549,106 +549,6 @@ input {
 }
 .doc strong {
   color: var(--ink);
-}
-.inspector {
-  min-height: 0;
-  overflow: auto;
-  background: var(--panel);
-  border: 1px solid var(--hair);
-  border-radius: 12px;
-  padding: 14px 14px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.ins-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.ins-date {
-  font-size: 15px;
-  font-weight: 680;
-  letter-spacing: -0.01em;
-}
-.ins-sub {
-  color: var(--ink-3);
-  font-size: 11.5px;
-  font-variant-numeric: tabular-nums;
-}
-.ins-nav {
-  margin-left: auto;
-  display: flex;
-  gap: 4px;
-}
-.ins-hero {
-  display: grid;
-  gap: 2px;
-}
-.ins-big {
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-}
-.ins-cap {
-  color: var(--ink-2);
-  font-size: 12.5px;
-}
-.ins-chart {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 10px;
-}
-.kv {
-  display: grid;
-  grid-template-columns: auto 1fr 1fr;
-  gap: 0;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.kv > div {
-  padding: 5px 0;
-  border-bottom: 1px solid var(--hair);
-}
-.kv .h {
-  color: var(--ink-3);
-  font-size: 10.5px;
-  font-weight: 650;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.kv .k {
-  color: var(--ink-2);
-  padding-right: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.kv .v {
-  text-align: right;
-  color: var(--ink);
-}
-.kv .v small {
-  color: var(--ink-3);
-  font-size: 11px;
-  margin-left: 4px;
-}
-.moonrow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-  color: var(--ink-2);
-}
-.moonrow b {
-  color: var(--ink);
-  font-weight: 650;
-}
-.ins-foot {
-  color: var(--ink-3);
-  font-size: 11px;
 }
 .wkl {
   border-top: 1px solid var(--hair);
@@ -961,7 +861,7 @@ button:disabled {
   stroke-width: 1.5;
 }
 .river-annotations .river-window-duration {
-  fill: var(--good);
+  fill: var(--ink);
   font-size: 15px;
   font-weight: 700;
 }
@@ -1093,7 +993,7 @@ button.lunation-pick:hover {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.lunations-detail {
+.night-detail {
   position: absolute;
   z-index: 1;
   box-sizing: border-box;
@@ -1103,7 +1003,7 @@ button.lunation-pick:hover {
   border-radius: 5px;
   font-variant-numeric: tabular-nums;
 }
-.lunations-night-heading {
+.night-detail-heading {
   box-sizing: border-box;
   height: 44px;
   padding: 4px 10px;
@@ -1113,15 +1013,15 @@ button.lunation-pick:hover {
   gap: 6px;
   background: var(--panel);
 }
-.lunations-night-heading > div {
+.night-detail-heading > div {
   min-width: 0;
 }
-.lunations-night-heading h3 {
+.night-detail-heading h3 {
   margin: 0;
   font-size: 13px;
   font-weight: 650;
 }
-.lunations-night-heading p {
+.night-detail-heading p {
   margin: 2px 0 0;
   color: var(--ink-2);
   font-size: 10px;
@@ -1129,10 +1029,10 @@ button.lunation-pick:hover {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.lunations-night-slot {
+.night-detail-slot {
   height: 46px;
 }
-.lunations-detail .river-annotations {
+.night-detail .river-annotations {
   background: var(--panel);
 }
 @media (max-width: 700px) {
@@ -1166,7 +1066,7 @@ button.lunation-pick:hover {
     padding-block: 5px;
     min-height: 28px;
   }
-  .lunations-night-heading h3 {
+  .night-detail-heading h3 {
     font-size: 12px;
   }
 }
@@ -1546,4 +1446,146 @@ kbd {
 .share-site-fields dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.body.calendar-mode {
+  grid-template-columns: minmax(0, 1fr);
+}
+.calendar-mode .scroller {
+  overflow-x: hidden;
+}
+.calendar-heading {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 38%);
+  gap: 8px 20px;
+  align-items: center;
+  background: var(--panel);
+  border-bottom: 1px solid var(--hair);
+}
+.calendar-heading h2 {
+  margin: 0 0 5px;
+  font-size: 20px;
+  font-weight: 650;
+}
+.calendar-heading p {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.calendar-month-total {
+  position: relative;
+  font-size: 12px;
+}
+.calendar-month-total summary {
+  cursor: pointer;
+  min-height: 24px;
+}
+.calendar-month-total strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.calendar-month-total > p {
+  position: absolute;
+  z-index: 3;
+  top: 100%;
+  left: 0;
+  width: min(300px, calc(100vw - 80px));
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--hair-2);
+  border-radius: 5px;
+  background: var(--panel);
+  box-shadow: 0 4px 16px #0002;
+}
+.calendar-profile {
+  width: 100%;
+  height: 72px;
+  display: block;
+  overflow: visible;
+}
+.calendar-profile text {
+  fill: var(--ink-2);
+  font:
+    10px system-ui,
+    sans-serif;
+}
+.calendar-profile .profile-bar {
+  fill: var(--good);
+}
+.calendar-profile .profile-weekend {
+  fill: var(--weekend);
+}
+.calendar-profile .profile-axis {
+  stroke: var(--hair-2);
+  stroke-width: 1;
+}
+.calendar-month-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 5px;
+  color: var(--ink);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.calendar-month-link:hover {
+  background: var(--chip);
+}
+.calendar-month-link strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.3;
+}
+.calendar-month-link span {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.calendar-heading.year-heading {
+  display: block;
+  padding: 0;
+  border-bottom: 0;
+  border-radius: 6px;
+}
+.calendar-heading :is(button, summary):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+@media (max-width: 700px) {
+  .calendar-mode .stage {
+    height: auto;
+  }
+  .calendar-mode .scroller {
+    flex: none;
+    height: 500px;
+  }
+}
+@media (max-width: 649px) {
+  .calendar-heading {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 7px 10px;
+  }
+  .calendar-heading h2 {
+    font-size: 18px;
+    margin-bottom: 3px;
+  }
+  .calendar-heading p {
+    margin-top: 3px;
+    font-size: 10px;
+  }
+  .calendar-profile {
+    height: 68px;
+  }
 }

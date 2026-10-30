@@ -323,7 +323,7 @@ class RiverView implements CanvasView {
       'left',
       700,
     );
-    text('Moon-free', x1 + this.GR / 2, top - 12, narrow ? 9 : 10.5, C.ink3, 'center', 600);
+    text('Usable dark', x1 + this.GR / 2, top - 12, narrow ? 9 : 10.5, C.ink3, 'center', 600);
     if (hoverH != null) {
       const s = fmtClock(hoverH),
         wv = tw(s, 11, 650) + 10,

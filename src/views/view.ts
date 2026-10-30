@@ -4,8 +4,10 @@ export interface Hit {
   i?: number;
   /** Clock position in wall-clock hours after noon, when the view has a time axis there. */
   hh?: number | null;
-  /** Key of a calendar week's expand gutter. */
-  gutter?: string;
+  /** Calendar week containing the activated date, including neighboring-month dates. */
+  week?: string;
+  /** Year month to open. */
+  month?: string;
   /** The River's minimap. */
   mini?: boolean;
   y?: number;

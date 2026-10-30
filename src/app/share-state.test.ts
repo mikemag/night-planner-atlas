@@ -59,7 +59,7 @@ it('shares an expanded Lunations night independently of River zoom', () => {
   const lunation: SharedPlan = { ...plan, view: 'lunations', riverZoom: 'year', focus: 3 };
   const url = new URL(createShareLink('https://example.test/', lunation));
   expect(readSharedPlan(url.hash)).toEqual(lunation);
-  expect(() => readSharedPlan(hash({ ...lunation, view: 'calendar' }))).toThrow();
+  expect(() => readSharedPlan(hash({ ...lunation, view: 'calendar', calZoom: 'year' }))).toThrow();
 });
 
 it('round-trips names and precise site coordinates while keeping IANA zones readable', () => {
@@ -153,4 +153,12 @@ it('validates leap days without using the viewer zone', () => {
   expect(readSharedPlan(hash({ ...plan, start: '2028-02', night: '2028-02-29' }))!.night).toBe(
     '2028-02-29',
   );
+});
+
+it('shares a Calendar Month night without changing orientation or private site defaults', () => {
+  const calendar: SharedPlan = { ...plan, view: 'calendar', riverZoom: 'year', calOrient: 'h' };
+  expect(readSharedPlan(new URL(createShareLink('https://example.test/', calendar)).hash)).toEqual(
+    calendar,
+  );
+  expect(() => readSharedPlan(hash({ ...calendar, calZoom: 'year' }))).toThrow();
 });

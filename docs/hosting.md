@@ -66,7 +66,7 @@ live at `/`, and unknown paths should return 404. Hosting deploys are atomic.
 After every deployment, open the printed HTTPS URL. Check River, Calendar, Lunations
 and How it works at desktop and phone widths in both themes, with no horizontal page scroll. Change
 the site, IANA zone, optional elevation and planning controls, reload, and check persistence.
-With a browser zone different from the observing site, verify the inspector's site-local times.
+With a browser zone different from the observing site, verify the expanded night's site-local times.
 Inspect network requests: only same-origin static files should load; site edits and view changes
 must not issue requests or change the URL. Disconnect the network after loading and verify
 that views and calculations still work. Check HTML and hashed asset cache response headers.

@@ -3,17 +3,15 @@ import { MON3, WD3, fmtHrs } from '../model/format';
 import { lunWindow, lunationWindow, visibleLunations, type Lunation } from '../model/range';
 import { MS_H } from '../model/time';
 import { C } from '../render/colors';
-import { drawNight, hourTicks, moonGlyph } from '../render/night-draw';
+import { drawNight, hourTicks } from '../render/night-draw';
 import { ctx, size, snap, text } from '../render/surface';
 import { el, scroller } from '../ui/dom';
 import {
-  LUNATION_DETAIL_AXIS,
-  LUNATION_DETAIL_BAND,
-  LUNATION_DETAIL_HEADING,
   LUNATION_DETAIL_HEIGHT,
   placeLunationsDetail,
   prepareLunationsDetail,
 } from '../ui/lunations-detail';
+import { drawNightDetail, nightDetailGeometry } from '../ui/night-detail';
 import { placeLunationsHeaders, prepareLunationsHeaders } from '../ui/lunations-headers';
 import type { CanvasView, Hit } from './view';
 
@@ -92,15 +90,7 @@ class LunationsView implements CanvasView {
   }
 
   private detailGeom() {
-    const x0 = 64;
-    return {
-      width: size.W,
-      x0,
-      cw: Math.max(40, size.W - x0 - 12),
-      start: atlas().ax.start,
-      end: atlas().ax.end,
-      moonX: 32,
-    };
+    return nightDetailGeometry();
   }
 
   cycleAt(y: number): number {
@@ -397,27 +387,7 @@ class LunationsView implements CanvasView {
 
   private drawDetail(y: number): void {
     const n = atlas().nights[S.sel];
-    if (!n) return;
-    const g = this.detailGeom();
-    const axis = y + LUNATION_DETAIL_HEADING;
-    const sky = axis + LUNATION_DETAIL_AXIS;
-    for (const tick of hourTicks(g.cw / (g.end - g.start))) {
-      if (tick.major)
-        text(
-          tick.label,
-          g.x0 + ((tick.hh - g.start) / (g.end - g.start)) * g.cw,
-          axis + 11,
-          10.5,
-          C.ink3,
-          'center',
-          tick.midnight ? 700 : 450,
-        );
-    }
-    drawNight(n, g.x0, sky, g.cw, LUNATION_DETAIL_BAND, 'h');
-    moonGlyph(n, g.moonX, sky + LUNATION_DETAIL_BAND / 2, 7);
-    ctx.fillStyle = C.select;
-    ctx.fillRect(1, y, 2, LUNATION_DETAIL_HEIGHT);
-    ctx.fillRect(size.W - 3, y, 2, LUNATION_DETAIL_HEIGHT);
+    if (n) drawNightDetail(n, y);
   }
 
   hit(px: number, py: number): Hit | null {

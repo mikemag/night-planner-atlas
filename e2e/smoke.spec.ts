@@ -41,7 +41,7 @@ async function canvasColors(page: Page): Promise<number> {
   });
 }
 
-const insDate = (page: Page) => page.locator('#insDate');
+const insDate = (page: Page) => page.locator('#riverSelection');
 
 for (const view of VIEWS) {
   test(`${view.tab} view renders`, async ({ page }, info) => {
@@ -54,7 +54,7 @@ for (const view of VIEWS) {
       // Resize and view changes can schedule another frame, especially in WebKit.
       await expect.poll(() => canvasColors(page)).toBeGreaterThan(8);
     }
-    await expect(insDate(page)).toHaveText('Wed Sep 23 → Thu Sep 24');
+    await expect(insDate(page)).toContainText('Wed Sep 23 → Thu Sep 24');
     if (process.env.SCREENSHOTS) {
       await page.screenshot({
         path: path.join('test-results', 'screenshots', `${info.project.name}-${view.id}.png`),
@@ -64,18 +64,18 @@ for (const view of VIEWS) {
   });
 }
 
-test('keys, the inspector list and Tonight move the selection', async ({ page }) => {
+test('keys, the weekend tray and Tonight move the selection', async ({ page }) => {
   const errors = await open(page);
   await page.keyboard.press('ArrowRight');
-  await expect(insDate(page)).toHaveText('Thu Sep 24 → Fri Sep 25');
+  await expect(insDate(page)).toContainText('Thu Sep 24 → Fri Sep 25');
   await page.keyboard.press('ArrowDown');
-  await expect(insDate(page)).toHaveText('Thu Oct 1 → Fri Oct 2');
+  await expect(insDate(page)).toContainText('Thu Oct 1 → Fri Oct 2');
   await page.locator('#riverWeekends > summary').click();
   await page.locator('#insWeekends button').first().click();
-  await expect(insDate(page)).toHaveText('Fri Oct 9 → Sat Oct 10');
-  await expect(page.locator('#insBig')).toHaveText('9h 24m');
+  await expect(insDate(page)).toContainText('Fri Oct 9 → Sat Oct 10');
+  await expect(page.locator('#riverSelection')).toContainText('9h 24m usable dark');
   await page.getByRole('button', { name: 'Tonight' }).click();
-  await expect(insDate(page)).toHaveText('Wed Sep 23 → Thu Sep 24');
+  await expect(insDate(page)).toContainText('Wed Sep 23 → Thu Sep 24');
   expect(errors).toEqual([]);
 });
 
@@ -85,7 +85,7 @@ test('clicking a night on the canvas selects it', async ({ page }) => {
   // eighth row down is four nights later.
   const box = (await page.locator('#cv').boundingBox())!;
   await page.mouse.click(box.x + box.width / 2, box.y + 30 + 7 * 20 + 10);
-  await expect(insDate(page)).toHaveText('Sun Sep 27 → Mon Sep 28');
+  await expect(insDate(page)).toContainText('Sun Sep 27 → Mon Sep 28');
   expect(errors).toEqual([]);
 });
 
@@ -97,7 +97,7 @@ test('a new site recomputes every night', async ({ page }) => {
   await page.locator('#siteTz').fill('Europe/London');
   await page.locator('#siteApply').click();
   await expect(page.locator('#siteSel option:checked')).toContainText('Edinburgh · 55.95°N 3.19°W');
-  await expect(page.locator('#insSub')).toHaveText('Night 2026-09-23 · Edinburgh');
+  await expect(page.locator('#riverSelection')).toContainText('Wed Sep 23 → Thu Sep 24');
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(errors).toEqual([]);
 });

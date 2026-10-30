@@ -132,7 +132,7 @@
               >
               <span
                 ><i class="sw line" style="background: var(--good)"></i
-                ><span id="durationCaption">Moon-free duration</span></span
+                ><span id="durationCaption">Usable dark duration</span></span
               >
               <span id="riverMoonKey"
                 ><b class="new-moon-label">New Moon</b><i class="sw new-moon-tick"></i>New-moon
@@ -172,9 +172,16 @@
             </p>
             <div class="sizer" id="sizer"></div>
             <div id="lunationsHeaders" hidden></div>
+            <div id="calendarHeaders" hidden></div>
+            <section
+              id="calendarDetail"
+              class="night-detail"
+              aria-label="Expanded Calendar night"
+              hidden
+            ></section>
             <section
               id="lunationsDetail"
-              class="lunations-detail"
+              class="night-detail"
               aria-label="Expanded Lunations night"
               hidden
             ></section>
@@ -350,37 +357,17 @@
             </form>
           </dialog>
         </section>
-
-        <aside class="inspector" id="inspector" aria-live="polite">
-          <div class="ins-head">
-            <div>
-              <div class="ins-date" id="insDate" tabindex="-1">—</div>
-              <div class="ins-sub" id="insSub"></div>
-            </div>
-            <div class="ins-nav">
-              <button class="icon-btn" id="insPrev" aria-label="Previous night">‹</button>
-              <button class="icon-btn" id="insNext" aria-label="Next night">›</button>
-            </div>
-          </div>
-          <div class="ins-hero">
-            <div class="ins-big" id="insBig">—</div>
-            <div class="ins-cap" id="insCap"></div>
-          </div>
-          <div id="insChart"></div>
-          <div class="moonrow" id="insMoon"></div>
-          <div class="kv" id="insStages"></div>
-          <div class="ins-foot" id="insFoot"></div>
+      </div>
+      <details class="weekends-tray" id="riverWeekends" hidden>
+        <summary>Dark weekends ahead</summary>
+        <div id="riverWeekendSlot">
           <div class="wkl" id="weekendList">
             <div class="wkl-h">
               Dark weekends ahead <span>Fri + Sat nights, best near each new moon</span>
             </div>
             <div id="insWeekends"></div>
           </div>
-        </aside>
-      </div>
-      <details class="weekends-tray" id="riverWeekends" hidden>
-        <summary>Dark weekends ahead</summary>
-        <div id="riverWeekendSlot"></div>
+        </div>
       </details>
       <div class="tip" id="tip" hidden></div>
     </div>

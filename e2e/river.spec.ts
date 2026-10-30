@@ -168,7 +168,7 @@ test('Month shows window times without hover on weekdays and weekends wherever t
 
 test('River zoom and focus preserve the browsed night away from selection', async ({ page }) => {
   await openRiver(page);
-  const selection = await page.locator('#insDate').textContent();
+  const selection = (await page.locator('#riverSelection').textContent())!.split('.')[0];
   // Browse well away from the selection, seven pixels into a Month row.
   await page.locator('#scroller').evaluate((e) => {
     e.scrollTop = 150 * 20 + 7;
@@ -177,7 +177,7 @@ test('River zoom and focus preserve the browsed night away from selection', asyn
   await page.locator('#focusSeg button[data-val="0"]').click();
   // Browsers round scrollTop to whole pixels; expanding an 8 px context row can amplify that.
   expect(Math.abs((await scroll(page)) - 3007)).toBeLessThanOrEqual(3);
-  await expect(page.locator('#insDate')).toHaveText(selection!);
+  await expect(page.locator('#riverSelection')).toContainText(selection);
   await zoom(page, 'Year');
   await zoom(page, 'Month');
   // Year fits the range and clamps scroll to its start; zooming back must not jump to selection.
@@ -201,7 +201,7 @@ test('phone River labels stay in their columns in Month', async ({ page }, info)
       .locator('#cv')
       .evaluate((e) => ({ width: e.clientWidth, labels: window.riverText }));
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
-    const heading = labels.find((t) => t.text === 'Moon-free')!;
+    const heading = labels.find((t) => t.text === 'Usable dark')!;
     expect(heading.left).toBeGreaterThanOrEqual(width - 88);
     expect(heading.right).toBeLessThanOrEqual(width);
     expect(labels.find((t) => t.text === 'Oct ’26')).toBeTruthy();
@@ -251,7 +251,7 @@ test('River uses a fixed pointer readout without a floating card or layout chang
     ),
   );
   await painted(page);
-  const selection = await page.locator('#insDate').textContent();
+  const selection = (await page.locator('#riverSelection').textContent())!.split('.')[0];
   const box = (await page.locator('#cv').boundingBox())!;
   const readout = page.getByRole('group', { name: 'River readout' });
   const before = await readout.boundingBox();
@@ -265,7 +265,7 @@ test('River uses a fixed pointer readout without a floating card or layout chang
     `Fri Oct 9, 2026 · ${clock} · Astronomical darkness · Moon center`,
   );
   await expect(page.locator('#tip')).toBeHidden();
-  await expect(page.locator('#insDate')).toHaveText(selection!);
+  await expect(page.locator('#riverSelection')).toContainText(selection);
   expect(await page.locator('#cv').boundingBox()).toEqual(box);
   expect(await readout.boundingBox()).toEqual(before);
   if (process.env.SCREENSHOTS)
@@ -278,10 +278,10 @@ test('River uses a fixed pointer readout without a floating card or layout chang
   await page.locator('#cv').focus();
   await page.keyboard.press('ArrowRight');
   await expect(readout).toContainText('Fri Oct 9, 2026');
-  await expect(readout).toContainText('moon-free');
+  await expect(readout).toContainText('usable dark');
   await expect(readout).toContainText('PM –');
   await page.locator('#viewSeg').getByRole('button', { name: 'Calendar', exact: true }).click();
-  await expect(page.locator('#riverReadout')).toBeHidden();
+  await expect(page.getByRole('group', { name: 'Calendar readout' })).toBeVisible();
 });
 
 test('Year readout supplies the hovered night total and window', async ({ page }) => {
@@ -300,7 +300,7 @@ test('Year readout supplies the hovered night total and window', async ({ page }
   });
   await page.mouse.move(box.x + box.width / 2, box.y + y);
   expect(total).toBeGreaterThan(0);
-  await expect(page.locator('#riverReadout')).toContainText(`${fmtDur(total)} moon-free`);
+  await expect(page.locator('#riverReadout')).toContainText(`${fmtDur(total)} usable dark`);
   await expect(page.locator('#riverReadout')).toContainText('Fri Oct 9, 2026');
   await expect(page.locator('#riverReadout')).toContainText('PM –');
   await expect(page.locator('#tip')).toBeHidden();
@@ -315,7 +315,7 @@ test.describe('touch River', () => {
     await openRiver(page);
     const box = (await page.locator('#cv').boundingBox())!;
     await page.touchscreen.tap(box.x + 150, box.y + 30 + 5 * 32 + 16);
-    await expect(page.locator('#insDate')).toHaveText('Fri Sep 25 → Sat Sep 26');
+    await expect(page.locator('#riverSelection')).toContainText('Fri Sep 25 → Sat Sep 26');
     await expect(page.locator('#riverReadout')).toContainText('Fri Sep 25, 2026');
     await expect(page.locator('#tip')).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
@@ -371,7 +371,7 @@ test('minimap viewport keeps the grab point with expansion and new-moon focus', 
   page,
 }) => {
   await openRiver(page);
-  const selection = await page.locator('#insDate').textContent();
+  const selection = (await page.locator('#riverSelection').textContent())!.split('.')[0];
   for (const [mode, focus, expanded] of [
     ['Month', '0', false],
     ['Month', '0', true],
@@ -404,7 +404,7 @@ test('minimap viewport keeps the grab point with expansion and new-moon focus', 
       await page.mouse.up();
     }
   }
-  await expect(page.locator('#insDate')).toHaveText(selection!);
+  await expect(page.locator('#riverSelection')).toContainText(selection);
   await expect(page.locator('#tip')).toBeHidden();
 });
 

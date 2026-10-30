@@ -40,6 +40,8 @@ export function initSharing(): void {
           pendingNight: plan.night,
           riverExpanded: plan.view === 'river' && plan.expanded,
           lunationsExpanded: plan.view === 'lunations' && plan.expanded,
+          calendarExpanded: plan.view === 'calendar' && plan.expanded,
+          calendarWeek: null,
           sharedSettings: true,
         });
         included = !!plan.site;
@@ -84,6 +86,8 @@ export function initSharing(): void {
       pendingNight: null,
       riverExpanded: false,
       lunationsExpanded: false,
+      calendarExpanded: false,
+      calendarWeek: null,
       focusExplicit: hasFocusPreference(),
     });
     history.replaceState(null, '', location.pathname + location.search);
@@ -123,7 +127,9 @@ export function initSharing(): void {
       expanded:
         S.view === 'lunations'
           ? S.lunationsExpanded
-          : S.view === 'river' && S.riverZoom === 'month' && S.riverExpanded,
+          : S.view === 'calendar'
+            ? S.calZoom === 'month' && S.calendarExpanded
+            : S.view === 'river' && S.riverZoom === 'month' && S.riverExpanded,
       ...(include.checked ? { site: siteRecord(S.site) } : {}),
     };
     el('shareSitePreview').hidden = !include.checked;
