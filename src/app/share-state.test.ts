@@ -8,6 +8,7 @@ const plan: SharedPlan = {
   riverZoom: 'month',
   calZoom: 'month',
   calOrient: 'v',
+  calMonthStyle: 'hours',
   focus: 5,
   moonAlt: 10,
   crescent: 0.2,
@@ -161,4 +162,19 @@ it('shares a Calendar Month night without changing orientation or private site d
     calendar,
   );
   expect(() => readSharedPlan(hash({ ...calendar, calZoom: 'year' }))).toThrow();
+});
+
+it('shares the month presentation and an expanded Week without saving recipient preferences', () => {
+  const week: SharedPlan = { ...plan, view: 'calendar', calZoom: 'week', calMonthStyle: 'windows' };
+  const url = new URL(createShareLink('https://example.test/', week));
+  expect(url.hash).toContain('calZoom=week');
+  expect(url.hash).toContain('calMonthStyle=windows');
+  expect(readSharedPlan(url.hash)).toEqual(week);
+  expect(() => readSharedPlan(hash({ ...week, calMonthStyle: 'nautical' }))).toThrow();
+});
+
+it('defaults old JSON plans to hours first while retaining legacy orientation fields', () => {
+  const old = { ...plan } as Partial<SharedPlan>;
+  delete old.calMonthStyle;
+  expect(readSharedPlan(hash(old))).toEqual(plan);
 });

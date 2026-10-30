@@ -25,7 +25,12 @@ export function updateRiverReadout(): void {
           : 'No true dark';
       value = `${date} · ${total} · ${windowsText(n)}`;
     }
-    const event = atlas().quarters.find((q) => q.q === 0 && q.i === i);
+    const event = atlas().quarters.find((q) => {
+      if (q.q !== 0) return false;
+      if (S.view !== 'calendar') return q.i === i;
+      const p = atlas().tz.wallParts(q.t + 30_000);
+      return p.y === n.y && p.m === n.m && p.d === n.d;
+    });
     if (event) {
       const p = atlas().tz.wallParts(event.t + 30_000);
       const clock = fmtClock(p.h + p.mi / 60 - 12);

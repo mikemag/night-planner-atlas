@@ -18,18 +18,21 @@ corrections), and `range.ts`
   mountain profile or terrain obstruction is inferred.
 - Displayed times are the site's local clock time from its IANA zone, including daylight saving
   time. The viewer's own time zone plays no part.
-- The month views place times at wall-clock hours after local noon of the night's date. The axis
+- Timelines place times at wall-clock hours after local noon of the night's date. The range axis
   runs from the loaded range's earliest sunset to its latest sunrise, padded by about 20 minutes
-  and rounded out to the half hour.
+  and rounded out to the half hour. Calendar Week fits the same clock coordinates to the seven
+  displayed nights' sunset/sunrise extent, with half-hour padding. This affects drawing only.
 
 ## Observing night
 
 - A night is labeled by the local date of its evening (`YYYY-MM-DD`) and runs from local noon to
   the next local noon.
 - "Tonight" is today's date after local noon, and yesterday's before it.
-- The loaded range is 14 whole months starting with the month before the current one. The Range
+- The default loaded range is 14 whole months starting with the month before the current one. The Range
   control shifts it by a year. A shared plan can fix the first month explicitly so its loaded
   dates remain reproducible when opened later; the Range control still shifts those dates by years.
+  Calendar Year loads a January-based 14-month range when needed to include the complete selected
+  calendar year. Night calculations and elapsed durations are identical for a given evening date.
 
 ## Sun events
 

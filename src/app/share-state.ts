@@ -19,6 +19,7 @@ const DEFAULTS = {
   riverZoom: 'month',
   calZoom: 'month',
   calOrient: 'v',
+  calMonthStyle: 'hours',
   focus: 0,
   moonAlt: 0,
   crescent: 0,
@@ -31,13 +32,15 @@ const among = <T extends string | number>(value: unknown, choices: readonly T[])
 function validate(value: unknown): SharedPlan {
   if (!value || typeof value !== 'object') throw new Error(INVALID);
   const p = value as Record<string, unknown>;
+  const calMonthStyle = p.calMonthStyle === undefined ? DEFAULTS.calMonthStyle : p.calMonthStyle;
   if (
     p.v !== 1 ||
     typeof p.start !== 'string' ||
     !/^\d{4}-(0[1-9]|1[0-2])$/.test(p.start) ||
     !among(p.view, ['river', 'calendar', 'lunations', 'notes'] as const) ||
     !among(p.riverZoom, ['year', 'month'] as const) ||
-    !among(p.calZoom, ['year', 'month'] as const) ||
+    !among(p.calZoom, ['year', 'month', 'week'] as const) ||
+    !among(calMonthStyle, ['hours', 'windows'] as const) ||
     !among(p.calOrient, ['v', 'h'] as const) ||
     !among(p.focus, [0, 3, 5, 7, 10] as const) ||
     !among(p.moonAlt, [0, 5, 10, 15] as const) ||
@@ -67,7 +70,7 @@ function validate(value: unknown): SharedPlan {
     (!p.night ||
       (p.view !== 'lunations' &&
         !(p.view === 'river' && p.riverZoom === 'month') &&
-        !(p.view === 'calendar' && p.calZoom === 'month')))
+        !(p.view === 'calendar' && p.calZoom !== 'year')))
   )
     throw new Error(INVALID);
   if (p.site !== undefined && (!isSite(p.site) || p.site.name.length > 200))
@@ -79,6 +82,7 @@ function validate(value: unknown): SharedPlan {
     riverZoom: p.riverZoom,
     calZoom: p.calZoom,
     calOrient: p.calOrient,
+    calMonthStyle,
     focus: p.focus,
     moonAlt: p.moonAlt,
     crescent: p.crescent,
@@ -112,6 +116,7 @@ export function readSharedPlan(hash: string): SharedPlan | null {
         riverZoom: params.get('riverZoom') ?? DEFAULTS.riverZoom,
         calZoom: params.get('calZoom') ?? DEFAULTS.calZoom,
         calOrient: params.get('calOrient') ?? DEFAULTS.calOrient,
+        calMonthStyle: params.get('calMonthStyle') ?? DEFAULTS.calMonthStyle,
         focus: number('focus', DEFAULTS.focus),
         moonAlt: number('moonAlt', DEFAULTS.moonAlt),
         crescent: number('crescent', 0)! / 100,
@@ -143,7 +148,14 @@ export function createShareLink(base: string, plan: SharedPlan): string {
   url.search = '';
   const params = new URLSearchParams({ npa: '1', view: clean.view, start: clean.start });
   if (clean.night) params.set('night', clean.night);
-  for (const key of ['riverZoom', 'calZoom', 'calOrient', 'focus', 'moonAlt'] as const)
+  for (const key of [
+    'riverZoom',
+    'calZoom',
+    'calOrient',
+    'calMonthStyle',
+    'focus',
+    'moonAlt',
+  ] as const)
     if (clean[key] !== DEFAULTS[key]) params.set(key, String(clean[key]));
   if (clean.crescent !== DEFAULTS.crescent) params.set('crescent', String(clean.crescent * 100));
   if (clean.expanded) params.set('expanded', '1');

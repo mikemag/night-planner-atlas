@@ -190,6 +190,17 @@ function initKeyboard(): void {
   const steps: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
   window.addEventListener('keydown', (e) => {
     const target = e.target as HTMLElement | null;
+    const settings = el<HTMLDetailsElement>('planningOptions');
+    if (
+      e.key === 'Escape' &&
+      S.view === 'calendar' &&
+      settings.open &&
+      !document.querySelector('dialog[open]')
+    ) {
+      settings.open = false;
+      el('planningSummary').focus({ preventScroll: true });
+      return;
+    }
     if (
       document.querySelector('dialog[open]') ||
       target?.closest('#riverMinimap') ||
@@ -264,6 +275,11 @@ function initKeyboard(): void {
 }
 
 function initHeader(): void {
+  window.addEventListener('pointerdown', (e) => {
+    const settings = el<HTMLDetailsElement>('planningOptions');
+    if (S.view === 'calendar' && settings.open && !settings.contains(e.target as Node))
+      settings.open = false;
+  });
   const theme = el<HTMLSelectElement>('themeSel');
   theme.value = loadTheme();
   theme.addEventListener('change', () => setTheme(theme.value as Theme));

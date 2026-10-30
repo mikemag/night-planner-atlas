@@ -13,6 +13,7 @@ const preferenceKeys = [
   'crescent',
   'calOrient',
   'calZoom',
+  'calMonthStyle',
   'riverZoom',
 ] as const;
 
@@ -33,6 +34,7 @@ export function initSharing(): void {
           crescent: plan.crescent,
           calOrient: plan.calOrient,
           calZoom: plan.calZoom,
+          calMonthStyle: plan.calMonthStyle,
           riverZoom: plan.riverZoom,
           site: plan.site ?? loadSettings().site,
           rangeStart: { y, m },
@@ -42,6 +44,7 @@ export function initSharing(): void {
           lunationsExpanded: plan.view === 'lunations' && plan.expanded,
           calendarExpanded: plan.view === 'calendar' && plan.expanded,
           calendarWeek: null,
+          calendarMonth: plan.night?.slice(0, 7) ?? null,
           sharedSettings: true,
         });
         included = !!plan.site;
@@ -88,6 +91,7 @@ export function initSharing(): void {
       lunationsExpanded: false,
       calendarExpanded: false,
       calendarWeek: null,
+      calendarMonth: null,
       focusExplicit: hasFocusPreference(),
     });
     history.replaceState(null, '', location.pathname + location.search);
@@ -120,6 +124,7 @@ export function initSharing(): void {
       riverZoom: S.riverZoom,
       calZoom: S.calZoom,
       calOrient: S.calOrient,
+      calMonthStyle: S.calMonthStyle,
       focus: activeFocus(),
       moonAlt: S.moonAlt,
       crescent: S.crescent,
@@ -128,7 +133,7 @@ export function initSharing(): void {
         S.view === 'lunations'
           ? S.lunationsExpanded
           : S.view === 'calendar'
-            ? S.calZoom === 'month' && S.calendarExpanded
+            ? S.calZoom !== 'year' && S.calendarExpanded
             : S.view === 'river' && S.riverZoom === 'month' && S.riverExpanded,
       ...(include.checked ? { site: siteRecord(S.site) } : {}),
     };

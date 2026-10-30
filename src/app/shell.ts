@@ -6,8 +6,10 @@ import {
   computeRange,
   deriveRange,
   lunWindow,
+  tonightId,
   type NightRange,
 } from '../model/range';
+import { TimeZone } from '../model/time';
 import { C, readColors } from '../render/colors';
 import { ctx, cv, size, sizeSurface } from '../render/surface';
 import { el, scroller } from '../ui/dom';
@@ -97,14 +99,16 @@ export function draw(): void {
           v === lunations
             ? S.lunationsExpanded
             : v === calendar
-              ? S.calZoom === 'month' && S.calendarExpanded
+              ? S.calZoom !== 'year' && S.calendarExpanded
               : S.riverZoom === 'month' && S.riverExpanded;
-        const status = `${nightTitle(n)}.${n.quarter === 0 ? ' New moon night.' : ''} Times in ${S.site.tz}. ${fmtDur(n.mfMs)} usable dark. ${windowsText(n)}.${expanded ? ' Expanded.' : ''}`;
+        const newMoon = v === calendar ? calendar.newMoons.has(n.id) : n.quarter === 0;
+        const moonLabel = newMoon ? (v === calendar ? ' New moon.' : ' New moon night.') : '';
+        const status = `${nightTitle(n)}.${moonLabel} Times in ${S.site.tz}. ${fmtDur(n.mfMs)} usable dark. ${windowsText(n)}.${expanded ? ' Expanded.' : ''}`;
         const live = el('riverSelection');
         if (live.textContent !== status) live.textContent = status;
       }
       const expandable =
-        v === lunations || (v === calendar ? S.calZoom === 'month' : S.riverZoom === 'month');
+        v === lunations || (v === calendar ? S.calZoom !== 'year' : S.riverZoom === 'month');
       cv.setAttribute('role', expandable ? 'button' : 'img');
       if (expandable)
         cv.setAttribute(
@@ -150,19 +154,12 @@ export function select(i: number, scroll: boolean, top?: boolean): void {
     return;
   }
   if (v === calendar) {
-    const previous = calendar.weekFor(S.sel);
-    const keepY = previous ? previous.y - scroller.scrollTop : null;
     selectState(i);
-    const next = calendar.weekFor(i);
-    S.calendarWeek = next?.key ?? null;
-    if (S.calendarExpanded && S.calZoom === 'month') {
-      relayout();
-      const row = calendar.weekFor(i);
-      if (scroll && !top && row && keepY != null && keepY >= 0 && keepY < size.H - calendar.TOP)
-        scroller.scrollTop = row.y - keepY;
-    }
-    if (scroll) calendar.scrollTo(i, !!top);
-    draw();
+    if (scroll && (top || !calendar.weekFor(i) || S.calZoom !== 'month'))
+      calendar.scrollTo(i, !!top);
+    S.calendarWeek = calendar.weekFor(i)?.key ?? null;
+    if (S.calZoom === 'year' && ensureCalendarYear(calendar.month().y)) return;
+    relayout();
     return;
   }
   const moving = v === river && S.riverZoom === 'month' && S.riverExpanded && i !== S.sel;
@@ -206,21 +203,20 @@ export function toggleLunationsNight(i: number = S.sel): void {
   draw();
 }
 
-/** The activated week owns the expansion, including a dimmed neighboring-month date. */
+/** Keep the period in place and open the shared night timeline as a bottom drawer. */
 export function toggleCalendarNight(i: number = S.sel, week: string | null = S.calendarWeek): void {
-  if (!data.ready || i < 0 || S.view !== 'calendar' || S.calZoom !== 'month') return;
-  const row = calendar.weekFor(i, week);
+  if (!data.ready || i < 0 || S.view !== 'calendar' || S.calZoom === 'year') return;
+  let row = calendar.weekFor(i, week);
+  if (!row) {
+    calendar.scrollTo(i, true);
+    row = calendar.weekFor(i);
+  }
   if (!row) return;
-  const keepY = row.y - scroller.scrollTop;
-  S.calendarExpanded = !(S.calendarExpanded && S.sel === i && S.calendarWeek === row.key);
+  S.calendarExpanded = !(S.calendarExpanded && S.sel === i);
   S.calendarWeek = row.key;
   selectState(i);
   relayout();
-  const next = calendar.weekFor(i);
-  if (next) scroller.scrollTop = next.y - keepY;
-  if (S.calendarExpanded) calendar.reveal(i);
-  else calendar.scrollTo(i, false);
-  draw();
+  scroller.scrollTop = 0;
 }
 
 /** Single activation of a Year month opens Month with the intended evening date. */
@@ -229,6 +225,8 @@ export function openCalendarMonth(key: string, i?: number): void {
   if (!mo) return;
   const chosen = i != null && mo.idx.includes(i) ? i : mo.idx.includes(S.sel) ? S.sel : mo.idx[0];
   selectState(chosen);
+  S.calendarMonth = mo.key;
+  S.calendarExpanded = false;
   S.calendarWeek = null;
   setOpt('calZoom', 'month');
   calendar.scrollTo(chosen, true);
@@ -238,6 +236,14 @@ export function openCalendarMonth(key: string, i?: number): void {
 
 export function goTonight(): void {
   const r = data.range;
+  if (S.view === 'calendar' && (!r || !data.ready || r.tonightIdx < 0)) {
+    S.rangeStart = null;
+    S.rangeShift = 0;
+    S.pendingNight = tonightId(Date.now(), new TimeZone(S.site.tz));
+    S.calendarMonth = null;
+    restart();
+    return;
+  }
   if (!r) return;
   const i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
   select(i, true, true);
@@ -260,6 +266,15 @@ function currentMonthIndex(): number {
 function updatePeriod(): void {
   const r = data.range;
   if (!data.ready || !r) return;
+  if (S.view === 'calendar') {
+    el('periodLabel').textContent = calendar.label();
+    const period = S.calZoom === 'year' ? 'year' : S.calZoom === 'week' ? 'week' : 'month';
+    el('prevBtn').setAttribute('aria-label', `Previous ${period}`);
+    el('nextBtn').setAttribute('aria-label', `Next ${period}`);
+    return;
+  }
+  el('prevBtn').setAttribute('aria-label', 'Previous month');
+  el('nextBtn').setAttribute('aria-label', 'Next month');
   if (S.view === 'lunations') {
     const n = r.nights[lunations.topNight()];
     el('periodLabel').textContent = n ? `${MON3[n.m - 1]} ${n.y}` : '—';
@@ -275,6 +290,24 @@ export function stepMonth(dir: number): void {
   if (!data.ready || !r) return;
   if (S.view === 'lunations') {
     lunations.stepCycle(dir);
+    return;
+  }
+  if (S.view === 'calendar') {
+    const mo = calendar.month();
+    S.calendarExpanded = false;
+    if (S.calZoom === 'year') {
+      const y = Math.max(100, Math.min(9997, mo.y + dir));
+      S.calendarMonth = `${y}-${String(mo.m).padStart(2, '0')}`;
+      S.pendingNight = `${S.calendarMonth}-01`;
+      S.rangeStart = { y, m: 1 };
+      S.rangeShift = 0;
+      restart();
+    } else if (S.calZoom === 'week') {
+      select(Math.max(0, Math.min(r.nights.length - 1, S.sel + dir * 7)), true, true);
+    } else {
+      const k = Math.max(0, Math.min(r.months.length - 1, r.months.indexOf(mo) + dir));
+      select(r.months[k].idx[0], true, true);
+    }
     return;
   }
   const k = Math.max(0, Math.min(r.months.length - 1, currentMonthIndex() + dir));
@@ -300,7 +333,7 @@ const VIEW_INFO: Record<ViewId, [string, string]> = {
   notes: ['How it works', 'Calculations, conventions, accuracy and practical help.'],
 };
 
-type ViewOption = 'riverZoom' | 'calZoom' | 'calOrient';
+type ViewOption = 'riverZoom' | 'calZoom' | 'calOrient' | 'calMonthStyle';
 
 /** The segmented controls for the current view's own options. */
 function viewControls(): void {
@@ -309,10 +342,13 @@ function viewControls(): void {
   const seg = <K extends ViewOption>(key: K, opts: Array<[AppState[K], string]>) => {
     const s = document.createElement('span');
     s.className = 'seg small';
+    s.setAttribute('role', 'group');
+    s.setAttribute('aria-label', key === 'calMonthStyle' ? 'Month summary' : 'Period');
     for (const [val, label] of opts) {
       const b = document.createElement('button');
       b.textContent = label;
       b.dataset.val = val;
+      b.dataset.option = key;
       b.setAttribute('aria-pressed', String(S[key] === val));
       b.addEventListener('click', () => {
         setOpt(key, val);
@@ -331,18 +367,42 @@ function viewControls(): void {
   if (S.view === 'calendar') {
     seg('calZoom', [
       ['month', 'Month'],
+      ['week', 'Week'],
       ['year', 'Year'],
     ]);
-    if (S.calZoom === 'month')
-      seg('calOrient', [
-        ['v', 'Time ↓'],
-        ['h', 'Time →'],
-      ]);
+    if (S.calZoom === 'month') {
+      const picker = document.createElement('select');
+      picker.id = 'calMonthStyle';
+      picker.className = 'calendar-month-style';
+      picker.setAttribute('aria-label', 'Month summary');
+      for (const [value, label] of [
+        ['hours', 'Hours first'],
+        ['windows', 'Windows first'],
+      ]) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        picker.append(option);
+      }
+      picker.value = S.calMonthStyle;
+      picker.addEventListener('change', () =>
+        setOpt('calMonthStyle', picker.value as AppState['calMonthStyle']),
+      );
+      box.append(picker);
+    }
+    el('legend').style.display = S.calZoom === 'week' ? '' : 'none';
+    el('viewSub').textContent =
+      S.calZoom === 'month'
+        ? 'Usable dark · select a date for details.'
+        : S.calZoom === 'week'
+          ? 'Seven nights · evening ↓ morning · site clock time.'
+          : 'New moons at a glance · select a month.';
   }
 }
 
 /** Change a view option; River keeps the browsed position rather than jumping to selection. */
 export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
+  const focused = el('viewCtl').contains(document.activeElement);
   const reopening =
     key === 'riverZoom' && S.riverZoom === 'year' && val === 'month' && S.riverExpanded;
   const anchor = S.view === 'river' && data.ready ? river.anchor() : null;
@@ -350,11 +410,17 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
   S[key] = val;
   remember(key, val);
   viewControls();
+  if (focused)
+    el('viewCtl')
+      .querySelector<HTMLElement>(
+        key === 'calMonthStyle'
+          ? '#calMonthStyle'
+          : `button[data-option="${key}"][data-val="${val}"]`,
+      )
+      ?.focus({ preventScroll: true });
   if (S.view === 'calendar' && data.ready) {
-    const previous = key === 'calOrient' ? calendar.anchor() : null;
+    if (S.calZoom === 'year' && ensureCalendarYear(calendar.month().y)) return;
     relayout();
-    if (previous) calendar.restoreAnchor(previous);
-    else if (keep != null) calendar.scrollTo(keep, true);
     return;
   }
   if (anchor) {
@@ -364,8 +430,18 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
   } else relayout(keep);
 }
 
+/** A calendar year needs January–December, rather than a partial year of the rolling range. */
+function ensureCalendarYear(y: number): boolean {
+  if (data.range?.months.filter((mo) => mo.y === y).length === 12) return false;
+  S.rangeStart = { y, m: 1 };
+  S.rangeShift = 0;
+  restart();
+  return true;
+}
+
 export function setView(view: ViewId): void {
   const keep = S.sel >= 0 ? S.sel : (data.range?.tonightIdx ?? -1);
+  if (view === 'calendar' && S.view !== 'calendar') S.calendarMonth = null;
   S.view = view;
   remember('view', view);
   S.hover = null;
@@ -379,7 +455,7 @@ export function setView(view: ViewId): void {
   cv.setAttribute('aria-describedby', inline ? 'chartHelp riverSelection' : 'chartHelp');
   el('chartHelp').textContent =
     view === 'calendar'
-      ? 'Each date is the evening of its night. Muted dates belong to neighboring months; a dash outside the loaded range means unavailable data. Left and Right select nights; Up and Down move a week. In Month, Enter or Space toggles the selected night timeline and Escape closes it. In Year, activate a month or press Enter on the selected night to open Month.'
+      ? 'Each date is the evening of its night. Muted dates belong to neighboring months; unloaded dates cannot be selected. Left and Right select nights; Up and Down move a week. In Month and Week, Enter or Space toggles the night timeline and Escape closes it. In Year, activate a month or press Enter on the selected night to open Month. New-moon labels mark the event’s local calendar date.'
       : view === 'lunations'
         ? 'Time runs from evening at the top to morning at the bottom of each cycle. Left and Right select displayed nights; Up and Down move between lunar cycles at the same offset. Enter or Space toggles the selected night’s horizontal timeline; Escape collapses it. Wider phone windows pan horizontally inside the chart.'
         : 'Arrow keys select nights and weeks. In River Month, Enter or Space toggles the selected night’s boundary times. Use the selected-night summary for the site-local windows; pointer previews do not change selection.';
@@ -399,6 +475,10 @@ export function setView(view: ViewId): void {
   el('viewBody').classList.toggle('river-mode', view === 'river');
   el('viewBody').classList.toggle('lunations-mode', view === 'lunations');
   el('viewBody').classList.toggle('calendar-mode', view === 'calendar');
+  el('app').classList.toggle('calendar-app', view === 'calendar');
+  el('planningOptions').classList.toggle('calendar-planning', view === 'calendar');
+  el('planningSummary').hidden = view !== 'calendar';
+  el<HTMLDetailsElement>('planningOptions').open = view !== 'calendar';
   el('calendarHeaders').hidden = view !== 'calendar';
   if (view !== 'calendar') el('calendarDetail').hidden = true;
   el('viewBody').classList.toggle('guide-mode', view === 'notes');
@@ -406,7 +486,7 @@ export function setView(view: ViewId): void {
   if (view !== 'lunations') el('lunationsDetail').hidden = true;
   el('sizer').style.width = '1px';
   scroller.scrollLeft = 0;
-  el('riverWeekends').hidden = view !== 'river' && view !== 'calendar';
+  el('riverWeekends').hidden = view !== 'river';
   el('riverWeekendSlot').appendChild(el('weekendList'));
   if (view !== 'river') el('riverDetail').hidden = true;
   el('riverReadout').hidden = !inline;
@@ -421,7 +501,11 @@ export function setView(view: ViewId): void {
   el('notesView').hidden = view !== 'notes';
   el('legend').style.display = view === 'notes' ? 'none' : '';
   el('riverMoonKey').hidden = view !== 'river';
-  el('durationCaption').textContent = 'Usable dark duration';
+  el('durationCaption').textContent = view === 'calendar' ? 'Usable dark' : 'Usable dark duration';
+  el('moonLegendText').textContent =
+    view === 'calendar' ? 'Moonlight' : 'Moon above horizon (brighter = fuller)';
+  el('acceptedMoonLegendText').textContent =
+    view === 'calendar' ? 'Accepted moonlight' : 'Moonlit, accepted by settings';
   el('periodBox').hidden = view === 'notes';
   el('planningControls').hidden = view === 'notes';
   el('viewTitle').textContent = VIEW_INFO[view][0];
@@ -429,6 +513,7 @@ export function setView(view: ViewId): void {
   viewControls();
   syncSettingsControls();
   if (!data.ready) return;
+  if (view === 'calendar' && S.calZoom === 'year' && ensureCalendarYear(calendar.month().y)) return;
   bestWeekends(data.range!, lunWindow(activeFocus()));
   if (v) {
     resize();
@@ -508,6 +593,10 @@ export function restart(): void {
   el('loadingText').textContent = 'Computing sun and moon for each night…';
   el('loadingBar').style.width = '0%';
   const token = ++computeToken;
+  if (S.view === 'calendar' && S.calZoom === 'year' && !S.rangeStart) {
+    const date = selId ?? tonightId(Date.now(), new TimeZone(S.site.tz));
+    S.rangeStart = { y: Number(date.slice(0, 4)), m: 1 };
+  }
   computeRange(S.site, S.rangeShift, thresholds(), lunWindow(activeFocus()), Date.now(), {
     startMonth: S.rangeStart ? { y: S.rangeStart.y + S.rangeShift, m: S.rangeStart.m } : undefined,
     isCancelled: () => token !== computeToken,
@@ -535,10 +624,13 @@ export function restart(): void {
         S.lunationsExpanded = false;
         S.calendarExpanded = false;
         S.calendarWeek = null;
+        S.calendarMonth = null;
       }
       S.sel = i;
       updateWeekends();
       setView(S.view);
+      // A Year chosen during loading may need a complete January-based range first.
+      if (!data.ready) return;
       const v = canvasView();
       if (v) {
         if (v === river) scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.heights().base);
@@ -606,6 +698,8 @@ export interface TestHooks {
     blocks: typeof calendar.blocks;
     geometry: ReturnType<typeof calendar.cols>;
     axis: number;
+    clock: typeof calendar.weekAxis;
+    body: typeof calendar.weekBody;
   };
   readonly lunationRows: {
     tops: number[];
@@ -636,7 +730,13 @@ function exposeTestHooks(): void {
     toggleCalendarNight,
     openCalendarMonth,
     get calendarRows() {
-      return { blocks: calendar.blocks, geometry: calendar.cols(), axis: calendar.TOP };
+      return {
+        blocks: calendar.blocks,
+        geometry: calendar.cols(),
+        axis: calendar.TOP,
+        clock: calendar.weekAxis,
+        body: calendar.weekBody,
+      };
     },
     setView,
     setOpt,

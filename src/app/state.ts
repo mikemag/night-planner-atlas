@@ -13,7 +13,9 @@ export interface UiState {
   sharedSettings: boolean;
   /** Selected night index, or −1. */
   sel: number;
-  /** Open one Calendar night beneath the week that was activated. */
+  /** Calendar's month page stays put when an adjacent-month night is selected. */
+  calendarMonth: string | null;
+  /** Open the shared night timeline over the bottom of the Calendar. */
   calendarExpanded: boolean;
   calendarWeek: string | null;
   /** Expand the selected night in River Month; Year always stays compact. */
@@ -39,6 +41,7 @@ export const S: AppState = {
   pendingNight: null,
   sharedSettings: false,
   sel: -1,
+  calendarMonth: null,
   calendarExpanded: false,
   calendarWeek: null,
   riverExpanded: false,

@@ -57,7 +57,10 @@
           <button data-view="calendar">Calendar</button>
           <button data-view="river">River</button>
           <button data-view="lunations">Lunations</button>
-          <button data-view="notes">How it works</button>
+          <button data-view="notes" aria-label="How it works">
+            <span class="view-tab-long">How it works</span
+            ><span class="view-tab-short" aria-hidden="true">Guide</span>
+          </button>
         </div>
         <button class="btn share-trigger" id="shareBtn" disabled>Share</button>
         <div class="period" id="periodBox">
@@ -68,40 +71,43 @@
         </div>
       </header>
 
-      <div class="controls" id="planningControls">
-        <span class="ctl"
-          >New-moon focus
-          <span class="seg small" id="focusSeg">
-            <button data-val="0">Off</button><button data-val="3">±3</button
-            ><button data-val="5">±5</button><button data-val="7">±7</button
-            ><button data-val="10">±10</button>
+      <details class="planning-options" id="planningOptions" open>
+        <summary id="planningSummary" hidden>Planning settings</summary>
+        <div class="controls" id="planningControls">
+          <span class="ctl"
+            >New-moon focus
+            <span class="seg small" id="focusSeg">
+              <button data-val="0">Off</button><button data-val="3">±3</button
+              ><button data-val="5">±5</button><button data-val="7">±7</button
+              ><button data-val="10">±10</button>
+            </span>
           </span>
-        </span>
-        <label class="ctl" for="moonAltSel"
-          >Moon’s upper edge above
-          <select id="moonAltSel">
-            <option value="0">0° (horizon)</option>
-            <option value="5">5°</option>
-            <option value="10">10°</option>
-            <option value="15">15°</option>
-          </select>
-        </label>
-        <label class="ctl" for="crescentSel"
-          >Ignore a moon under
-          <select id="crescentSel">
-            <option value="0">— (strict)</option>
-            <option value="0.1">10% lit</option>
-            <option value="0.2">20% lit</option>
-            <option value="0.3">30% lit</option>
-          </select>
-        </label>
-        <span class="ctl" id="rangeCtl"
-          >Range
-          <button class="icon-btn" id="rangePrev" aria-label="Earlier range">‹</button>
-          <span id="rangeLabel">—</span>
-          <button class="icon-btn" id="rangeNext" aria-label="Later range">›</button>
-        </span>
-      </div>
+          <label class="ctl" for="moonAltSel"
+            >Moon’s upper edge above
+            <select id="moonAltSel">
+              <option value="0">0° (horizon)</option>
+              <option value="5">5°</option>
+              <option value="10">10°</option>
+              <option value="15">15°</option>
+            </select>
+          </label>
+          <label class="ctl" for="crescentSel"
+            >Ignore a moon under
+            <select id="crescentSel">
+              <option value="0">— (strict)</option>
+              <option value="0.1">10% lit</option>
+              <option value="0.2">20% lit</option>
+              <option value="0.3">30% lit</option>
+            </select>
+          </label>
+          <span class="ctl" id="rangeCtl"
+            >Range
+            <button class="icon-btn" id="rangePrev" aria-label="Earlier range">‹</button>
+            <span id="rangeLabel">—</span>
+            <button class="icon-btn" id="rangeNext" aria-label="Later range">›</button>
+          </span>
+        </div>
+      </details>
 
       <p id="siteStorageNotice" class="storage-notice" role="status" hidden></p>
       <aside id="sharedNotice" class="shared-notice" aria-label="Shared plan" hidden>
@@ -125,10 +131,13 @@
               <span><i class="sw" style="background: var(--sky-naut)"></i>Nautical</span>
               <span><i class="sw" style="background: var(--sky-astro)"></i>Astronomical</span>
               <span><i class="sw" style="background: var(--sky-dark)"></i>True dark</span>
-              <span><i class="sw" id="moonSw"></i>Moon above horizon (brighter = fuller)</span>
               <span
-                ><i class="sw accepted-moonlight" id="acceptedMoonSw"></i>Moonlit, accepted by
-                settings</span
+                ><i class="sw" id="moonSw"></i
+                ><span id="moonLegendText">Moon above horizon (brighter = fuller)</span></span
+              >
+              <span
+                ><i class="sw accepted-moonlight" id="acceptedMoonSw"></i
+                ><span id="acceptedMoonLegendText">Moonlit, accepted by settings</span></span
               >
               <span
                 ><i class="sw line" style="background: var(--good)"></i

@@ -4,8 +4,9 @@ import { readSiteBook, siteRecord } from './site-book';
 
 export type ViewId = 'river' | 'calendar' | 'lunations' | 'notes';
 export type RiverZoom = 'year' | 'month';
-export type CalZoom = 'month' | 'year';
+export type CalZoom = 'month' | 'week' | 'year';
 export type CalOrient = 'v' | 'h';
+export type CalMonthStyle = 'hours' | 'windows';
 
 /** Preferences remembered in this browser. */
 export interface Settings {
@@ -14,8 +15,10 @@ export interface Settings {
   focus: number;
   moonAlt: number;
   crescent: number;
+  /** Retained for compatibility with saved settings and v1 share links. */
   calOrient: CalOrient;
   calZoom: CalZoom;
+  calMonthStyle: CalMonthStyle;
   riverZoom: RiverZoom;
 }
 
@@ -75,7 +78,8 @@ export function loadSettings(): Settings {
     moonAlt: choice('moonAlt', [0, 5, 10, 15], 0),
     crescent: choice('crescent', [0, 0.1, 0.2, 0.3], 0),
     calOrient: choice<CalOrient>('calOrient', ['v', 'h'], 'v'),
-    calZoom: choice<CalZoom>('calZoom', ['month', 'year'], 'month'),
+    calZoom: choice<CalZoom>('calZoom', ['month', 'week', 'year'], 'month'),
+    calMonthStyle: choice<CalMonthStyle>('calMonthStyle', ['hours', 'windows'], 'hours'),
     riverZoom: choice<RiverZoom>('riverZoom', ['year', 'month'], 'month'),
   };
 }

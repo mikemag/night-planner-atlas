@@ -1,17 +1,12 @@
 import { S, atlas } from '../app/state';
-import { MON3, MONL, WD1, WD3, fmtDur, fmtHrs } from '../model/format';
-import type { Month } from '../model/range';
-import { MS_H } from '../model/time';
-import { C } from '../render/colors';
+import { MON3, MONL, WD1, WD3, fmtClockS, fmtDur, fmtHrs, pad2 } from '../model/format';
+import type { Night } from '../model/night';
+import type { Axis, Month } from '../model/range';
+import { C, inkOn } from '../render/colors';
 import { drawNight, hourTicks, moonGlyph } from '../render/night-draw';
 import { ctx, size, text, tw } from '../render/surface';
 import { scroller } from '../ui/dom';
-import {
-  durationScale,
-  placeCalendarHeaders,
-  prepareCalendarHeaders,
-  type CalendarHeading,
-} from '../ui/calendar-headers';
+import { placeCalendarHeaders, prepareCalendarHeaders } from '../ui/calendar-headers';
 import {
   NIGHT_DETAIL_HEIGHT,
   drawNightDetail,
@@ -25,43 +20,50 @@ type WeekBlock = {
   t: 'week';
   mo: Month;
   wk: number[];
+  start: number;
   wi: number;
   key: string;
   y: number;
   h: number;
   base: number;
 };
-type Block =
-  | WeekBlock
-  | { t: 'head'; mo: Month; y: number; h: number }
-  | { t: 'mini'; mo: Month; x: number; y: number; w: number; h: number };
-interface CalendarAnchor {
-  key: string;
-  type: Block['t'];
-  fraction: number;
-}
+export type CalendarMonthBlock = {
+  t: 'mini';
+  mo: Month;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+type Block = WeekBlock | CalendarMonthBlock;
 
-/** Familiar Sunday-first weeks, with one full-width selected-night timeline. */
+/** One complete period: quiet month summaries, seven full nights, or twelve month choosers. */
 class CalendarView implements CanvasView {
   PAD = 8;
-  GUT = 40;
-  TOP = 42;
-  DATE = 24;
-  FOOT = 26;
-  GAP = 10;
+  TOP = 28;
+  FOOT = 24;
   total = 0;
   blocks: Block[] = [];
-  headings: CalendarHeading[] = [];
-  yr = { cols: 4, mw: 0, cw: 0, ch: 0, gap: 18, head: 70 };
+  weekAxis: Axis = { start: 0, end: 24 };
+  weekBody = { y: 84, h: 0 };
+  yr = { cols: 4, head: 38, cw: 0, ch: 0, compact: false };
+  newMoons = new Map<string, number>();
 
-  weekKey(mo: Month, wi: number): string {
-    return `${mo.key}:${wi}`;
-  }
-  weekHeight(): number {
-    return S.calOrient === 'v' ? 176 : 102;
+  month(): Month {
+    const r = atlas(),
+      n = r.nights[S.sel] ?? r.nights[0];
+    return (
+      r.months.find((m) => m.key === S.calendarMonth) ??
+      r.months.find((m) => m.y === n.y && m.m === n.m) ??
+      r.months[0]
+    );
   }
   cols() {
-    return { x0: this.PAD + this.GUT, cw: (size.W - this.PAD * 2 - this.GUT) / 7 };
+    const x0 = S.calZoom === 'week' ? 42 : 0;
+    return { x0, cw: (size.W - x0) / 7 };
+  }
+  weekKey(mo: Month, wi: number): string {
+    return `${mo.key}:${wi}`;
   }
   displayedWeeks(mo: Month): number[][] {
     const r = atlas(),
@@ -73,383 +75,423 @@ class CalendarView implements CanvasView {
       }),
     );
   }
-
+  /** Date arithmetic uses evening dates, independently of either browser or site UTC offsets. */
+  dateAt(i: number): { y: number; m: number; d: number; dow: number } {
+    const first = atlas().nights[0],
+      date = new Date(Date.UTC(first.y, first.m - 1, first.d + i));
+    return {
+      y: date.getUTCFullYear(),
+      m: date.getUTCMonth() + 1,
+      d: date.getUTCDate(),
+      dow: date.getUTCDay(),
+    };
+  }
+  label(): string {
+    const mo = this.month();
+    if (S.calZoom === 'year') return String(mo.y);
+    if (S.calZoom === 'week') {
+      const n = atlas().nights[S.sel] ?? atlas().nights[mo.idx[0]],
+        a = this.dateAt((S.sel >= 0 ? S.sel : mo.idx[0]) - n.dow),
+        b = this.dateAt((S.sel >= 0 ? S.sel : mo.idx[0]) - n.dow + 6);
+      return `${MON3[a.m - 1]} ${a.d}–${a.m === b.m ? '' : MON3[b.m - 1] + ' '}${b.d}, ${b.y}`;
+    }
+    return `${MONL[mo.m - 1]} ${mo.y}`;
+  }
   layout(): void {
+    const r = atlas(),
+      mo = this.month();
+    S.calendarMonth = mo.key;
+    this.total = size.H;
     this.blocks = [];
-    this.headings = [];
-    if (S.calZoom === 'year') {
-      this.layoutYear();
-      return;
+    this.newMoons = new Map(
+      r.quarters
+        .filter((q) => q.q === 0)
+        .map((q) => {
+          const p = r.tz.wallParts(q.t + 30_000);
+          return [`${p.y}-${pad2(p.m)}-${pad2(p.d)}`, q.t];
+        }),
+    );
+    if (S.calZoom === 'year') this.layoutYear();
+    else if (S.calZoom === 'week') this.layoutWeek();
+    else {
+      const h = Math.max(0, (size.H - this.TOP - this.FOOT) / mo.weeks.length),
+        start = mo.idx[0] - r.nights[mo.idx[0]].dow;
+      this.displayedWeeks(mo).forEach((wk, wi) =>
+        this.blocks.push({
+          t: 'week',
+          mo,
+          wk,
+          wi,
+          start: start + wi * 7,
+          key: this.weekKey(mo, wi),
+          y: this.TOP + wi * h,
+          h,
+          base: h,
+        }),
+      );
     }
-    const r = atlas();
-    let key = S.calendarWeek;
-    const preferred = key ? r.months.find((m) => m.key === key!.split(':')[0]) : null;
-    const wi = key ? Number(key.split(':')[1]) : -1;
-    if (!preferred || !this.displayedWeeks(preferred)[wi]?.includes(S.sel)) {
-      const own = r.months.find((m) => m.idx.includes(S.sel));
-      key = own
-        ? this.weekKey(
-            own,
-            own.weeks.findIndex((w) => w.includes(S.sel)),
-          )
-        : null;
-    }
-    S.calendarWeek = key;
-    let y = 8;
-    const head = size.W < 650 ? 180 : 112;
-    for (const mo of r.months) {
-      const b = { t: 'head' as const, mo, y, h: head };
-      this.blocks.push(b);
-      this.headings.push(b);
-      y += head;
-      this.displayedWeeks(mo).forEach((wk, wi) => {
-        const base = this.weekHeight(),
-          k = this.weekKey(mo, wi);
-        const h = base + (S.calendarExpanded && k === key ? NIGHT_DETAIL_HEIGHT : 0);
-        this.blocks.push({ t: 'week', mo, wk, wi, key: k, y, h, base });
-        y += h;
-      });
-      y += 18;
-    }
-    this.total = this.TOP + y + 8;
-    prepareCalendarHeaders(r, this.headings, size.W);
+    const months = this.blocks.filter((b): b is CalendarMonthBlock => b.t === 'mini');
+    prepareCalendarHeaders(r, months, size.W, S.calZoom === 'year' && this.yr.compact);
+    placeCalendarHeaders(months);
     prepareNightDetail(
       'calendarDetail',
-      S.calendarExpanded ? (r.nights[S.sel] ?? null) : null,
+      S.calendarExpanded && S.calZoom !== 'year' ? (r.nights[S.sel] ?? null) : null,
       nightDetailGeometry(),
     );
+    if (S.calendarExpanded && S.calZoom !== 'year')
+      placeNightDetail(
+        'calendarDetail',
+        Math.max(0, size.H - NIGHT_DETAIL_HEIGHT),
+        0,
+        0,
+        size.W,
+        0,
+      );
   }
-
+  layoutWeek(): void {
+    const r = atlas(),
+      mo = this.month(),
+      i = S.sel >= 0 ? S.sel : mo.idx[0],
+      start = i - r.nights[i].dow,
+      wk = Array.from({ length: 7 }, (_, d) =>
+        start + d >= 0 && start + d < r.nights.length ? start + d : -1,
+      ),
+      ns = wk.filter((i) => i >= 0).map((i) => r.nights[i]),
+      sets = ns.flatMap((n) => (n.evH.sunset == null ? [] : [n.evH.sunset])),
+      rises = ns.flatMap((n) => (n.evH.sunrise == null ? [] : [n.evH.sunrise]));
+    this.weekAxis =
+      sets.length && rises.length
+        ? {
+            start: Math.floor(Math.min(...sets) * 2) / 2 - 0.5,
+            end: Math.ceil(Math.max(...rises) * 2) / 2 + 0.5,
+          }
+        : r.ax;
+    this.weekBody = { y: this.TOP + 56, h: Math.max(0, size.H - this.TOP - 56 - this.FOOT) };
+    this.blocks.push({
+      t: 'week',
+      mo,
+      wk,
+      start,
+      wi: 0,
+      key: `week:${start}`,
+      y: this.TOP,
+      h: size.H - this.TOP - this.FOOT,
+      base: size.H - this.TOP - this.FOOT,
+    });
+  }
   layoutYear(): void {
     const r = atlas(),
-      W = size.W;
-    const cols = W >= 1100 ? 4 : W >= 720 ? 3 : 2,
-      gap = 18,
-      mw = (W - this.PAD * 2 - gap * (cols - 1)) / cols;
-    const cw = mw / 7,
-      ch = Math.min(34, cw * 1.35),
-      head = W < 350 ? 108 : W < 650 ? 88 : 70;
-    this.yr = { cols, mw, cw, ch, gap, head };
-    let y = 8;
-    for (let k = 0; k < r.months.length; k += cols) {
-      const months = r.months.slice(k, k + cols),
-        weeks = Math.max(...months.map((m) => m.weeks.length));
-      const h = head + 20 + weeks * ch + 12;
-      months.forEach((mo, j) => {
-        const b = { t: 'mini' as const, mo, x: this.PAD + j * (mw + gap), y, w: mw, h };
-        this.blocks.push(b);
-        this.headings.push({ ...b, h: head });
-      });
-      y += h + 18;
+      year = this.month().y,
+      cols = size.W >= 1000 ? 4 : size.W >= 650 ? 3 : 2,
+      rows = 12 / cols,
+      gap = size.W < 650 ? 8 : 16,
+      w = (size.W - this.PAD * 2 - gap * (cols - 1)) / cols,
+      h = Math.max(0, (size.H - this.FOOT - this.PAD * 2 - gap * (rows - 1)) / rows);
+    this.yr = {
+      cols,
+      head: 38,
+      cw: w / 7,
+      ch: Math.max(0, Math.min(24, (h - 60) / 6)),
+      compact: size.W < 650 || h < 150,
+    };
+    for (let m = 1; m <= 12; m++) {
+      const mo = r.months.find((mo) => mo.y === year && mo.m === m);
+      if (mo)
+        this.blocks.push({
+          t: 'mini',
+          mo,
+          x: this.PAD + ((m - 1) % cols) * (w + gap),
+          y: this.PAD + Math.floor((m - 1) / cols) * (h + gap),
+          w,
+          h,
+        });
     }
-    this.total = y + 8;
-    prepareCalendarHeaders(r, this.headings, W);
-    prepareNightDetail('calendarDetail', null, nightDetailGeometry());
   }
-
   weekFor(i: number, key: string | null = S.calendarWeek): WeekBlock | undefined {
     const weeks = this.blocks.filter((b): b is WeekBlock => b.t === 'week');
     return (
-      weeks.find((b) => b.key === key && b.wk.includes(i)) ??
-      weeks.find((b) => b.mo.idx.includes(i) && b.wk.includes(i))
+      weeks.find((b) => b.key === key && b.wk.includes(i)) ?? weeks.find((b) => b.wk.includes(i))
     );
   }
   topNight(): number {
-    const st = scroller.scrollTop;
-    return this.blocks.find((b) => b.y + b.h > st)?.mo.idx[0] ?? 0;
+    return this.month().idx[0];
   }
-  anchor(): CalendarAnchor | null {
-    const st = scroller.scrollTop,
-      b = this.blocks.find((b) => b.y + b.h > st);
-    return b
-      ? { key: b.t === 'week' ? b.key : b.mo.key, type: b.t, fraction: (st - b.y) / b.h }
-      : null;
+  anchor(): string {
+    return this.month().key;
   }
-  restoreAnchor(a: CalendarAnchor): void {
-    const b = this.blocks.find(
-      (b) => b.t === a.type && (b.t === 'week' ? b.key : b.mo.key) === a.key,
-    );
-    if (b) scroller.scrollTop = b.y + a.fraction * b.h;
+  restoreAnchor(key: string): void {
+    if (atlas().months.some((mo) => mo.key === key) && key !== S.calendarMonth) {
+      S.calendarMonth = key;
+      this.layout();
+    }
+    scroller.scrollTop = 0;
   }
   scrollTo(i: number, top: boolean): void {
-    if (S.calZoom === 'year') {
-      const b = this.blocks.find((b) => b.t === 'mini' && b.mo.idx.includes(i));
-      if (b && (top || b.y < scroller.scrollTop || b.y + b.h > scroller.scrollTop + size.H))
-        scroller.scrollTop = b.y;
-      return;
+    const n = atlas().nights[i];
+    if (!n) return;
+    const key = `${n.y}-${pad2(n.m)}`;
+    if ((S.calendarMonth !== key && (top || !this.weekFor(i))) || S.calZoom === 'week') {
+      S.calendarMonth = key;
+      this.layout();
     }
-    const b = this.weekFor(i);
-    if (!b) return;
-    if (top) {
-      const head = this.blocks.find((x) => x.t === 'head' && x.mo === b.mo)!;
-      scroller.scrollTop = head.y;
-    }
-    this.reveal(i);
+    scroller.scrollTop = 0;
   }
-  reveal(i: number): void {
-    const b = this.weekFor(i);
-    if (!b) return;
-    const available = size.H - this.TOP,
-      bottom = b.y + b.h;
-    const expanded = S.calendarExpanded && i === S.sel;
-    if (expanded) {
-      if (
-        bottom > scroller.scrollTop + available ||
-        bottom < scroller.scrollTop + NIGHT_DETAIL_HEIGHT
-      )
-        scroller.scrollTop = Math.max(b.y, bottom - available);
-    } else if (b.y < scroller.scrollTop || bottom > scroller.scrollTop + available)
-      scroller.scrollTop = Math.max(0, b.y - Math.max(0, (available - b.base) / 2));
-  }
-
-  draw(st: number): void {
-    if (S.calZoom === 'year') {
-      this.drawYear(st);
-      return;
+  draw(): void {
+    if (S.calZoom === 'year') this.drawYear();
+    else if (S.calZoom === 'week') this.drawWeek();
+    else this.drawMonth();
+    ctx.fillStyle = C.panel;
+    ctx.fillRect(0, size.H - this.FOOT, size.W, this.FOOT);
+    text(
+      S.calZoom === 'year'
+        ? this.yr.compact
+          ? 'New moon dates · select a month'
+          : '● New moon · select a month'
+        : S.calZoom === 'month'
+          ? 'Usable dark · current Moon settings · ● New moon'
+          : 'Usable dark · current Moon settings',
+      this.PAD,
+      size.H - 12,
+      11,
+      C.ink2,
+    );
+    if (size.W > 600)
+      text('Evening dates · site clock time', size.W - this.PAD, size.H - 12, 11, C.ink3, 'right');
+    const n = atlas().nights[S.sel];
+    if (S.calendarExpanded && S.calZoom !== 'year' && n) {
+      const y = Math.max(0, size.H - NIGHT_DETAIL_HEIGHT);
+      ctx.fillStyle = C.panel;
+      ctx.fillRect(0, y, size.W, NIGHT_DETAIL_HEIGHT);
+      drawNightDetail(n, y);
     }
-    const { W, H } = size,
-      { x0, cw } = this.cols(),
-      r = atlas();
-    placeCalendarHeaders(this.headings, st, W, this.TOP);
-    const selected = this.weekFor(S.sel);
-    if (S.calendarExpanded && selected)
-      placeNightDetail('calendarDetail', this.TOP + selected.y + selected.base, st, 0, W, this.TOP);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, this.TOP, W, H - this.TOP);
-    ctx.clip();
+  }
+  drawMonth(): void {
+    const r = atlas(),
+      { cw } = this.cols();
+    WD3.forEach((day, d) => text(day, (d + 0.5) * cw, 14, 11, C.ink2, 'center'));
     for (const b of this.blocks) {
       if (b.t !== 'week') continue;
-      const y = this.TOP + b.y - st;
-      if (y + b.h < this.TOP) continue;
-      if (y > H) break;
-      this.drawWeek(b, y, x0, cw);
-      if (S.calendarExpanded && b.key === S.calendarWeek) {
-        const n = r.nights[S.sel];
-        if (n) drawNightDetail(n, y + b.base);
-        const d = b.wk.indexOf(S.sel),
-          x = x0 + (d + 0.5) * cw;
-        ctx.fillStyle = C.select;
+      for (let d = 0; d < 7; d++) {
+        const i = b.wk[d],
+          n = r.nights[i],
+          date = this.dateAt(b.start + d),
+          x = d * cw,
+          adjacent = date.m !== b.mo.m || date.y !== b.mo.y;
+        ctx.fillStyle = adjacent ? C.panel : C.raised;
+        ctx.fillRect(x, b.y, cw, b.h);
+        ctx.strokeStyle = C.hair2;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, b.y + 0.5, cw, b.h);
+        ctx.save();
         ctx.beginPath();
-        ctx.moveTo(x - 5, y + b.base - 7);
-        ctx.lineTo(x + 5, y + b.base - 7);
-        ctx.lineTo(x, y + b.base - 1);
-        ctx.fill();
+        ctx.rect(x, b.y, cw, b.h);
+        ctx.clip();
+        const marked = n && this.newMoons.has(n.id) && cw < 60 && b.h < 76;
+        if (marked) {
+          ctx.beginPath();
+          ctx.arc(x + 14, b.y + 14, 9, 0, Math.PI * 2);
+          ctx.fillStyle = C.ink;
+          ctx.fill();
+        }
+        text(
+          String(date.d),
+          x + (marked ? 14 : 7),
+          b.y + 14,
+          12,
+          marked ? inkOn(C.ink) : i >= 0 && i === r.tonightIdx ? C.now : adjacent ? C.ink3 : C.ink,
+          marked ? 'center' : 'left',
+          600,
+        );
+        if (n && !adjacent) this.drawSummary(n, x, b.y, cw, b.h);
+        if (!n) text('—', x + 7, b.y + 37, 12, C.ink3);
+        ctx.restore();
+        this.outline(i, b, x, b.y, cw, b.h);
       }
     }
-    ctx.restore();
-    const mo = this.blocks.find((b) => b.y + b.h > st)?.mo ?? r.months[0];
-    ctx.fillStyle = C.panel;
-    ctx.fillRect(0, 0, W, this.TOP);
-    text(`${MONL[mo.m - 1]} ${mo.y}`, this.PAD, 11, 11, C.ink, 'left', 650);
-    text(
-      S.calOrient === 'v' ? 'Evening ↓ morning' : 'Evening → morning',
-      W - this.PAD,
-      11,
-      10,
-      C.ink2,
-      'right',
-      500,
-    );
-    text(S.calOrient === 'v' ? 'Time ↓' : 'Time →', this.PAD, 31, 9, C.ink3, 'left', 500);
-    for (let d = 0; d < 7; d++)
-      text(
-        WD3[d],
-        x0 + (d + 0.5) * cw,
-        31,
-        10.5,
-        d === 5 || d === 6 ? C.ink : C.ink3,
-        'center',
-        d >= 5 ? 650 : 500,
-      );
-    ctx.fillStyle = C.hair;
-    ctx.fillRect(0, this.TOP - 1, W, 1);
   }
-
-  drawWeek(b: WeekBlock, y: number, x0: number, cw: number): void {
+  drawSummary(n: Night, x: number, y: number, w: number, h: number): void {
+    const narrow = w < 85,
+      isNew = this.newMoons.has(n.id),
+      dim = S.focus > 0 && Math.abs(n.nmOff) > S.focus,
+      ink = dim || !n.mfMs ? C.ink3 : C.ink;
+    if (isNew && w >= 60 && h < 76) {
+      const label = narrow ? 'New' : 'New moon',
+        lw = tw(label, 10.5, 600) + 6;
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(x + w - lw - 4, y + 6, lw, 16);
+      text(label, x + w - lw / 2 - 4, y + 14, 10.5, inkOn(C.ink), 'center', 600);
+    } else if (w > 38) {
+      moonGlyph(n, x + w - 11, y + 14, 5);
+      if (w >= 95) text(`${Math.round(n.illum * 100)}%`, x + w - 22, y + 14, 11, C.ink3, 'right');
+    }
+    if (S.calMonthStyle === 'hours') {
+      const full = n.mfMs ? fmtDur(n.mfMs) : '0h',
+        px = narrow ? 14 : 19,
+        label = tw(full, px, 600) <= w - 12 ? full : `${fmtHrs(n.mfMs)}h`;
+      text(label, x + 7, y + (narrow ? 37 : 46), px, ink, 'left', 600);
+    } else if (n.mfH.length === 1) {
+      const [start, end] = n.mfH[0],
+        range = `${fmtClockS(start)}–${fmtClockS(end)}`;
+      if (tw(range, 14, 600) <= w - 12) text(range, x + 7, y + 43, 14, ink, 'left', 600);
+      else {
+        text(fmtClockS(start), x + 5, y + 32, 11, ink, 'left', 600);
+        text(fmtClockS(end), x + 5, y + 47, 11, ink, 'left', 600);
+      }
+    } else {
+      const full = n.mfH.length ? `${n.mfH.length} windows` : 'No usable dark',
+        px = narrow ? 11 : 14;
+      text(
+        tw(full, px, 600) <= w - 14 ? full : n.mfH.length ? 'Split' : '0h',
+        x + 7,
+        y + 39,
+        px,
+        ink,
+        'left',
+        600,
+      );
+    }
+    if (S.calMonthStyle === 'windows' && !narrow && h >= 92 && (!isNew || h >= 96))
+      text(`${fmtDur(n.mfMs)} usable`, x + 7, y + 66, 11, C.ink2);
+    if (isNew && h >= 76) {
+      const label = narrow ? 'New' : 'New moon',
+        lw = tw(label, 11, 600) + 8,
+        ly = S.calMonthStyle === 'windows' && h >= 96 ? 84 : 65;
+      ctx.fillStyle = C.ink;
+      ctx.fillRect(x + 7, y + ly - 8, lw, 16);
+      text(label, x + 11, y + ly, 11, inkOn(C.ink), 'left', 600);
+    }
+  }
+  outline(i: number, b: WeekBlock, x: number, y: number, w: number, h: number): void {
+    if (i < 0) return;
+    if (i === S.sel || (S.hover?.i === i && (!S.hover.week || S.hover.week === b.key))) {
+      ctx.strokeStyle = i === S.sel ? C.select : C.ink3;
+      ctx.lineWidth = i === S.sel ? 2 : 1;
+      ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+    }
+  }
+  drawWeek(): void {
+    const b = this.blocks[0];
+    if (!b || b.t !== 'week') return;
     const r = atlas(),
-      v = S.calOrient === 'v',
-      bodyY = y + this.DATE;
-    const bodyH = v ? b.base - this.DATE - this.FOOT - this.GAP : 24,
-      cwi = cw - 2;
+      { x0, cw } = this.cols(),
+      { y, h } = this.weekBody,
+      span = this.weekAxis.end - this.weekAxis.start;
+    text('Evening ↓ morning', size.W - this.PAD, 14, 11, C.ink2, 'right');
     for (let d = 0; d < 7; d++) {
       const i = b.wk[d],
         n = r.nights[i],
-        cx = x0 + d * cw;
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(cx, y, cwi, b.base - this.GAP);
-      ctx.clip();
-      ctx.fillStyle = C.raised;
-      ctx.fillRect(cx, y, cwi, b.base - this.GAP);
-      if (d === 5 || d === 6) {
-        ctx.fillStyle = C.weekend;
-        ctx.fillRect(cx, y, cwi, this.DATE);
-      }
-      if (!n) {
-        const firstDow = r.nights[b.mo.idx[0]].dow;
-        const date = new Date(Date.UTC(b.mo.y, b.mo.m - 1, 1 - firstDow + b.wi * 7 + d));
-        text(
-          `${MON3[date.getUTCMonth()]} ${date.getUTCDate()}`,
-          cx + cwi / 2,
-          y + this.DATE / 2,
-          9.5,
-          C.ink3,
-          'center',
-          500,
-        );
-        text('—', cx + cwi / 2, bodyY + bodyH / 2, 14, C.ink3, 'center');
-        ctx.restore();
-        continue;
-      }
-      const neighbor = n.y !== b.mo.y || n.m !== b.mo.m;
-      const dim = neighbor || (S.focus > 0 && Math.abs(n.nmOff) > S.focus);
-      const date = neighbor ? `${MON3[n.m - 1]} ${n.d}` : String(n.d);
-      text(date, cx + 4, y + this.DATE / 2, neighbor ? 9.5 : 12, dim ? C.ink3 : C.ink, 'left', 650);
-      if (cwi > (neighbor ? 90 : 38)) {
-        moonGlyph(n, cx + cwi - 8, y + this.DATE / 2, 4);
-        if (cwi > 90)
-          text(
-            `${Math.round(n.illum * 100)}%`,
-            cx + cwi - 19,
-            y + this.DATE / 2,
-            10,
-            C.ink3,
-            'right',
-            500,
-          );
-      }
-      drawNight(n, cx, bodyY, cwi, bodyH, v ? 'v' : 'h', { dim });
-      const total = n.mfMs ? fmtDur(n.mfMs) : n.tdMs ? '0h' : '—';
-      const label = tw(total, 11.5, 650) <= cwi - 8 ? total : n.mfMs ? `${fmtHrs(n.mfMs)}h` : total;
-      const fy = v ? bodyY + bodyH + 11 : bodyY + bodyH + 16;
+        date = this.dateAt(b.start + d),
+        x = x0 + d * cw;
+      text(WD3[d], x + cw / 2, b.y + 9, 11, C.ink2, 'center');
       text(
-        label,
-        cx + cwi / 2,
-        fy,
-        cwi < 50 ? 10 : 11.5,
-        dim || !n.mfMs ? C.ink3 : C.ink,
+        date.d === 1 ? `${MON3[date.m - 1]} 1` : String(date.d),
+        x + cw / 2,
+        b.y + 25,
+        12,
+        i >= 0 && i === r.tonightIdx ? C.now : C.ink,
         'center',
-        650,
+        600,
       );
-      if (!v && cwi > 100)
-        text(
-          n.mfH.length > 1 ? `${n.mfH.length} separate windows` : 'usable dark',
-          cx + cwi / 2,
-          fy + 14,
-          10,
-          C.ink3,
-          'center',
-        );
-      const barY = y + b.base - this.GAP - 3;
-      ctx.fillStyle = dim ? C.ink3 : C.good;
-      ctx.fillRect(cx + 4, barY, ((cwi - 8) * n.mfMs) / (durationScale(r) * MS_H), 2);
-      ctx.restore();
-      if (i === r.tonightIdx || (i === S.sel && b.key === S.calendarWeek)) {
-        ctx.strokeStyle = i === S.sel && b.key === S.calendarWeek ? C.select : C.now;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(cx + 1, y + 1, cwi - 2, b.base - this.GAP - 2);
-      } else if (S.hover?.i === i && S.hover.week === b.key) {
-        ctx.strokeStyle = C.hair2;
-        ctx.lineWidth = 1;
-        ctx.strokeRect(cx + 0.5, y + 0.5, cwi - 1, b.base - this.GAP - 1);
-      }
-    }
-    if (v) {
-      const span = r.ax.end - r.ax.start;
-      for (const tick of hourTicks((bodyH / span) * 1.6)) {
-        if (!tick.major && !tick.midnight) continue;
-        const ty = bodyY + ((tick.hh - r.ax.start) / span) * bodyH;
-        if (ty < bodyY + 15 || ty > bodyY + bodyH - 7) continue;
-        if (tick.midnight) {
-          ctx.fillStyle = C.ink3;
-          ctx.globalAlpha = 0.4;
-          ctx.fillRect(x0, ty, 7 * cw - 2, 1);
-          ctx.globalAlpha = 1;
+      if (n) {
+        const full = n.mfMs ? fmtDur(n.mfMs) : '0h',
+          label = tw(full, 12, 600) < cw - 6 ? full : `${fmtHrs(n.mfMs)}h`;
+        text(label, x + cw / 2, b.y + 44, 12, n.mfMs ? C.ink : C.ink3, 'center', 600);
+        drawNight(n, x + 1, y, cw - 2, h, 'v', {
+          axis: this.weekAxis,
+          dim: S.focus > 0 && Math.abs(n.nmOff) > S.focus,
+        });
+        const P = (t: number) => y + ((t - this.weekAxis.start) / span) * h;
+        for (const [start, end] of n.mfH) {
+          for (const t of [start, end]) {
+            ctx.fillStyle = C.good;
+            ctx.fillRect(x + 4, P(t), cw - 8, 1.5);
+          }
+          if (P(end) - P(start) < 36) continue;
+          for (const [t, offset] of [
+            [start, 11],
+            [end, -9],
+          ]) {
+            const label = fmtClockS(t),
+              lw = tw(label, 11, 600) + 4,
+              ly = P(t) + offset;
+            if (lw > cw - 2) continue;
+            ctx.fillStyle = C.panel;
+            ctx.fillRect(x + (cw - lw) / 2, ly - 7, lw, 14);
+            text(label, x + cw / 2, ly, 11, inkOn(C.panel), 'center', 600);
+          }
         }
-        text(
-          tick.label,
-          x0 - 6,
-          ty,
-          9,
-          tick.midnight ? C.ink : C.ink3,
-          'right',
-          tick.midnight ? 700 : 450,
-        );
       }
-      text('Evening', x0 - 6, bodyY + 5, 8, C.ink2, 'right', 500);
-      text('Morning', x0 - 6, bodyY + bodyH + 9, 8, C.ink2, 'right', 500);
+      ctx.fillStyle = C.hair2;
+      ctx.fillRect(x, y, 1, h);
+      this.outline(i, b, x, b.y, cw, b.h);
+    }
+    for (const tick of hourTicks(h / span, this.weekAxis)) {
+      if (!tick.major && !tick.midnight) continue;
+      const ty = y + ((tick.hh - this.weekAxis.start) / span) * h;
+      if (ty < y + 12 || ty > y + h - 12) continue;
+      if (tick.midnight) {
+        ctx.fillStyle = C.ink3;
+        ctx.globalAlpha = 0.5;
+        ctx.fillRect(x0, ty, size.W - x0, 1);
+        ctx.globalAlpha = 1;
+      }
+      text(tick.label, x0 - 6, ty, 11, C.ink2, 'right');
     }
   }
-
-  drawYear(st: number): void {
+  drawYear(): void {
     const r = atlas(),
       { cw, ch, head } = this.yr;
-    placeCalendarHeaders(this.headings, st, size.W, 0);
     for (const b of this.blocks) {
       if (b.t !== 'mini') continue;
-      const y = b.y - st;
-      if (y + b.h < 0 || y > size.H) continue;
-      ctx.fillStyle = C.hair;
-      ctx.fillRect(b.x, y, b.w, b.h);
-      ctx.fillStyle = C.panel;
-      ctx.fillRect(b.x + 1, y + 1, b.w - 2, b.h - 2);
-      for (let d = 0; d < 7; d++)
-        text(
-          WD1[d],
-          b.x + (d + 0.5) * cw,
-          y + head + 10,
-          9,
-          d >= 5 ? C.ink : C.ink3,
-          'center',
-          600,
-        );
+      ctx.fillStyle = C.raised;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+      if (b.mo.idx.includes(S.sel)) {
+        ctx.strokeStyle = C.select;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(b.x + 0.5, b.y + 0.5, b.w - 1, b.h - 1);
+      }
+      if (this.yr.compact) continue;
+      WD1.forEach((day, d) =>
+        text(day, b.x + (d + 0.5) * cw, b.y + head + 8, 11, C.ink2, 'center'),
+      );
       b.mo.weeks.forEach((wk, wi) =>
         wk.forEach((i, d) => {
           if (i < 0) return;
           const n = r.nights[i],
-            x = b.x + d * cw,
-            cy = y + head + 20 + wi * ch;
-          if (d === 5 || d === 6) {
-            ctx.fillStyle = C.weekend;
-            ctx.fillRect(x, cy, cw - 2, 11);
+            x = b.x + (d + 0.5) * cw,
+            y = b.y + head + 20 + (wi + 0.5) * ch,
+            isNew = this.newMoons.has(n.id);
+          if (isNew) {
+            ctx.beginPath();
+            ctx.arc(x, y, 9, 0, Math.PI * 2);
+            ctx.fillStyle = C.ink;
+            ctx.fill();
           }
-          text(String(n.d), x + 2, cy + 5, 8.5, n.dow >= 5 ? C.ink : C.ink3, 'left', 600);
-          drawNight(n, x, cy + 11, cw - 2, ch - 12, 'v', {
-            dim: S.focus > 0 && Math.abs(n.nmOff) > S.focus,
-          });
-          if (i === S.sel || i === r.tonightIdx) {
-            ctx.strokeStyle = i === S.sel ? C.select : C.now;
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(x + 0.5, cy + 0.5, cw - 2, ch - 1);
-          }
+          text(
+            String(n.d),
+            x,
+            y,
+            11,
+            isNew ? inkOn(C.ink) : i === r.tonightIdx ? C.now : C.ink,
+            'center',
+          );
         }),
       );
     }
   }
   hit(px: number, py: number): Hit | null {
-    const cy = py + scroller.scrollTop;
     if (S.calZoom === 'year') {
       const b = this.blocks.find(
-        (b) => b.t === 'mini' && px >= b.x && px < b.x + b.w && cy >= b.y && cy < b.y + b.h,
+        (b) => b.t === 'mini' && px >= b.x && px < b.x + b.w && py >= b.y && py < b.y + b.h,
       );
-      if (!b || b.t !== 'mini') return null;
-      const wi = Math.floor((cy - b.y - this.yr.head - 20) / this.yr.ch),
-        d = Math.floor((px - b.x) / this.yr.cw);
-      const i = b.mo.weeks[wi]?.[d];
-      return { month: b.mo.key, i: i != null && i >= 0 ? i : undefined };
+      return b ? { month: b.mo.key } : null;
     }
-    if (py < this.TOP) return null;
-    const y = cy - this.TOP,
-      { x0, cw } = this.cols();
-    const b = this.blocks.find(
-      (b): b is WeekBlock => b.t === 'week' && y >= b.y && y < b.y + b.base - this.GAP,
-    );
-    if (!b) return null;
-    const d = Math.floor((px - x0) / cw);
-    if (d < 0 || d > 6) return null;
-    const i = b.wk[d];
-    return i >= 0 ? { i, week: b.key } : null;
+    if (S.calendarExpanded && py >= size.H - NIGHT_DETAIL_HEIGHT) return null;
+    const { x0, cw } = this.cols(),
+      d = Math.floor((px - x0) / cw),
+      b = this.blocks.find((b): b is WeekBlock => b.t === 'week' && py >= b.y && py < b.y + b.h);
+    if (!b || d < 0 || d > 6 || b.wk[d] < 0) return null;
+    return { i: b.wk[d], week: b.key };
   }
 }
 export const calendar = new CalendarView();

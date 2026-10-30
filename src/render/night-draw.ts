@@ -1,4 +1,5 @@
 import { atlas } from '../app/state';
+import type { Axis } from '../model/range';
 import { fmtClockS } from '../model/format';
 import { NS, STEP, wallH, type Night } from '../model/night';
 import { C, moonAlpha } from './colors';
@@ -6,6 +7,8 @@ import { moonlightBands } from './moonlight';
 import { ctx, snap, text, tw } from './surface';
 
 export interface NightDrawOptions {
+  /** Calendar Week fits all seven nights on one sunset-to-sunrise clock. */
+  axis?: Axis;
   /** Label moon-free windows with their start and end times where they fit. */
   labels?: boolean;
   /** Draw the moon's altitude track (time across only). */
@@ -32,7 +35,7 @@ export function drawNight(
   o: 'h' | 'v',
   opt: NightDrawOptions = {},
 ): void {
-  const { ax } = atlas();
+  const ax = opt.axis ?? atlas().ax;
   const L = o === 'h' ? w : h;
   const span = ax.end - ax.start;
   const P = (t: number) => snap(((t - ax.start) / span) * L);
@@ -192,8 +195,7 @@ export interface HourTick {
 }
 
 /** Whole-hour ticks along the axis; labels thin out as hours get narrower. */
-export function hourTicks(pxPerHour: number): HourTick[] {
-  const { ax } = atlas();
+export function hourTicks(pxPerHour: number, ax = atlas().ax): HourTick[] {
   const every = pxPerHour >= 46 ? 1 : pxPerHour >= 24 ? 2 : 3;
   const out: HourTick[] = [];
   for (let hh = Math.ceil(ax.start); hh <= Math.floor(ax.end); hh++) {
