@@ -177,7 +177,7 @@ export function select(i: number, scroll: boolean, top?: boolean): void {
       const period = calendar.periods.find((p) => p.key === targetMonth);
       scroller.scrollTop = Math.max(S.calZoom === 'month' ? (period?.y ?? 0) : 0, next.y - keepY);
     }
-    if (scroll) calendar.scrollTo(i, !!top || changeMonth);
+    if (scroll) calendar.scrollTo(i, !!top);
     draw();
     return;
   }

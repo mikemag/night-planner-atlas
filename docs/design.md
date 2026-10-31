@@ -178,6 +178,8 @@ Friday/Saturday coloring do not appear in Month or Year.
   dimmed and selectable if loaded, without repeating their summaries. Selecting one keeps the
   current month context. Keyboard navigation uses real dates in their own month, so Left from
   October 1 goes directly to September 30 in September, bypassing duplicate placeholder cells.
+  Crossing a month boundary preserves the scroll position when the real date is already visible;
+  navigation scrolls only as needed to reveal the date and any open night expansion.
   Unloaded neighboring dates show a dash and cannot be selected.
 - **Week detail.** Seven nights share a clock axis from their earliest sunset to latest sunrise,
   padded to half hours. Evening is at the top and morning below. The shared sky/Moon renderer

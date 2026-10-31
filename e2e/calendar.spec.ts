@@ -475,17 +475,75 @@ for (const width of [1512, 390]) {
         };
       });
     expect(await ownRow()).toEqual({ own: true, visible: true });
+    const beforeRight = await page.locator('#scroller').evaluate((el) => el.scrollTop);
     await page.locator('#cv').press('ArrowRight');
-    await expect(page.locator('#periodLabel')).toHaveText('October 2026');
+    await painted(page);
+    expect(await page.locator('#scroller').evaluate((el) => el.scrollTop)).toBeCloseTo(
+      beforeRight,
+      0,
+    );
     expect((await selected(page)).id).toBe('2026-10-01');
     expect(await ownRow()).toEqual({ own: true, visible: true });
     await choose(page, '2026-10-31');
     await page.locator('#cv').press('Enter');
     await page.locator('#cv').press('ArrowRight');
-    await expect(page.locator('#periodLabel')).toHaveText('November 2026');
     expect((await selected(page)).id).toBe('2026-11-01');
     expect((await ownRow()).own).toBe(true);
     await sharedDetail(page);
+  });
+}
+
+for (const width of [1512, 390]) {
+  test(`Month arrows preserve scroll when the next real date is visible at ${width}px`, async ({
+    page,
+  }, info) => {
+    await open(page, width);
+    await choose(page, '2026-09-30');
+    await page.locator('#cv').focus();
+    const before = await page.evaluate(() => {
+      const a = window.__npa!,
+        s = document.getElementById('scroller')!,
+        last = a.nights.findIndex((n) => n.id === '2026-09-30'),
+        first = last + 1,
+        prev = a.calendarRows.blocks.find(
+          (b) => b.t === 'week' && b.mo.idx.includes(last) && b.wk.includes(last),
+        )!,
+        next = a.calendarRows.blocks.find(
+          (b) => b.t === 'week' && b.mo.idx.includes(first) && b.wk.includes(first),
+        )!;
+      if (prev.t !== 'week' || next.t !== 'week') throw new Error('Expected both real month rows');
+      s.scrollTop = prev.y - 16;
+      return {
+        top: s.scrollTop,
+        nextVisible: next.y >= s.scrollTop && next.y + next.base <= s.scrollTop + s.clientHeight,
+      };
+    });
+    expect(before.nextVisible).toBe(true);
+    await painted(page);
+    await page.locator('#cv').press('ArrowRight');
+    await painted(page);
+    expect((await selected(page)).id).toBe('2026-10-01');
+    expect(await page.locator('#scroller').evaluate((el) => el.scrollTop)).toBeCloseTo(
+      before.top,
+      0,
+    );
+    const owner = await page.evaluate(() => {
+      const a = window.__npa!;
+      return a.calendarRows.blocks.find((b) => b.t === 'week' && b.key === a.S.calendarWeek)?.mo
+        .key;
+    });
+    expect(owner).toBe('2026-10');
+    if (process.env.SCREENSHOTS)
+      await page.screenshot({
+        path: `test-results/screenshots/${info.project.name}-calendar-boundary-scroll-${width}.png`,
+      });
+    await page.locator('#cv').press('ArrowLeft');
+    await painted(page);
+    expect((await selected(page)).id).toBe('2026-09-30');
+    expect(await page.locator('#scroller').evaluate((el) => el.scrollTop)).toBeCloseTo(
+      before.top,
+      0,
+    );
   });
 }
 
