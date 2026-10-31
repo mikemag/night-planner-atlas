@@ -150,47 +150,65 @@ flattened.
 
 ### Calendar
 
-A familiar calendar for choosing dates. Month, Week and Year each fit their complete period into
-the chart, including six-row months. The calendar uses neutral cells and clear gridlines; sky
-bands and Friday/Saturday coloring do not appear in Month or Year.
+A familiar calendar for choosing dates. The period selector reads Year, Month, Week and defaults
+to Month. Neutral cells and clear gridlines keep the dates legible in every theme; sky bands and
+Friday/Saturday coloring do not appear in Month or Year.
 
-- **Month summaries.** **Hours first** is the default: each evening date leads with its usable-dark
-  duration under the current Moon settings. **Windows first** leads with the clock range, with the
-  usable total secondary where space permits. Multiple intervals are labeled as separate windows,
-  never joined into a misleading continuous range. The two choices persist in this browser and
-  travel in share links. This is one presentation preference, rather than a general cell editor.
-  Small cells use compact durations or two stacked clock times; exact facts remain in the detail.
+- **Scrolling periods.** Month and Week form continuous vertical sequences across the loaded
+  range. Wheel and touch scrolling browse periods without changing the selected night; the global
+  period label follows the top of the viewport. Native titles scroll with each period. Previous/Next
+  uses the browsed period. Desktop months fit the chart, including six-row months. Phones and
+  short screens retain readable minimum row heights and can scroll the remainder. Resizing and
+  planning changes preserve the browsed position.
+- **Month summaries.** Each evening date leads with its usable-dark duration under the current
+  Moon settings, followed by a slightly smaller clock range. Narrow cells stack the start and end
+  times. Multiple intervals are labeled as separate windows, never joined into a continuous range;
+  exact intervals remain in the expansion. There is no presentation selector.
+- **Duration bars.** An inset vertical green bar at the right of each Month cell grows upward
+  from a shared baseline within its row. Its height makes daily differences clear across the week;
+  all months share the same maximum bar height and hours scale. Year day cells use horizontal bars
+  on the same hours scale, rounded up to an even number. End margins keep bars distinct from the
+  grid. Compact Year cards show
+  a chronological daily bar profile when their height permits, retaining totals and new-moon dates.
 - **Moon context.** A quiet glyph and, where space permits, illumination accompany the date.
   New moons are marked on the event's actual site-local civil date. This can differ from the
   evening date of the event-associated night in River or the centered cycle in Lunations.
 - **Complete weeks.** Each month keeps seven Sunday-first columns. Adjacent months' dates are
   dimmed and selectable if loaded, without repeating their summaries. Selecting one keeps the
-  current month page. Unloaded neighboring dates show a dash and cannot be selected.
+  current month context. Keyboard navigation uses real dates in their own month, so Left from
+  October 1 goes directly to September 30 in September, bypassing duplicate placeholder cells.
+  Unloaded neighboring dates show a dash and cannot be selected.
 - **Week detail.** Seven nights share a clock axis from their earliest sunset to latest sunrise,
   padded to half hours. Evening is at the top and morning below. The shared sky/Moon renderer
-  supplies the same colors and accepted-moonlight treatment as River and Lunations. Thin green
-  boundaries mark usable intervals; endpoint times appear when there is room, with every interval
-  available on selection. The entire night fits without scrolling through a 24-hour schedule.
-- **Year navigation.** Twelve quiet mini calendars cover January through December, with actual
-  new-moon dates marked and usable-hour totals. Opening a year loads a January-based 14-month
-  range if the rolling range does not contain all twelve months. Previous/Next moves a calendar
-  year, and Tonight returns to the site's current observing night. Each entire mini calendar is a
-  keyboard/touch month button. Phones and short windows show twelve compact month choices with
-  totals and new-moon dates, rather than microscopic day grids.
-- **Shared night drawer.** Selecting a Month or Week date opens the same horizontal event
-  timeline used by River and Lunations at the bottom of the chart. The drawer overlays the
-  overview without shrinking its rows. It includes ordered Sun/Moon events, every usable window,
-  phase, illumination and threshold/clock-change notes. Activate a visible date again, use Close
+  supplies the same colors and accepted-moonlight treatment as River and Lunations. Time labels
+  mark the painted transitions: sunset, twilight levels, sunrise, and the edges between true dark,
+  ordinary moonlight and accepted moonlight. Moon rise/set events outside the dark region receive
+  no extra labels. Labels show only the time: the bands already identify the boundaries.
+  A label stays on its boundary whenever it fits, with no connector. Crowded labels move apart and
+  receive leaders back to their exact boundaries. There are no green interval boundary lines.
+  Dense or short weeks can grow enough to keep event labels separate; named events remain in the
+  shared night expansion.
+- **Year navigation.** Twelve mini calendars cover January through December, with larger month
+  headings on wide screens, new-moon dates, usable-hour totals and daily bars. Opening a year loads
+  a January-based 14-month range if needed. Previous/Next moves a calendar year; Tonight returns to
+  the site's current observing night. Each entire mini calendar is a keyboard/touch month button.
+  Phones and short windows show twelve compact month choices instead of microscopic day grids.
+- **Shared night expansion.** Selecting a Month or Week date inserts the same horizontal event
+  timeline used by River and Lunations after the activated row. Its height is reserved in the
+  scrolling sequence, so it covers no dates. Opening it reveals the panel; scrolling can return to
+  the overview or continue to later dates. It includes ordered Sun/Moon events, every usable
+  window, phase, illumination and threshold/clock-change notes. Activate the date again, use Close
   or Escape to collapse. Enter/Space toggles; Left/Right select neighboring nights and Up/Down move
-  a week, carrying an open drawer. Native touch swipes do not select a night.
-- **Focus and settings.** New-moon focus quiets daily summaries without removing dates or changing
-  row heights. Planning settings open in a collapsible panel above the calendar, keeping the
-  normal phone overview on one screen. The fixed readout previews a pointed-at night and otherwise
-  summarizes the selection. Richer seasonal profiles and the weekend ranking remain in River.
-- **Sharing.** Month/Week, the selected evening date, drawer and month-presentation preference are
-  reproducible through the existing site-optional links. Incoming settings remain temporary until
-  saved. Earlier links and the old orientation preference remain readable, with summary cells
-  replacing the former Time ↓ / Time → month layouts.
+  a week, carrying the expansion. Native touch swipes do not select a night.
+- **Focus and settings.** New-moon focus quiets daily summaries without removing dates. Planning
+  controls appear inline above the chart, using the same row as River and Lunations. On small
+  screens, the month can scroll vertically to keep summaries readable. The fixed readout previews a
+  pointed-at night and otherwise summarizes the selection. Richer seasonal profiles and weekend
+  rankings remain in River.
+- **Sharing.** Month/Week, the selected evening date and expansion are reproducible through the
+  existing site-optional links. Incoming settings remain temporary until saved. Earlier links with
+  month-presentation or orientation fields remain readable; new links omit the retired presentation
+  choice. Existing stored preferences are left intact.
 - _Best at_ choosing familiar dates, comparing a week and locating new moons across a year.
 - _Weak at_ the continuity of long-term patterns; River and Lunations provide those comparisons.
 
@@ -256,7 +274,7 @@ New-moon focus crops each cycle to ±N without changing ownership.
   chart-specific controls while it is open.
 - **Night details.** All three views share ordered event annotations on the same clock axis,
   with illumination, phase, individual usable-window durations and threshold/clock-change notes.
-  Calendar uses a bottom drawer and Lunations places the full-width panel beneath its cycle. River
+  Calendar reserves the panel after its selected row; Lunations places it beneath its cycle. River
   annotates its selected row directly. A fixed readout previews nights without changing selection
   and lists every separate usable window. River keeps **Dark weekends ahead** in a collapsible
   tray, using the same Friday/Saturday ranking.
@@ -291,7 +309,7 @@ New-moon focus crops each cycle to ±N without changing ownership.
   It updates each minute, on returning to the page and immediately on site changes; chart
   selection does not affect that clock.
 - **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 switch views, Esc
-  collapses an expanded River/Lunations night or Calendar drawer. Enter/Space toggles the selected
+  collapses an expanded River/Lunations night or Calendar expansion. Enter/Space toggles the selected
   River Month, Calendar Month/Week or Lunations night when the chart has focus. Lunations uses Up/Down for cycles and
   Left/Right for displayed nights. The chart and minimap retain a visible focus outline.
   River and Lunations' selected-night summaries include the local zone, full windows and usable duration;

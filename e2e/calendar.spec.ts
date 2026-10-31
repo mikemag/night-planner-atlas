@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { fmtClock, fmtDur, nightTitle } from '../src/model/format';
+import { fmtClock, fmtClockS, fmtDur, nightTitle, SUN_NAMES } from '../src/model/format';
+import { SUN_EVENTS } from '../src/model/night';
 
 async function painted(page: Page) {
   await page.evaluate(
@@ -49,10 +50,21 @@ async function point(page: Page, id: string) {
     const a = window.__npa!,
       i = a.nights.findIndex((n) => n.id === id),
       r = a.calendarRows,
-      b = r.blocks.find((b) => b.t === 'week' && b.wk.includes(i));
+      st = document.getElementById('scroller')!.scrollTop,
+      b =
+        r.blocks.find(
+          (b) =>
+            b.t === 'week' &&
+            b.wk.includes(i) &&
+            b.y >= st - 1 &&
+            b.y < st + document.getElementById('scroller')!.clientHeight,
+        ) ?? r.blocks.find((b) => b.t === 'week' && b.wk.includes(i) && b.mo.idx.includes(i));
     if (!b || b.t !== 'week') throw new Error('Test night is not on this page');
     const c = document.getElementById('cv')!.getBoundingClientRect();
-    return { x: c.x + r.geometry.x0 + (b.wk.indexOf(i) + 0.5) * r.geometry.cw, y: c.y + b.y + 14 };
+    return {
+      x: c.x + r.geometry.x0 + (b.wk.indexOf(i) + 0.5) * r.geometry.cw,
+      y: c.y + b.y - st + 14,
+    };
   }, id);
 }
 async function selected(page: Page) {
@@ -74,9 +86,13 @@ async function fits(page: Page) {
   expect(result.pageWidth).toBe(result.viewportWidth);
   expect(result.pageHeight).toBeLessThanOrEqual(result.viewportHeight + 1);
   expect(result.canvasBottom).toBeLessThanOrEqual(result.viewportHeight);
-  expect(result.scroll).toBeLessThanOrEqual(1);
+  const year = await page.evaluate(() => window.__npa!.S.calZoom === 'year');
+  if (year) expect(result.scroll).toBeLessThanOrEqual(1);
+  else expect(result.scroll).toBeGreaterThan(result.viewportHeight);
 }
 async function sharedDetail(page: Page) {
+  // The readout intentionally previews pointer hover; isolate the selected-night checks.
+  await page.mouse.move(0, 0);
   const n = await selected(page),
     detail = page.locator('#calendarDetail');
   await expect(detail).toBeVisible();
@@ -99,104 +115,156 @@ async function sharedDetail(page: Page) {
   );
 }
 
-for (const width of [1512, 390])
-  for (const style of ['hours', 'windows'] as const) {
-    test(`a complete six-row ${style}-first month fits at ${width}px and opens the common night detail`, async ({
-      page,
-    }, info) => {
-      const errors: string[] = [];
-      page.on('pageerror', (e) => errors.push(e.message));
-      await open(page, width, style);
-      await choose(page, '2027-01-01');
-      await expect(page.locator('#periodLabel')).toHaveText('January 2027');
-      await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveValue(style);
-      expect(await page.evaluate(() => window.__npa!.calendarRows.blocks.length)).toBe(6);
-      await fits(page);
-      await expect(page.locator('#legend')).toBeHidden();
-      await expect(page.locator('#riverWeekends')).toBeHidden();
-      await expect(page.locator('#planningOptions')).not.toHaveAttribute('open');
-      const backgrounds = await page.evaluate(() => {
-        const r = window.__npa!.calendarRows,
-          row = r.blocks[1],
-          cv = document.getElementById('cv') as HTMLCanvasElement;
-        const dpr = cv.width / cv.clientWidth;
-        if (row.t !== 'week') throw new Error('Expected month dates');
-        return [...Array(7)].map((_, d) =>
-          Array.from(
-            cv
-              .getContext('2d')!
-              .getImageData(
-                Math.floor((d + 0.5) * r.geometry.cw * dpr),
-                Math.floor((row.y + row.h - 5) * dpr),
-                1,
-                1,
-              ).data,
-          ).join(','),
-        );
-      });
-      expect(new Set(backgrounds).size).toBe(1);
-      if (process.env.SCREENSHOTS)
-        await page.screenshot({
-          path: `test-results/screenshots/${info.project.name}-calendar-month-${style}-${width}.png`,
-        });
-      await choose(page, '2026-10-09');
-      const p = await point(page, '2026-10-09');
-      await page.mouse.click(p.x, p.y);
-      await sharedDetail(page);
-      const before = await page.locator('#cv').boundingBox();
-      await page
-        .getByRole('combobox', { name: 'Month summary' })
-        .selectOption(style === 'hours' ? 'windows' : 'hours');
-      expect(await page.locator('#cv').boundingBox()).toEqual(before);
-      await sharedDetail(page);
-      await page.locator('#cv').press('ArrowRight');
-      await expect(page.locator('#calendarDetail').getByRole('heading')).toHaveText(
-        'Sat Oct 10 → Sun Oct 11',
-      );
-      await page.locator('#cv').press('Escape');
-      await expect(page.locator('#calendarDetail')).toBeHidden();
-      await page.locator('#cv').press('Enter');
-      await expect(page.locator('#calendarDetail')).toBeVisible();
-      if (process.env.SCREENSHOTS)
-        await page.screenshot({
-          path: `test-results/screenshots/${info.project.name}-calendar-expanded-${style}-${width}.png`,
-        });
-      await page.getByRole('button', { name: 'Collapse night', exact: true }).click();
-      await expect(page.locator('#calendarDetail')).toBeHidden();
-      expect(errors).toEqual([]);
+for (const width of [1512, 390]) {
+  test(`a six-row month keeps readable cells at ${width}px with inset duration bars and inline detail`, async ({
+    page,
+  }, info) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await open(page, width, 'windows');
+    await choose(page, '2027-01-07');
+    await expect(page.locator('#periodLabel')).toHaveText('January 2027');
+    await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveCount(0);
+    const overview = await page.evaluate(() => {
+      const a = window.__npa!,
+        r = a.calendarRows,
+        s = document.getElementById('scroller')!,
+        rows = r.blocks.filter((b) => b.t === 'week' && b.mo.key === '2027-01'),
+        p = r.periods.find((p) => p.key === '2027-01')!;
+      return { rows: rows.length, height: p.base, available: s.clientHeight };
     });
-  }
+    expect(overview.rows).toBe(6);
+    expect(overview.height).toBeLessThanOrEqual(Math.max(546, overview.available) + 1);
+    await fits(page);
+    await expect(page.locator('#legend')).toBeHidden();
+    await expect(page.locator('#riverWeekends')).toBeHidden();
+    await expect(page.locator('#planningControls')).toBeVisible();
+    const pixels = await page.evaluate(() => {
+      const a = window.__npa!,
+        r = a.calendarRows,
+        i = a.nights.findIndex((n) => n.id === '2027-01-07'),
+        row = r.blocks.find((b) => b.t === 'week' && b.mo.key === '2027-01' && b.wk.includes(i))!,
+        cv = document.getElementById('cv') as HTMLCanvasElement,
+        c = cv.getContext('2d')!,
+        dpr = cv.width / cv.clientWidth,
+        st = document.getElementById('scroller')!.scrollTop;
+      if (row.t !== 'week') throw new Error('Expected month row');
+      const x = row.wk.indexOf(i) * r.geometry.cw,
+        y = row.y + row.base - 10 - st,
+        pixel = (x: number, y: number) =>
+          Array.from(c.getImageData(Math.floor(x * dpr), Math.floor(y * dpr), 1, 1).data)
+            .slice(0, 3)
+            .join(','),
+        hex = getComputedStyle(document.documentElement).getPropertyValue('--good').trim().slice(1),
+        green = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',');
+      return {
+        green,
+        bar: pixel(x + r.geometry.cw - 6, y),
+        left: pixel(x + 3, y),
+        right: pixel(x + r.geometry.cw - 2, y),
+        backgrounds: [...Array(7)].map((_, d) =>
+          pixel((d + 0.5) * r.geometry.cw, row.y + row.base - 3 - st),
+        ),
+      };
+    });
+    expect(pixels.bar).toBe(pixels.green);
+    expect(pixels.left).not.toBe(pixels.green);
+    expect(pixels.right).not.toBe(pixels.green);
+    expect(new Set(pixels.backgrounds).size).toBe(1);
+    if (process.env.SCREENSHOTS)
+      await page.screenshot({
+        path: `test-results/screenshots/${info.project.name}-calendar-month-${width}.png`,
+      });
+    await choose(page, '2026-10-31');
+    const p = await point(page, '2026-10-31');
+    await page.mouse.click(p.x, p.y);
+    await sharedDetail(page);
+    const geometry = await page.evaluate(() => {
+      const a = window.__npa!,
+        r = a.calendarRows,
+        row = r.blocks.find((b) => b.t === 'week' && b.key === a.S.calendarWeek)!,
+        following = r.blocks.find((b) => b.y > row.y),
+        detail = document.getElementById('calendarDetail')!.getBoundingClientRect(),
+        cv = document.getElementById('cv')!.getBoundingClientRect();
+      if (row.t !== 'week') throw new Error('Expected expanded row');
+      return {
+        start: r.detailTop,
+        rowEnd: row.y + row.base,
+        next: following?.y,
+        end: row.y + row.h,
+        bottom: detail.bottom,
+        canvasBottom: cv.bottom,
+      };
+    });
+    expect(geometry.start).toBe(geometry.rowEnd);
+    expect(geometry.next).toBeGreaterThanOrEqual(geometry.end);
+    expect(geometry.bottom).toBeLessThanOrEqual(geometry.canvasBottom + 1);
+    if (process.env.SCREENSHOTS)
+      await page.screenshot({
+        path: `test-results/screenshots/${info.project.name}-calendar-expanded-${width}.png`,
+      });
+    await page.locator('#cv').press('ArrowRight');
+    await expect(page.locator('#calendarDetail').getByRole('heading')).toHaveText(
+      'Sun Nov 1 → Mon Nov 2',
+    );
+    await page.locator('#cv').press('Escape');
+    await expect(page.locator('#calendarDetail')).toBeHidden();
+    await page.locator('#cv').press('Enter');
+    await sharedDetail(page);
+    await page.getByRole('button', { name: 'Collapse night', exact: true }).click();
+    await expect(page.locator('#calendarDetail')).toBeHidden();
+    expect(errors).toEqual([]);
+  });
+  test(`wheel scrolling browses months without changing the selected night at ${width}px`, async ({
+    page,
+  }) => {
+    await open(page, width);
+    await choose(page, '2026-10-09');
+    const distance = await page.evaluate(
+      () => window.__npa!.calendarRows.periods.find((p) => p.key === '2026-10')!.h + 38,
+    );
+    await page.locator('#scroller').hover();
+    await page.mouse.wheel(0, distance);
+    await expect(page.locator('#periodLabel')).toHaveText('November 2026');
+    expect((await selected(page)).id).toBe('2026-10-09');
+    await page.setViewportSize({ width, height: width < 700 ? 860 : 940 });
+    await painted(page);
+    await expect(page.locator('#periodLabel')).toHaveText('November 2026');
+    await page.locator('#scroller').hover();
+    const back = await page.evaluate(
+      () =>
+        document.getElementById('scroller')!.scrollTop -
+        window.__npa!.calendarRows.periods.find((p) => p.key === '2026-10')!.y -
+        20,
+    );
+    await page.mouse.wheel(0, -back);
+    await expect(page.locator('#periodLabel')).toHaveText('October 2026');
+    await page.getByRole('button', { name: 'Next month', exact: true }).click();
+    await expect(page.locator('#periodLabel')).toHaveText('November 2026');
+  });
+}
 
-test('the saved month presentation survives reload, period changes and resize without changing the night', async ({
+test('Month defaults with Year / Month / Week order and ignores the retired preference', async ({
   page,
 }) => {
-  await open(page);
-  await choose(page, '2026-10-09');
-  const hash = () =>
-    page.locator('#cv').evaluate((el) => {
-      let h = 2166136261;
-      const cv = el as HTMLCanvasElement;
-      for (const v of cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height).data)
-        h = Math.imul(h ^ v, 16777619);
-      return h >>> 0;
-    });
-  const before = await hash();
-  await page.getByRole('combobox', { name: 'Month summary' }).selectOption('windows');
-  expect((await selected(page)).id).toBe('2026-10-09');
-  await painted(page);
-  const after = await hash();
-  expect(after).not.toBe(before);
-  expect(await page.evaluate(() => localStorage.getItem('npa:calMonthStyle'))).toBe('"windows"');
-  await page.getByRole('button', { name: 'Week', exact: true }).click();
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'Month', exact: true }).click();
-  await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveValue('windows');
-  expect((await selected(page)).id).toBe('2026-10-09');
+  await open(page, 1512, 'windows');
+  await expect(page.locator('#viewCtl [data-option="calZoom"]')).toHaveText([
+    'Year',
+    'Month',
+    'Week',
+  ]);
+  await expect(page.getByRole('button', { name: 'Month', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveCount(0);
   await page.reload();
   await expect(page.locator('#loading')).toBeHidden();
-  await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveValue('windows');
-  await page.getByRole('combobox', { name: 'Month summary' }).selectOption('hours');
-  expect(await page.evaluate(() => localStorage.getItem('npa:calMonthStyle'))).toBe('"hours"');
+  expect(await page.evaluate(() => localStorage.getItem('npa:calMonthStyle'))).toBe('"windows"');
+  await choose(page, '2026-10-09');
+  await page.getByRole('button', { name: 'Week', exact: true }).click();
+  await page.getByRole('button', { name: 'Month', exact: true }).click();
+  expect((await selected(page)).id).toBe('2026-10-09');
 });
 
 for (const width of [1512, 390]) {
@@ -213,7 +281,7 @@ for (const width of [1512, 390]) {
     const extent = await page.evaluate(() => {
       const a = window.__npa!,
         r = a.calendarRows,
-        b = r.blocks[0];
+        b = r.blocks.find((b) => b.t === 'week' && b.wk.includes(a.S.sel))!;
       if (b.t !== 'week') throw new Error('Expected week');
       const ns = b.wk.map((i) => a.nights[i]);
       return {
@@ -232,9 +300,68 @@ for (const width of [1512, 390]) {
       await page.screenshot({
         path: `test-results/screenshots/${info.project.name}-calendar-week-${width}.png`,
       });
+    const labels = await page.evaluate(() => {
+      const a = window.__npa!,
+        r = a.calendarRows;
+      return r.annotations
+        .filter((e) => e.i === a.S.sel)
+        .map((e) => ({
+          name: e.name,
+          y: e.y,
+          x: e.x,
+          w: e.w,
+          time: e.time,
+          leader: e.leader,
+          anchor: e.anchor,
+        }));
+    });
+    expect(labels.map((e) => e.name)).toEqual(
+      expect.arrayContaining([
+        'Sunset',
+        'Civil dusk',
+        'Nautical dusk',
+        'Astro dusk',
+        'Astro dawn',
+        'Nautical dawn',
+        'Civil dawn',
+        'Sunrise',
+      ]),
+    );
+    expect(labels).toHaveLength(8);
+    const paintedEdges = await page.evaluate(() => {
+      const a = window.__npa!,
+        darkMoon = a.nights.findIndex((n) => n.id === '2026-10-04'),
+        daylightMoon = a.nights.findIndex((n) => n.id === '2026-10-10');
+      return {
+        intrusion: a.nights[darkMoon].mfH[0][1],
+        darkTimes: a.calendarRows.annotations.filter((e) => e.i === darkMoon).map((e) => e.time),
+        daylightLabels: a.calendarRows.annotations.filter((e) => e.i === daylightMoon).length,
+      };
+    });
+    // A Moon intrusion in true dark has a painted edge; daytime rise/set adds no extra label.
+    expect(paintedEdges.darkTimes).toContain(fmtClockS(paintedEdges.intrusion));
+    expect(paintedEdges.daylightLabels).toBe(8);
+    const night = await selected(page);
+    SUN_EVENTS.forEach((key, i) => {
+      if (night.evH[key] != null)
+        expect(labels.find((e) => e.name === SUN_NAMES[i])?.time).toBe(fmtClockS(night.evH[key]));
+    });
+    for (let k = 1; k < labels.length; k++)
+      expect(labels[k].y - labels[k - 1].y).toBeGreaterThanOrEqual(21.9);
+    for (const e of labels) {
+      expect(e.leader).toBe(Math.abs(e.y - e.anchor) > 0.75);
+      expect(e.x).toBeGreaterThanOrEqual(42);
+      expect(e.x + e.w).toBeLessThanOrEqual(width - 16);
+    }
     const p = await point(page, '2026-10-09');
     await page.mouse.click(p.x, p.y);
     await sharedDetail(page);
+    await page.locator('#scroller').hover();
+    const distance = await page.locator('#scroller').evaluate((el) => el.clientHeight + 300);
+    await page.mouse.wheel(0, distance);
+    await expect(page.locator('#periodLabel')).toHaveText('Oct 11–17, 2026');
+    expect((await selected(page)).id).toBe('2026-10-09');
+    await page.getByRole('button', { name: 'Previous week', exact: true }).click();
     await page.getByRole('button', { name: 'Next week', exact: true }).click();
     await expect(page.locator('#periodLabel')).toHaveText('Oct 11–17, 2026');
     await expect(page.locator('#calendarDetail')).toBeHidden();
@@ -260,6 +387,26 @@ for (const width of [1512, 390]) {
     await expect(page.locator('[data-calendar-month="2026-01"]')).toHaveAccessibleName(
       /January 2026.*usable dark.*New moon 18/,
     );
+    if (width > 1000) {
+      const visual = await months.first().evaluate((node) => {
+        const cv = document.getElementById('cv') as HTMLCanvasElement,
+          data = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height).data,
+          hex = getComputedStyle(document.documentElement)
+            .getPropertyValue('--good')
+            .trim()
+            .slice(1),
+          rgb = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+        let green = 0;
+        for (let i = 0; i < data.length; i += 4)
+          if (rgb.every((v, k) => v === data[i + k])) green++;
+        return {
+          font: parseFloat(getComputedStyle(node.querySelector('strong')!).fontSize),
+          green,
+        };
+      });
+      expect(visual.font).toBeGreaterThanOrEqual(18);
+      expect(visual.green).toBeGreaterThan(100);
+    }
     if (process.env.SCREENSHOTS)
       await page.screenshot({
         path: `test-results/screenshots/${info.project.name}-calendar-year-${width}.png`,
@@ -269,7 +416,7 @@ for (const width of [1512, 390]) {
     await december.press('Enter');
     await expect(page.locator('#periodLabel')).toHaveText('December 2026');
     expect((await selected(page)).id).toBe('2026-12-01');
-    await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveValue('windows');
+    await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Year', exact: true }).click();
     await page.getByRole('button', { name: 'Next year', exact: true }).click();
     await expect(page.locator('#loading')).toBeHidden();
@@ -288,6 +435,7 @@ test('adjacent-month activation keeps its month page while unloaded dates cannot
   page,
 }) => {
   await open(page, 390);
+  await choose(page, '2026-10-01');
   const p = await point(page, '2026-09-30');
   await page.mouse.click(p.x, p.y);
   await expect(page.locator('#periodLabel')).toHaveText('October 2026');
@@ -301,10 +449,45 @@ test('adjacent-month activation keeps its month page while unloaded dates cannot
   await page.locator('#cv').press('Escape');
   await choose(page, '2026-09-01');
   const c = (await page.locator('#cv').boundingBox())!;
-  await page.mouse.click(c.x + c.width / 14, c.y + 42);
+  await page.mouse.click(c.x + c.width / 14, c.y + 68);
   expect((await selected(page)).id).toBe('2026-09-01');
   await expect(page.locator('#calendarDetail')).toBeHidden();
 });
+
+for (const width of [1512, 390]) {
+  test(`Month arrows cross straight to real dates instead of placeholders at ${width}px`, async ({
+    page,
+  }) => {
+    await open(page, width);
+    await choose(page, '2026-10-01');
+    await page.locator('#cv').press('ArrowLeft');
+    await expect(page.locator('#periodLabel')).toHaveText('September 2026');
+    expect((await selected(page)).id).toBe('2026-09-30');
+    const ownRow = () =>
+      page.evaluate(() => {
+        const a = window.__npa!,
+          s = document.getElementById('scroller')!,
+          row = a.calendarRows.blocks.find((b) => b.t === 'week' && b.key === a.S.calendarWeek)!;
+        if (row.t !== 'week') throw new Error('Expected selected month row');
+        return {
+          own: row.mo.idx.includes(a.S.sel),
+          visible: row.y >= s.scrollTop - 1 && row.y + row.base <= s.scrollTop + s.clientHeight + 1,
+        };
+      });
+    expect(await ownRow()).toEqual({ own: true, visible: true });
+    await page.locator('#cv').press('ArrowRight');
+    await expect(page.locator('#periodLabel')).toHaveText('October 2026');
+    expect((await selected(page)).id).toBe('2026-10-01');
+    expect(await ownRow()).toEqual({ own: true, visible: true });
+    await choose(page, '2026-10-31');
+    await page.locator('#cv').press('Enter');
+    await page.locator('#cv').press('ArrowRight');
+    await expect(page.locator('#periodLabel')).toHaveText('November 2026');
+    expect((await selected(page)).id).toBe('2026-11-01');
+    expect((await ownRow()).own).toBe(true);
+    await sharedDetail(page);
+  });
+}
 
 test('focus and thresholds retain the complete month and update the same shared night details', async ({
   page,
@@ -315,7 +498,6 @@ test('focus and thresholds retain the complete month and update the same shared 
   const before = await page.evaluate(() =>
     window.__npa!.calendarRows.blocks.map((b) => [b.y, b.h]),
   );
-  await page.locator('#planningSummary').click();
   await page.locator('#focusSeg button[data-val="3"]').click();
   await page.locator('#moonAltSel').selectOption('15');
   await page.locator('#crescentSel').selectOption('0.3');
@@ -323,12 +505,10 @@ test('focus and thresholds retain the complete month and update the same shared 
     await page.evaluate(() => window.__npa!.calendarRows.blocks.map((b) => [b.y, b.h])),
   ).toEqual(before);
   await expect(page.locator('#calendarDetail')).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('#planningOptions')).not.toHaveAttribute('open');
+  await expect(page.locator('#planningControls')).toBeVisible();
   await sharedDetail(page);
   await page.locator('#viewSeg button[data-view="river"]').click();
   await expect(page.locator('#calendarDetail')).toBeHidden();
-  await expect(page.locator('#planningSummary')).toBeHidden();
   await expect(page.locator('#planningControls')).toBeVisible();
   expect((await selected(page)).id).toBe('2026-10-06');
   await page.locator('#viewSeg button[data-view="calendar"]').click();
@@ -355,9 +535,7 @@ test('night details handle no-dark, split windows and daylight-saving changes', 
   await choose(page, '2026-06-20');
   await page.locator('#cv').press('Enter');
   await expect(page.locator('#calendarDetail')).toContainText('No astronomical darkness');
-  await page.locator('#planningSummary').click();
   await page.locator('#moonAltSel').selectOption('15');
-  await page.keyboard.press('Escape');
   await page.evaluate(() => {
     const a = window.__npa!,
       i = a.nights.findIndex((n) => n.mf.length > 1);
@@ -373,7 +551,7 @@ test('night details handle no-dark, split windows and daylight-saving changes', 
   await expect(page.locator('#calendarDetail .river-detail-note')).toContainText('Clocks change');
 });
 
-test('expanded Week links carry the month preference without saving private fields or recipient defaults', async ({
+test('expanded Week links omit the retired month preference without saving private fields or recipient defaults', async ({
   page,
   browser,
 }) => {
@@ -385,7 +563,7 @@ test('expanded Week links carry the month preference without saving private fiel
   const link = await page.locator('#shareLink').inputValue(),
     hash = new URL(link).hash;
   expect(hash).toContain('calZoom=week');
-  expect(hash).toContain('calMonthStyle=windows');
+  expect(hash).not.toContain('calMonthStyle');
   expect(hash).toContain('expanded=1');
   expect(hash).not.toMatch(/lat=|lon=|tz=/);
   const context = await browser.newContext({
@@ -397,14 +575,19 @@ test('expanded Week links carry the month preference without saving private fiel
     await target.clock.setFixedTime(new Date('2028-05-12T00:00:00Z'));
     await target.goto(link);
     await expect(target.locator('#loading')).toBeHidden();
+    await painted(target);
+    await fits(target);
     await expect(target.locator('#calendarDetail').getByRole('heading')).toHaveText(
       'Sat Oct 31 → Sun Nov 1',
     );
     await expect(target.locator('#calendarDetail .river-detail-note')).toContainText(
       'Clocks change',
     );
+    const bounds = await target.locator('#calendarDetail').boundingBox(),
+      frame = await target.locator('#cv').boundingBox();
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(frame!.y + frame!.height + 1);
     await target.getByRole('button', { name: 'Month', exact: true }).click();
-    await expect(target.getByRole('combobox', { name: 'Month summary' })).toHaveValue('windows');
+    await expect(target.getByRole('combobox', { name: 'Month summary' })).toHaveCount(0);
     expect(await target.evaluate(() => localStorage.getItem('npa:calMonthStyle'))).toBeNull();
     expect(await target.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   } finally {
@@ -427,11 +610,19 @@ test('touch taps toggle a night while moved and canceled gestures cannot open it
     const p = await point(page, '2026-10-09');
     await page.touchscreen.tap(p.x, p.y);
     await expect(page.locator('#calendarDetail')).toBeVisible();
-    await page.touchscreen.tap(p.x, p.y);
+    const visible = await point(page, '2026-10-09');
+    await page.touchscreen.tap(visible.x, visible.y);
     await expect(page.locator('#calendarDetail')).toBeHidden();
-    const event = { pointerType: 'touch', pointerId: 42, button: 0, clientX: p.x, clientY: p.y };
+    const target = await point(page, '2026-10-09');
+    const event = {
+      pointerType: 'touch',
+      pointerId: 42,
+      button: 0,
+      clientX: target.x,
+      clientY: target.y,
+    };
     await page.locator('#cv').dispatchEvent('pointerdown', event);
-    await page.locator('#cv').dispatchEvent('pointerup', { ...event, clientY: p.y + 30 });
+    await page.locator('#cv').dispatchEvent('pointerup', { ...event, clientY: target.y + 30 });
     await expect(page.locator('#calendarDetail')).toBeHidden();
     await page.locator('#cv').dispatchEvent('pointerdown', event);
     await page.locator('#cv').dispatchEvent('pointercancel', event);
@@ -442,20 +633,24 @@ test('touch taps toggle a night while moved and canceled gestures cannot open it
   }
 });
 
-test('the month still fits at 320px with all six rows and keyboard-reachable preferences', async ({
+test('320px keeps readable month rows and scrolls to the selected night by keyboard', async ({
   page,
 }) => {
-  await open(page, 320, 'windows');
+  await open(page, 320);
   await page.setViewportSize({ width: 320, height: 740 });
   await choose(page, '2027-01-07');
   await fits(page);
-  await page.locator('#cv').focus();
-  await page.keyboard.press('Shift+Tab');
-  await expect(page.getByRole('combobox', { name: 'Month summary' })).toBeFocused();
-  await page.getByRole('combobox', { name: 'Month summary' }).selectOption('hours');
-  await expect(page.getByRole('combobox', { name: 'Month summary' })).toBeFocused();
-  await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveValue('hours');
-  expect((await selected(page)).id).toBe('2027-01-07');
+  const rows = await page.evaluate(() =>
+    window
+      .__npa!.calendarRows.blocks.filter((b) => b.t === 'week' && b.mo.key === '2027-01')
+      .map((b) => (b.t === 'week' ? b.base : 0)),
+  );
+  expect(rows).toHaveLength(6);
+  expect(Math.min(...rows)).toBeGreaterThanOrEqual(78);
+  await page.locator('#cv').press('ArrowDown');
+  expect((await selected(page)).id).toBe('2027-01-14');
+  await page.locator('#cv').press('Enter');
+  await sharedDetail(page);
   await fits(page);
 });
 

@@ -16,8 +16,9 @@ track where it is going.
   march becomes diagonal stripes, the seasons an hourglass, and clock changes a visible step.
   Use Year for an overview, Month for nightly windows, and expand individual Month nights for boundary times.
 - **Calendar**: a complete month of quiet night summaries, seven detailed nights in Week, or a
-  Year of month choosers. Choose Hours first or Windows first for the month cells, and select a
-  date for the shared night timeline in a bottom drawer. Dim neighboring dates complete the weeks.
+  Year of month choosers. Each month cell shows usable hours, its clock window and an inset vertical green
+  bar. Scroll through months or weeks; selecting a date inserts the shared timeline after its row.
+  Dim neighboring dates complete the weeks.
 - **Lunations**: one row per lunar cycle, aligned on new moon, with the best Friday–Saturday of
   each cycle. Full cycle shows every night exactly once, assigned to its nearest new moon, with
   padding keeping new moon centered. Taller night columns run from evening down to morning, with usable-hour bars below;
@@ -25,8 +26,8 @@ track where it is going.
 
 All views share one visual language and the same controls: new-moon focus (±N nights), when the
 moon counts as up, and whether to ignore a thin crescent. Expand a night in any view for the same ordered boundary times and separate usable windows.
-River keeps the darkest weekends in a collapsible tray. Calendar fits a complete Month, Week or
-Year, with a saved Hours first / Windows first month preference. **How it works** explains the calculations, measured accuracy, conventions,
+River keeps the darkest weekends in a collapsible tray. Calendar uses familiar Month, Week and
+Year grids. Month and Year share green duration bars, and Week labels the boundaries between shaded regions directly. **How it works** explains the calculations, measured accuracy, conventions,
 controls, privacy and credits, with technical detail available on demand.
 
 | Year at a glance (River)                        | Calendar                                           | Lunations                                           |

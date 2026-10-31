@@ -66,3 +66,47 @@ export function placeCalendarHeaders(blocks: CalendarMonthBlock[]): void {
     box.setAttribute('aria-current', String(b.mo.idx.includes(S.sel)));
   }
 }
+
+export interface CalendarPeriodHeading {
+  key: string;
+  title: string;
+  context: string;
+  y: number;
+  h: number;
+}
+
+/** Period titles scroll with the dates; only the small global period control stays fixed. */
+export function prepareCalendarPeriods(
+  r: NightRange,
+  headings: CalendarPeriodHeading[],
+  width: number,
+): void {
+  const root = el('calendarHeaders');
+  root.classList.remove('calendar-compact-year');
+  const key = JSON.stringify(['periods', width, headings]);
+  if (previousRange !== r || signature !== key) {
+    previousRange = r;
+    signature = key;
+    root.replaceChildren(
+      ...headings.map((h) => {
+        const box = document.createElement('header');
+        box.className = 'calendar-period-heading';
+        box.dataset.period = h.key;
+        const title = document.createElement('h2');
+        title.textContent = h.title;
+        const context = document.createElement('span');
+        context.textContent = h.context;
+        box.append(title, context);
+        return box;
+      }),
+    );
+  }
+  [...root.children].forEach((node, i) => {
+    const box = node as HTMLElement,
+      h = headings[i];
+    box.style.top = `${h.y}px`;
+    box.style.left = '0';
+    box.style.width = `${width}px`;
+    box.style.height = `${h.h}px`;
+  });
+}

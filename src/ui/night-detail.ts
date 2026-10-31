@@ -1,6 +1,6 @@
 import { S, atlas } from '../app/state';
 import { phaseName } from '../model/describe';
-import { fmtClock, fmtDur, nightTitle } from '../model/format';
+import { fmtClock, fmtDur, nightTitle, SUN_NAMES } from '../model/format';
 import { SUN_EVENTS, wallH, type Night } from '../model/night';
 import { layoutBoundaryLabels } from '../render/boundary-labels';
 import { ctx, size, text, tw } from '../render/surface';
@@ -9,16 +9,6 @@ import { drawNight, hourTicks, moonGlyph } from '../render/night-draw';
 import { el } from './dom';
 
 const NS = 'http://www.w3.org/2000/svg';
-const names = [
-  'Sunset',
-  'Civil dusk',
-  'Nautical dusk',
-  'Astro dusk',
-  'Astro dawn',
-  'Nautical dawn',
-  'Civil dawn',
-  'Sunrise',
-];
 
 function svgElement<K extends keyof SVGElementTagNameMap>(
   tag: K,
@@ -62,7 +52,7 @@ export function annotationChart(n: Night, g: DetailGeometry): SVGSVGElement {
     }
     events.push({ instant, hh, name, accepted, lane });
   };
-  SUN_EVENTS.forEach((key, i) => add(n.ev[key], names[i], i < 4 ? i : 7 - i));
+  SUN_EVENTS.forEach((key, i) => add(n.ev[key], SUN_NAMES[i], i < 4 ? i : 7 - i));
   for (const crossing of n.moonWindows[0].crossings)
     add(crossing.t, crossing.rising ? 'Moonrise' : 'Moonset', 4);
   for (const [start, end] of n.mf) {

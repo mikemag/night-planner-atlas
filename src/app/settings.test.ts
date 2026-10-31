@@ -29,7 +29,6 @@ it('falls back safely from obsolete or malformed control values without altering
     crescent: 0,
     calOrient: 'v',
     calZoom: 'month',
-    calMonthStyle: 'hours',
     riverZoom: 'month',
   });
   expect(saved.get('npa:moonAlt')).toBe('7');
@@ -49,8 +48,10 @@ it('restores the selected full favorite even if the legacy site key is older', (
   expect(settings.moonAlt).toBe(15);
 });
 
-it('restores the Calendar month presentation independently of the selected period', () => {
+it('ignores the retired month presentation without deleting saved data or the selected period', () => {
   saved.set('npa:calMonthStyle', '"windows"');
   saved.set('npa:calZoom', '"week"');
-  expect(loadSettings()).toMatchObject({ calMonthStyle: 'windows', calZoom: 'week' });
+  expect(loadSettings()).toMatchObject({ calZoom: 'week' });
+  expect(loadSettings()).not.toHaveProperty('calMonthStyle');
+  expect(saved.get('npa:calMonthStyle')).toBe('"windows"');
 });

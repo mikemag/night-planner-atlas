@@ -13,7 +13,6 @@ const preferenceKeys = [
   'crescent',
   'calOrient',
   'calZoom',
-  'calMonthStyle',
   'riverZoom',
 ] as const;
 
@@ -34,7 +33,6 @@ export function initSharing(): void {
           crescent: plan.crescent,
           calOrient: plan.calOrient,
           calZoom: plan.calZoom,
-          calMonthStyle: plan.calMonthStyle,
           riverZoom: plan.riverZoom,
           site: plan.site ?? loadSettings().site,
           rangeStart: { y, m },
@@ -124,7 +122,6 @@ export function initSharing(): void {
       riverZoom: S.riverZoom,
       calZoom: S.calZoom,
       calOrient: S.calOrient,
-      calMonthStyle: S.calMonthStyle,
       focus: activeFocus(),
       moonAlt: S.moonAlt,
       crescent: S.crescent,

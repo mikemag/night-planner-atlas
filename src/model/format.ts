@@ -1,5 +1,16 @@
 import { MS_H, MS_M } from './time';
 
+export const SUN_NAMES = [
+  'Sunset',
+  'Civil dusk',
+  'Nautical dusk',
+  'Astro dusk',
+  'Astro dawn',
+  'Nautical dawn',
+  'Civil dawn',
+  'Sunrise',
+];
+
 export const WD1 = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 export const WD3 = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const MON3 = [

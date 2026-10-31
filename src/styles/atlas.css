@@ -347,6 +347,7 @@ input {
   outline-offset: 2px;
 }
 .controls {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 10px 18px;
@@ -1448,14 +1449,7 @@ kbd {
   overflow-wrap: anywhere;
 }
 
-/* Calendar spends its height on one complete period; settings open above the grid. */
-.planning-options {
-  flex: none;
-}
-.planning-options .controls {
-  /* Reset inheritance across the details element's anonymous content box. */
-  box-sizing: border-box;
-}
+/* Calendar keeps complete periods readable inside a continuous scrolling chart. */
 .view-tab-short {
   display: none;
 }
@@ -1464,47 +1458,17 @@ kbd {
   min-height: 0;
   gap: 7px;
 }
-.calendar-planning {
-  position: relative;
-  align-self: flex-start;
-  z-index: 4;
-}
-.calendar-planning > summary {
-  color: var(--ink-2);
-  cursor: pointer;
-  font-size: 12px;
-  padding: 3px 0;
-}
-.calendar-planning .controls {
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 0;
-  width: min(720px, calc(100vw - 32px));
-  max-height: 55dvh;
-  overflow: auto;
-  padding: 12px;
-  background: var(--panel);
-  border: 1px solid var(--hair-2);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-}
 .body.calendar-mode {
   grid-template-columns: minmax(0, 1fr);
   min-height: 0;
-}
-.app.calendar-app:has(#sharedNotice:not([hidden])) {
-  height: auto;
-  min-height: 100dvh;
-}
-.calendar-app:has(#sharedNotice:not([hidden])) .body {
-  min-height: 560px;
 }
 .calendar-mode .stage {
   height: auto;
 }
 .calendar-mode .scroller {
-  overflow: hidden;
-  min-height: 384px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 240px;
 }
 .calendar-mode .stage-head {
   gap: 5px 12px;
@@ -1517,13 +1481,6 @@ kbd {
 .calendar-mode .view-sub {
   font-size: 11px;
 }
-.calendar-month-style {
-  background: var(--raised);
-  border: 1px solid var(--hair-2);
-  border-radius: 6px;
-  padding: 3px 5px;
-  font-size: 12px;
-}
 .calendar-mode .river-readout {
   height: 32px;
   padding: 6px 10px;
@@ -1534,7 +1491,25 @@ kbd {
 }
 .calendar-mode .night-detail {
   z-index: 2;
-  box-shadow: 0 -4px 16px #0002;
+}
+.calendar-period-heading {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 8px;
+  pointer-events: none;
+  background: var(--panel);
+}
+.calendar-period-heading h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.calendar-period-heading span {
+  font-size: 11px;
+  color: var(--ink-2);
 }
 .calendar-month-link {
   position: absolute;
@@ -1615,10 +1590,8 @@ kbd {
   .calendar-app .view-tab-short {
     display: inline;
   }
-  .calendar-month-style {
-    min-height: 32px;
-    max-width: 125px;
-    font-size: 11px;
+  .calendar-period-heading h2 {
+    font-size: 16px;
   }
   .calendar-app .share-trigger {
     grid-column: 2;
@@ -1659,4 +1632,9 @@ kbd {
 .calendar-compact-year .calendar-year-phases {
   display: block;
   width: 100%;
+}
+@media (min-width: 1100px) {
+  #calendarHeaders:not(.calendar-compact-year) .calendar-month-link strong {
+    font-size: 18px;
+  }
 }
