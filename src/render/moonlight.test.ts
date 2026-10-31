@@ -3,9 +3,36 @@ import type { Interval } from '../model/night';
 import { moonlightBands } from './moonlight';
 
 const bands = (td: Interval | null, mf: Interval[], above: Interval[]) =>
-  moonlightBands({ td, mf, moonWindows: { 0: { above, crossings: [] } } });
+  moonlightBands({
+    sunBelow: { sun: [], civil: [], nautical: [], astronomical: td ? [td] : [] },
+    mf,
+    moonWindows: { 0: { above, crossings: [] } },
+  });
 
 describe('physical moonlight and accepted moonlit time', () => {
+  it('clips a continuous Moon to both dark intervals of a polar observing period', () => {
+    expect(
+      moonlightBands({
+        sunBelow: {
+          sun: [],
+          civil: [],
+          nautical: [],
+          astronomical: [
+            [0, 20],
+            [80, 100],
+          ],
+        },
+        mf: [],
+        moonWindows: { 0: { above: [[0, 100]], crossings: [] } },
+      }),
+    ).toEqual({
+      ordinary: [
+        [0, 20],
+        [80, 100],
+      ],
+      accepted: [],
+    });
+  });
   it('leaves strict moon-free windows plain black, clipping the wash to true dark', () => {
     expect(
       bands(

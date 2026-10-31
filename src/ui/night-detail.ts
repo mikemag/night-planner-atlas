@@ -1,7 +1,7 @@
 import { S, atlas } from '../app/state';
 import { phaseName } from '../model/describe';
 import { fmtClock, fmtDur, nightTitle, SUN_NAMES } from '../model/format';
-import { SUN_EVENTS, wallH, type Night } from '../model/night';
+import { SUN_EVENTS, solarCrossings, wallH, type Night } from '../model/night';
 import { layoutBoundaryLabels } from '../render/boundary-labels';
 import { ctx, size, text, tw } from '../render/surface';
 import { C } from '../render/colors';
@@ -52,7 +52,10 @@ export function annotationChart(n: Night, g: DetailGeometry): SVGSVGElement {
     }
     events.push({ instant, hh, name, accepted, lane });
   };
-  SUN_EVENTS.forEach((key, i) => add(n.ev[key], SUN_NAMES[i], i < 4 ? i : 7 - i));
+  for (const { event, t } of solarCrossings(n)) {
+    const i = SUN_EVENTS.indexOf(event);
+    add(t, SUN_NAMES[i], i < 4 ? i : 7 - i);
+  }
   for (const crossing of n.moonWindows[0].crossings)
     add(crossing.t, crossing.rising ? 'Moonrise' : 'Moonset', 4);
   for (const [start, end] of n.mf) {
@@ -220,6 +223,10 @@ export function annotationChart(n: Night, g: DetailGeometry): SVGSVGElement {
     n.dst ? 'Clocks change · elapsed durations' : '',
     n.moonIgnored ? 'Moon ignored' : S.moonAlt > 0 ? `Moon below ${S.moonAlt}° accepted` : '',
   ].filter(Boolean);
+  if (!notes.length && n.ev.sunset == null && n.ev.sunrise == null)
+    notes.push(
+      n.sunBelow.sun.length ? 'Sun below horizon throughout' : 'Sun above horizon throughout',
+    );
   const note = svgElement('text', { x: g.width / 2, y: 173, class: 'river-detail-note' });
   note.textContent = notes.join(' · ');
   svg.appendChild(note);

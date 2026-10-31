@@ -132,7 +132,7 @@ it.each([
   { ...plan, night: '2026-08-31' },
   { ...plan, expanded: true, riverZoom: 'year' },
   { ...plan, expanded: true, night: null },
-  { ...plan, site: { name: 'Private ridge', lat: 66, lon: 0, tz: 'Etc/UTC' } },
+  { ...plan, site: { name: 'Private ridge', lat: 91, lon: 0, tz: 'Etc/UTC' } },
   { ...plan, site: { name: 'Private ridge', lat: 0, lon: 0, tz: 'Mars/Olympus_Mons' } },
 ])('refuses malformed or obsolete shared state without echoing private input: %j', (value) => {
   expect(() => readSharedPlan(hash(value))).toThrow('saved settings were not changed');

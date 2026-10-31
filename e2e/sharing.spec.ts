@@ -7,7 +7,12 @@ const ownSite = {
   tz: 'Australia/Sydney',
   elevation: 321,
 };
-const ownBook = { version: 1, sites: [{ ...ownSite, id: 'mine' }], selectedId: 'mine' };
+const ownBook = {
+  version: 1,
+  starterVersion: 1,
+  sites: [{ ...ownSite, id: 'mine' }],
+  selectedId: 'mine',
+};
 const ownPrefs = { view: 'river', riverZoom: 'year', focus: 7, moonAlt: 5, crescent: 0.1 };
 
 async function receiver(browser: Browser) {

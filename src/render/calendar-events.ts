@@ -1,4 +1,4 @@
-import { SUN_EVENTS, wallH, type Night } from '../model/night';
+import { SUN_EVENTS, solarCrossings, wallH, type Night } from '../model/night';
 import type { Axis } from '../model/range';
 import { fmtClockS, SUN_NAMES } from '../model/format';
 import { layoutBoundaryLabels } from './boundary-labels';
@@ -6,12 +6,11 @@ import { moonlightBands } from './moonlight';
 
 /** Label the actual painted edges, omitting Moon events that cause no visible shading change. */
 export function calendarEvents(n: Night) {
-  const events = SUN_EVENTS.flatMap((key, i) => {
-    const t = n.ev[key];
-    return t == null || n.ev[SUN_EVENTS[7 - i]] == null
-      ? []
-      : [{ t, hh: n.evH[key]!, name: SUN_NAMES[i] }];
-  });
+  const events = solarCrossings(n).map(({ event, t }) => ({
+    t,
+    hh: wallH(t, n),
+    name: SUN_NAMES[SUN_EVENTS.indexOf(event)],
+  }));
   const bands = moonlightBands(n);
   for (const t of [...bands.ordinary, ...bands.accepted].flat()) {
     if (!events.some((e) => Math.abs(e.t - t) < 1000))

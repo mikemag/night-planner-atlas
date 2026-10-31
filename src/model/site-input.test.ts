@@ -37,8 +37,10 @@ it.each([
 });
 
 it('enforces the planner limits and accepts the dateline and southern coordinates', () => {
-  expect(parseSiteInput('-65, 180')).toEqual({ lat: -65, lon: 180 });
-  expect(() => parseSiteInput('65.01, 0')).toThrow('Latitude');
+  expect(parseSiteInput('-90, 180')).toEqual({ lat: -90, lon: 180 });
+  expect(parseSiteInput('90, -180')).toEqual({ lat: 90, lon: -180 });
+  expect(parseSiteInput('78.148, 16.043')).toEqual({ lat: 78.148, lon: 16.043 });
+  expect(() => parseSiteInput('90.01, 0')).toThrow('Latitude');
   expect(() => parseSiteInput('0, -180.01')).toThrow('Longitude');
 });
 

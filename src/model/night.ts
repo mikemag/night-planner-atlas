@@ -11,7 +11,7 @@ import {
 import { pad2 } from './format';
 import { apparentAltitude } from './refraction';
 import { moonWindows, type MoonWindow } from './moon';
-import { MS_H, MS_M, type TimeZone } from './time';
+import { MS_D, MS_H, MS_M, type TimeZone } from './time';
 
 export interface Site {
   name: string;
@@ -36,8 +36,9 @@ export type SunEvent = (typeof SUN_EVENTS)[number];
 /** Event times keyed by name: UTC ms in `ev`, wall-clock hours after local noon in `evH`. */
 export type SunEvents = Record<SunEvent, number | null>;
 export type Interval = [number, number];
+export type SunBand = 'sun' | 'civil' | 'nautical' | 'astronomical';
 
-/** Moon and Sun altitudes are sampled every 10 minutes from local noon + 2 h (121 samples). */
+/** Ordinary nights use 121 ten-minute samples; long/polar nights extend the window. */
 export const STEP = 10 * MS_M;
 export const NS = 121;
 export const S_OFF = 2 * MS_H;
@@ -63,12 +64,15 @@ export interface Night {
   /** Local noon as a wall time, and as an instant. */
   wallNoon: number;
   noon: number;
+  nextNoon: number;
   /** Local midnight at the end of the evening date. */
   mid: number;
   /** First altitude sample. */
   S0: number;
   ev: SunEvents;
   evH: SunEvents;
+  /** Intervals below each solar threshold, clipped to the observing night. */
+  sunBelow: Record<SunBand, Interval[]>;
   /** Apparent center altitude, for drawing the altitude curve only. */
   moonAlt: Float32Array;
   /** Refined upper-limb windows at every supported apparent horizon height. */
@@ -84,6 +88,7 @@ export interface Night {
   nmOff: number;
   moonUp: Interval[];
   moonUpH: Interval[];
+  /** First true-dark interval; sunBelow.astronomical contains every interval. */
   td: Interval | null;
   tdH: Interval | null;
   tdMs: number;
@@ -110,13 +115,22 @@ export function computeNight(
 ): Night {
   const wallNoon = Date.UTC(y, m - 1, d, 12);
   const noon = tz.utcForWall(wallNoon);
-  const t0 = new Date(noon);
+  const nextNoon = tz.utcForWall(Date.UTC(y, m - 1, d + 1, 12));
   const density = Atmosphere(observer.height).density;
   const sunHorizon = -0.833 + (34 / 60) * (1 - density);
-  const find = (dir: number, alt: number): number | null => {
+  const find = (dir: number, alt: number, from = noon): number | null => {
+    if (from >= nextNoon) return null;
     try {
-      const r = SearchAltitude(Body.Sun, observer, dir, t0, 1, alt);
-      return r ? r.date.getTime() : null;
+      const r = SearchAltitude(
+        Body.Sun,
+        observer,
+        dir,
+        new Date(from),
+        (nextNoon - from) / MS_D,
+        alt,
+      );
+      const t = r?.date.getTime();
+      return t != null && t >= from && t < nextNoon ? t : null;
     } catch {
       return null;
     }
@@ -131,10 +145,56 @@ export function computeNight(
     civilDawn: find(+1, -6),
     sunrise: find(+1, sunHorizon),
   };
-  const S0 = noon + S_OFF;
-  const moonAlt = new Float32Array(NS),
-    sunAlt = new Float32Array(NS);
-  for (let i = 0; i < NS; i++) {
+  const eq = Equator(Body.Sun, new Date(noon), observer, true, true);
+  const initialAltitude = Horizon(new Date(noon), observer, eq.ra, eq.dec).altitude;
+  const below = (alt: number, dusk: number | null, dawn: number | null): Interval[] => {
+    const crossings: Array<{ t: number; below: boolean }> = [];
+    for (const [first, direction] of [
+      [dusk, -1],
+      [dawn, 1],
+    ] as const) {
+      let t = first;
+      while (t != null) {
+        crossings.push({ t, below: direction < 0 });
+        t = find(direction, alt, t + 1000);
+      }
+    }
+    let start: number | null = initialAltitude < alt ? noon : null;
+    const intervals: Interval[] = [];
+    for (const crossing of crossings.sort((a, b) => a.t - b.t)) {
+      if (crossing.below) start = crossing.t;
+      else if (start != null) {
+        if (crossing.t > start) intervals.push([start, crossing.t]);
+        start = null;
+      }
+    }
+    if (start != null && nextNoon > start) intervals.push([start, nextNoon]);
+    return intervals;
+  };
+  const sunBelow = {
+    sun: below(sunHorizon, ev.sunset, ev.sunrise),
+    civil: below(-6, ev.civilDusk, ev.civilDawn),
+    nautical: below(-12, ev.nauticalDusk, ev.nauticalDawn),
+    astronomical: below(-18, ev.astroDusk, ev.astroDawn),
+  };
+  // Cover the whole dark part of long nights, preserving the ordinary 2 h–22 h window.
+  const fullDay = ev.sunset == null || ev.sunrise == null;
+  const S0 = fullDay
+    ? noon
+    : Math.min(
+        noon + S_OFF,
+        ...sunBelow.sun.map(([start]) => noon + Math.floor((start - noon) / STEP) * STEP),
+      );
+  const sampleEnd = fullDay
+    ? nextNoon
+    : Math.max(
+        noon + S_OFF + (NS - 1) * STEP,
+        ...sunBelow.sun.map(([, end]) => noon + Math.ceil((end - noon) / STEP) * STEP),
+      );
+  const samples = Math.round((sampleEnd - S0) / STEP) + 1;
+  const moonAlt = new Float32Array(samples),
+    sunAlt = new Float32Array(samples);
+  for (let i = 0; i < samples; i++) {
     const t = new Date(S0 + i * STEP);
     const em = Equator(Body.Moon, t, observer, true, true);
     moonAlt[i] = apparentAltitude(Horizon(t, observer, em.ra, em.dec).altitude, density);
@@ -155,12 +215,14 @@ export function computeNight(
     tz,
     wallNoon,
     noon,
+    nextNoon,
     mid,
     S0,
     ev,
     evH: { ...ev },
+    sunBelow,
     moonAlt,
-    moonWindows: moonWindows(observer, S0, S0 + (NS - 1) * STEP),
+    moonWindows: moonWindows(observer, S0, sampleEnd),
     sunAlt,
     illum,
     phase,
@@ -202,18 +264,46 @@ export function subtract(iv: Interval, cuts: Interval[]): Interval[] {
   return segs.filter(([x, y]) => y - x >= MS_M);
 }
 
+/** Sky stage at a site-local clock position, including continuous polar stages. */
+export function sunBandAt(n: Night, hh: number): SunBand | 'day' {
+  for (const band of ['astronomical', 'nautical', 'civil', 'sun'] as const)
+    if (
+      n.sunBelow[band].some(
+        ([a, b]) =>
+          hh >= wallH(a, n) && (hh < wallH(b, n) || (b === n.nextNoon && hh === wallH(b, n))),
+      )
+    )
+      return band;
+  return 'day';
+}
+
+/** Every real solar boundary, including repeated events in a long observing period. */
+export function solarCrossings(n: Night): Array<{ event: SunEvent; t: number }> {
+  const bands = ['sun', 'civil', 'nautical', 'astronomical'] as const;
+  return SUN_EVENTS.flatMap((event, i) => {
+    const setting = i < 4;
+    const band = bands[setting ? i : 7 - i];
+    const times = n.sunBelow[band]
+      .map((interval) => interval[setting ? 0 : 1])
+      .filter((t) => t > n.noon && t < n.nextNoon);
+    const first = n.ev[event];
+    if (first != null && !times.includes(first)) times.unshift(first);
+    return times.map((t) => ({ event, t }));
+  });
+}
+
 /** Fill in true dark, moon-up and moon-free intervals under the given thresholds. */
 export function deriveNight(n: Night, th: Thresholds): void {
-  const E = n.ev;
   n.moonUp = n.moonWindows[th.moonAlt].above;
   n.moonUpH = n.moonUp.map(([a, b]): Interval => [wallH(a, n), wallH(b, n)]);
-  const dusk = E.astroDusk,
-    dawn = E.astroDawn;
-  n.td = dusk != null && dawn != null && dawn > dusk ? [dusk, dawn] : null;
+  const dark = n.sunBelow.astronomical;
+  n.td = dark[0] ?? null;
   n.tdH = n.td ? [wallH(n.td[0], n), wallH(n.td[1], n)] : null;
-  n.tdMs = n.td ? n.td[1] - n.td[0] : 0;
+  n.tdMs = dark.reduce((sum, [a, b]) => sum + b - a, 0);
   n.moonIgnored = n.illum < th.crescent;
-  n.mf = n.td ? (n.moonIgnored ? [[n.td[0], n.td[1]]] : subtract(n.td, n.moonUp)) : [];
+  n.mf = dark.flatMap((interval) =>
+    n.moonIgnored ? [[...interval] as Interval] : subtract(interval, n.moonUp),
+  );
   n.mfH = n.mf.map(([a, b]): Interval => [wallH(a, n), wallH(b, n)]);
   n.mfMs = n.mf.reduce((s, [a, b]) => s + b - a, 0);
   const hz = n.moonWindows[0].crossings;

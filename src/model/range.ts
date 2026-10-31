@@ -16,6 +16,15 @@ export interface Axis {
   end: number;
 }
 
+/** A missing horizon event or darkness crossing noon requires the complete local day. */
+export function needsFullDay(n: Night): boolean {
+  return (
+    n.ev.sunset == null ||
+    n.ev.sunrise == null ||
+    n.sunBelow.sun.some(([a, b]) => a === n.noon || b === n.nextNoon)
+  );
+}
+
 /** A moon quarter (0 new, 1 first, 2 full, 3 last) and the night it falls in. */
 export interface Quarter {
   q: number;
@@ -186,7 +195,9 @@ export function buildStructures(
     lo = 4;
     hi = 20;
   }
-  const ax = { start: Math.floor((lo - 0.3) * 2) / 2, end: Math.ceil((hi + 0.3) * 2) / 2 };
+  const ax = nights.some(needsFullDay)
+    ? { start: 0, end: 24 }
+    : { start: Math.floor((lo - 0.3) * 2) / 2, end: Math.ceil((hi + 0.3) * 2) / 2 };
 
   // moon quarters and new-moon alignment
   const quarters: Quarter[] = [];

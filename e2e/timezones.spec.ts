@@ -85,7 +85,7 @@ test('startup loads lookup bytes before the first site edit, and ambiguous zones
   await page.locator('#siteApply').click();
   await expect(page.locator('#siteTzErr')).toContainText('More than one zone');
   await expect(page.locator('#siteTz')).toHaveAttribute('aria-invalid', 'true');
-  expect(await page.evaluate(() => window.__npa!.S.site.name)).toBe('Seattle');
+  expect(await page.evaluate(() => window.__npa!.S.site.name)).toBe('Seattle, Paramount Park');
   await page.locator('#siteTz').fill('America/Denver');
   await page.locator('#siteApply').click();
   await expect(page.locator('#sitePop')).not.toBeVisible();
@@ -110,7 +110,7 @@ test('editing or closing during a save lookup never applies a stale draft', asyn
   await expect(page.locator('#siteApply')).toBeEnabled();
   await expect(page.locator('#siteTz')).toHaveValue('America/Los_Angeles');
   await expect(page.locator('#sitePop')).toBeVisible();
-  expect(await page.evaluate(() => window.__npa!.S.site.name)).toBe('Seattle');
+  expect(await page.evaluate(() => window.__npa!.S.site.name)).toBe('Seattle, Paramount Park');
   expect(await page.evaluate(() => localStorage.getItem('npa:favorites'))).toBeNull();
   await page.locator('#siteTz').fill('');
   await page.locator('#siteApply').click();
@@ -118,7 +118,7 @@ test('editing or closing during a save lookup never applies a stale draft', asyn
   await page.locator('#siteCancel').click();
   await page.locator('#siteSel').selectOption('manage');
   await expect(page.locator('#siteApply')).toBeEnabled();
-  await expect(page.locator('#siteName')).toHaveValue('Seattle');
+  await expect(page.locator('#siteName')).toHaveValue('Seattle, Paramount Park');
   await page.locator('#siteName').fill('Current draft');
   await page.locator('#siteApply').click();
   await expect(page.locator('#loading')).toBeHidden();

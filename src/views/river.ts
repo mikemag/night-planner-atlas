@@ -301,17 +301,20 @@ class RiverView implements CanvasView {
         top - 12,
         11,
         t.midnight ? C.ink : C.ink3,
-        'center',
+        t.hh === ax.start ? 'left' : t.hh === ax.end ? 'right' : 'center',
         t.midnight ? 650 : 500,
       );
     }
     const f = nights[Math.max(0, this.rowAt(st))];
     const narrow = W < 700;
+    const fullMonth = f ? `${MONL[f.m - 1]} ${f.y}` : 'Night of';
     text(
       f
         ? narrow
           ? `${MON3[f.m - 1]} ’${String(f.y).slice(-2)}`
-          : `${MONL[f.m - 1]} ${f.y}`
+          : tw(fullMonth, 11, 700) <= x0 - 16
+            ? fullMonth
+            : `${MON3[f.m - 1]} ${f.y}`
         : 'Night of',
       8,
       top - 12,

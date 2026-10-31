@@ -25,7 +25,7 @@ export function initSiteEditor(): void {
     [zone, el('siteTzErr')],
   ]);
   const raw = store.raw('favorites');
-  const { book, readable } = readSiteBook(raw, S.site);
+  const { book, readable, migrated } = readSiteBook(raw, store.get<unknown>('site', null));
   let storageFailed = !readable;
   let editingId: string | null = null;
   let point: Coordinates | null = null;
@@ -70,6 +70,7 @@ export function initSiteEditor(): void {
     }
     return saved;
   };
+  if (migrated) persist();
   const setSaving = (saving: boolean) => {
     save.disabled = saving;
     save.textContent = saving ? 'Finding time zone…' : 'Save & use site';

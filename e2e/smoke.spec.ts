@@ -128,6 +128,18 @@ test('optional elevation persists, corrects events, and can be cleared without c
   // Allow time for four full range computations, including a reload, on slower machines.
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 390, height: 844 });
+  // Pin the sea-level baseline independently of the public starter site's elevation.
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      'npa:site',
+      JSON.stringify({
+        name: 'Sea-level Seattle',
+        lat: 47.60621,
+        lon: -122.34253,
+        tz: 'America/Los_Angeles',
+      }),
+    ),
+  );
   const errors = await open(page);
   const before = await page.evaluate(() => {
     const n = window.__npa!.nights.find((n) => n.id === '2026-10-03')!;
@@ -164,6 +176,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
 
 test('elevation validates range, accepts below sea level, and can be cleared', async ({ page }) => {
   const errors = await open(page);
+  const initialElevation = await page.evaluate(() => window.__npa!.S.site.elevation);
   await page.locator('#siteSel').selectOption('manage');
   for (const value of ['-501', '10001']) {
     await page.locator('#siteElevation').fill(value);
@@ -172,7 +185,7 @@ test('elevation validates range, accepts below sea level, and can be cleared', a
       'Elevation must be between −500 and 10,000 metres above sea level, or left blank.',
     );
     await expect(page.locator('#siteElevation')).toHaveAttribute('aria-invalid', 'true');
-    expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
+    expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBe(initialElevation);
   }
   await page.locator('#siteElevation').fill('-400');
   await page.locator('#siteApply').click();

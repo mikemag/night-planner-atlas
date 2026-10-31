@@ -1,6 +1,7 @@
 import type { Site } from '../model/night';
 import { isSite } from '../model/site-input';
 import { readSiteBook, siteRecord } from './site-book';
+import { DEFAULT_SITES } from './default-sites';
 
 export type ViewId = 'river' | 'calendar' | 'lunations' | 'notes';
 export type RiverZoom = 'year' | 'month';
@@ -20,12 +21,7 @@ export interface Settings {
   riverZoom: RiverZoom;
 }
 
-export const DEFAULT_SITE: Site = {
-  name: 'Seattle',
-  lat: 47.60621,
-  lon: -122.34253,
-  tz: 'America/Los_Angeles',
-};
+export const DEFAULT_SITE: Site = siteRecord(DEFAULT_SITES[0]);
 
 /** Per-viewer conveniences in localStorage; storage may be unavailable, so nothing depends on it. */
 export const store = {
@@ -67,7 +63,7 @@ export function hasFocusPreference(): boolean {
 export function loadSettings(): Settings {
   const savedSite = store.get<unknown>('site', null);
   const legacy = isSite(savedSite) ? savedSite : DEFAULT_SITE;
-  const { book } = readSiteBook(store.raw('favorites'), legacy);
+  const { book } = readSiteBook(store.raw('favorites'), savedSite);
   const site = book.sites.find((site) => site.id === book.selectedId) ?? legacy;
   return {
     view: choice<ViewId>('view', ['river', 'calendar', 'lunations', 'notes'], 'river'),

@@ -1,6 +1,48 @@
 import { expect, test } from '@playwright/test';
+import { DEFAULT_SITES } from '../src/app/default-sites';
 
 for (const width of [1512, 390]) {
+  test(`starter sites switch complete records offline and retain the choice at ${width}px`, async ({
+    page,
+    context,
+  }, info) => {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
+    const wasm = page.waitForResponse((response) => response.url().endsWith('.wasm'));
+    await page.goto('./');
+    await (await wasm).finished();
+    await expect(page.locator('#loading')).toBeHidden();
+    const picker = page.getByRole('combobox', { name: 'Observing site', exact: true });
+    await expect(picker).toHaveValue('site:seattle-paramount-park');
+    await expect(picker.locator('option')).toHaveCount(7);
+    await context.setOffline(true);
+    for (const { id, ...site } of DEFAULT_SITES) {
+      await picker.selectOption(`site:${id}`);
+      await expect(page.locator('#loading')).toBeHidden();
+      expect(await page.evaluate(() => window.__npa!.S.site)).toEqual(site);
+      await expect(page.locator('#siteClock')).toContainText(site.tz);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    }
+    if (process.env.SCREENSHOTS)
+      await page.screenshot({
+        path: `test-results/screenshots/${info.project.name}-starter-sites-${width}.png`,
+      });
+    await picker.selectOption('manage');
+    await expect(page.locator('#siteFavorite option')).toHaveCount(6);
+    await expect(page.locator('#siteName')).toHaveValue('Svalbard, Kjell Henriksen Observatory');
+    await expect(page.locator('#siteElevation')).toHaveValue('520');
+    if (process.env.SCREENSHOTS)
+      await page.screenshot({
+        path: `test-results/screenshots/${info.project.name}-starter-sites-editor-${width}.png`,
+      });
+    await context.setOffline(false);
+    await page.reload();
+    await expect(page.locator('#loading')).toBeHidden();
+    await expect(picker).toHaveValue('site:svalbard-kjell-henriksen-observatory');
+    expect(
+      await page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!).sites),
+    ).toEqual(DEFAULT_SITES);
+  });
+
   test(`site errors belong to their fields and a cleared zone is inferred on save offline at ${width}px`, async ({
     page,
     context,
@@ -13,7 +55,9 @@ for (const width of [1512, 390]) {
     await context.setOffline(true);
     await page.locator('#siteSel').selectOption('manage');
     await expect(page.locator('#sitePop')).not.toContainText('OpenStreetMap');
-    await expect(page.locator('#siteFavorite option:checked')).toHaveText('Seattle');
+    await expect(page.locator('#siteFavorite option:checked')).toHaveText(
+      'Seattle, Paramount Park',
+    );
     await expect(page.locator('#siteCoordinates')).toBeHidden();
     await page.locator('#siteAdd').click();
     await expect(page.locator('#siteCoordinates')).toBeHidden();
@@ -102,7 +146,7 @@ for (const width of [1512, 390]) {
       if (!localStorage.getItem('npa:favorites'))
         localStorage.setItem(
           'npa:favorites',
-          JSON.stringify({ version: 1, sites, selectedId: 'west' }),
+          JSON.stringify({ version: 1, starterVersion: 1, sites, selectedId: 'west' }),
         );
     }, sites);
     await page.goto('./');
@@ -121,7 +165,12 @@ for (const width of [1512, 390]) {
       record,
     );
     const stored = await page.evaluate(() => localStorage.getItem('npa:favorites'));
-    expect(JSON.parse(stored!)).toEqual({ version: 1, sites, selectedId: 'east' });
+    expect(JSON.parse(stored!)).toEqual({
+      version: 1,
+      starterVersion: 1,
+      sites,
+      selectedId: 'east',
+    });
     await picker.selectOption('manage');
     await expect(page.getByRole('dialog', { name: 'Observing sites' })).toBeVisible();
     await expect(picker).toHaveValue('site:east');
@@ -171,7 +220,7 @@ for (const width of [1512, 390]) {
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     await page.locator('#siteSel').selectOption('manage');
-    await expect(page.locator('#siteFavorite option')).toHaveCount(1);
+    await expect(page.locator('#siteFavorite option')).toHaveCount(7);
     await page.locator('#siteName').fill('Unsaved edit');
     await page.keyboard.press('Escape');
     await expect(page.locator('#siteSel')).toBeFocused();
@@ -201,7 +250,7 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#siteClock')).toContainText('America/Los_Angeles');
     const stored = await page.evaluate(() => localStorage.getItem('npa:favorites')!);
     expect(stored).not.toMatch(/google|discard-me|query=/);
-    expect(JSON.parse(stored).sites).toHaveLength(2);
+    expect(JSON.parse(stored).sites).toHaveLength(8);
     await page.reload();
     await expect(page.locator('#loading')).toBeHidden();
     await expect(page.locator('#siteSel option:checked')).toContainText('Baker ridge');
@@ -211,7 +260,7 @@ for (const width of [1512, 390]) {
     await page.locator('#siteCancel').click();
     expect(
       await page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!).sites.length),
-    ).toBe(2);
+    ).toBe(8);
     await page.locator('#siteSel').selectOption('manage');
     await page.locator('#siteDuplicate').click();
     await page.locator('#siteName').fill('Baker copy');
@@ -220,10 +269,10 @@ for (const width of [1512, 390]) {
     await page.locator('#siteSel').selectOption('manage');
     await page.locator('#siteRemove').click();
     await page.locator('#siteKeep').click();
-    await expect(page.locator('#siteFavorite option')).toHaveCount(3);
+    await expect(page.locator('#siteFavorite option')).toHaveCount(9);
     await page.locator('#siteRemove').click();
     await page.locator('#siteConfirmRemove').click();
-    await expect(page.locator('#siteFavorite option')).toHaveCount(2);
+    await expect(page.locator('#siteFavorite option')).toHaveCount(8);
     // Removing the active favorite leaves the current plan intact until another site is used.
     await expect(page.locator('#siteSel option:checked')).toContainText('Baker copy');
     const legacyId = await page
@@ -296,7 +345,7 @@ test('storage write failure still permits a temporary site', async ({ page }) =>
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#siteStorageNotice')).toContainText('cannot be kept');
   await expect(page.locator('#siteSel option:checked')).toContainText('Temporary site');
-  await page.locator('#siteSel').selectOption('site:initial-site');
+  await page.locator('#siteSel').selectOption('site:seattle-paramount-park');
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#siteSel option:checked')).toContainText('Seattle');
   await page.locator('#siteSel').selectOption('manage');

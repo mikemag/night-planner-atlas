@@ -1,7 +1,7 @@
 import { S, atlas } from '../app/state';
 import { MON3, MONL, WD1, WD3, fmtClockS, fmtDur, fmtHrs, pad2 } from '../model/format';
 import type { Night } from '../model/night';
-import type { Axis, Month } from '../model/range';
+import { needsFullDay, type Axis, type Month } from '../model/range';
 import { MS_H } from '../model/time';
 import { C, inkOn } from '../render/colors';
 import { drawDurationBar, usableHoursScale } from '../render/duration';
@@ -230,7 +230,7 @@ class CalendarView implements CanvasView {
         sets = ns.flatMap((n) => (n.evH.sunset == null ? [] : [n.evH.sunset])),
         rises = ns.flatMap((n) => (n.evH.sunrise == null ? [] : [n.evH.sunrise])),
         axis =
-          sets.length && rises.length
+          !ns.some(needsFullDay) && sets.length && rises.length
             ? {
                 start: Math.floor(Math.min(...sets) * 2) / 2 - 0.5,
                 end: Math.ceil(Math.max(...rises) * 2) / 2 + 0.5,

@@ -1,7 +1,7 @@
 import { atlas } from '../app/state';
 import type { Axis } from '../model/range';
 import { fmtClockS } from '../model/format';
-import { NS, STEP, wallH, type Night } from '../model/night';
+import { STEP, sunBandAt, wallH, type Night } from '../model/night';
 import { C, moonAlpha } from './colors';
 import { moonlightBands } from './moonlight';
 import { ctx, snap, text, tw } from './surface';
@@ -49,14 +49,15 @@ export function drawNight(
     if (o === 'h') ctx.fillRect(x + p0, y, p1 - p0, h);
     else ctx.fillRect(x, y + p0, w, p1 - p0);
   };
-  const E = n.evH;
   ctx.globalAlpha = opt.dim ? 0.35 : 1;
   seg(ax.start, ax.end, C.day);
-  if (E.sunset != null && E.sunrise != null) seg(E.sunset, E.sunrise, C.civil);
-  if (E.civilDusk != null && E.civilDawn != null) seg(E.civilDusk, E.civilDawn, C.naut);
-  if (E.nauticalDusk != null && E.nauticalDawn != null)
-    seg(E.nauticalDusk, E.nauticalDawn, C.astro);
-  if (n.tdH) seg(n.tdH[0], n.tdH[1], C.dark);
+  for (const [band, color] of [
+    ['sun', C.civil],
+    ['civil', C.naut],
+    ['nautical', C.astro],
+    ['astronomical', C.dark],
+  ] as const)
+    for (const [a, b] of n.sunBelow[band]) seg(wallH(a, n), wallH(b, n), color);
   const bands = moonlightBands(n);
   if (bands.ordinary.length) {
     const col = `rgba(${C.moon},${moonAlpha(n.illum).toFixed(3)})`;
@@ -102,7 +103,7 @@ export function drawNight(
     ctx.lineJoin = 'round';
     ctx.beginPath();
     let prev = -1e9;
-    for (let i = 0; i < NS; i++) {
+    for (let i = 0; i < n.moonAlt.length; i++) {
       const hh = wallH(n.S0 + i * STEP, n);
       const px = x + ((hh - ax.start) / span) * w,
         py = Y(n.moonAlt[i]);
@@ -137,14 +138,9 @@ export function drawNight(
 
 /** The sky color drawn at `hh` wall-clock hours after noon (ignoring moonlight). */
 export function skyColorAt(n: Night, hh: number): string {
-  const E = n.evH;
-  const inside = (a: number | null, b: number | null) =>
-    a != null && b != null && hh >= a && hh < b;
-  if (n.tdH && hh >= n.tdH[0] && hh < n.tdH[1]) return C.dark;
-  if (inside(E.nauticalDusk, E.nauticalDawn)) return C.astro;
-  if (inside(E.civilDusk, E.civilDawn)) return C.naut;
-  if (inside(E.sunset, E.sunrise)) return C.civil;
-  return C.day;
+  return { day: C.day, sun: C.civil, civil: C.naut, nautical: C.astro, astronomical: C.dark }[
+    sunBandAt(n, hh)
+  ];
 }
 
 /** A moon at `phase` degrees (0 new, 180 full), lit side on the right while waxing. */

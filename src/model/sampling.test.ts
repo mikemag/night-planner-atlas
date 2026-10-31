@@ -14,6 +14,8 @@ const SITES: Site[] = [
   },
   { name: 'Edinburgh', lat: 55.95, lon: -3.19, tz: 'Europe/London' },
   { name: 'Sydney', lat: -33.87, lon: 151.21, tz: 'Australia/Sydney' },
+  { name: 'Kjell Henriksen', lat: 78.148, lon: 16.043, tz: 'Arctic/Longyearbyen', elevation: 520 },
+  { name: 'Antarctic', lat: -85, lon: 0, tz: 'Etc/UTC' },
 ];
 
 /**
@@ -39,7 +41,9 @@ describe('2026 Moon sampling accuracy across the supported planning thresholds',
       for (let day = 0; day < 365; day++) {
         const date = new Date(Date.UTC(2026, 0, 1 + day));
         const n = computeNight(observer, tz, 2026, date.getUTCMonth() + 1, date.getUTCDate());
-        const dense = Array.from({ length: 1201 }, (_, i) => altitude(n.S0 + i * MS_M));
+        const dense = Array.from({ length: (n.moonAlt.length - 1) * 10 + 1 }, (_, i) =>
+          altitude(n.S0 + i * MS_M),
+        );
         for (const height of heights) {
           const apparent = (geometric: number) =>
             height === 0

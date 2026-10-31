@@ -11,6 +11,7 @@ corrections), and `range.ts`
 - A site is a name, latitude, longitude (east positive), IANA time zone, and optional elevation
   in metres above sea level. The site editor accepts −500 m to 10,000 m. Blank elevation,
   including sites saved before this field existed, uses 0 m without altering the saved coordinates.
+- All latitudes from −90° through +90° are supported, including both poles.
 - Elevation is entered manually and stays in browser localStorage with the site. There is no
   elevation lookup, terrain download or external runtime request.
 - The observer's position includes the site's elevation. The horizon remains a level horizontal
@@ -22,6 +23,8 @@ corrections), and `range.ts`
   runs from the loaded range's earliest sunset to its latest sunrise, padded by about 20 minutes
   and rounded out to the half hour. Calendar Week fits the same clock coordinates to the seven
   displayed nights' sunset/sunrise extent, with half-hour padding. This affects drawing only.
+  When a horizon event is absent or the below-horizon interval crosses local noon, the range
+  uses the full 0–24 h wall-clock axis. Calendar Week uses the full range axis for these cases.
 
 ## Observing night
 
@@ -36,8 +39,8 @@ corrections), and `range.ts`
 
 ## Sun events
 
-Found with Astronomy Engine's `SearchAltitude` for the Sun's center, searching forward 24 hours
-from local noon:
+Found with Astronomy Engine's `SearchAltitude` for the Sun's center, searching from local noon
+to the next local noon (23, 24 or 25 elapsed hours across ordinary clock changes):
 
 | Events                               | Sun altitude                                        |
 | ------------------------------------ | --------------------------------------------------- |
@@ -52,12 +55,23 @@ Atmosphere (1976), evaluated at the site's elevation. This keeps the nominal sol
 and scales the refraction term. Twilight remains geometric (−6°/−12°/−18°), with only the
 observer-position correction; it receives no refraction or horizon-dip adjustment.
 
-If an event doesn't happen (the Sun never gets that low, or never sets), it is absent, along with
-the bands that depend on it. The views label such nights, for example "No true dark".
+Missing events remain absent; a clipped noon boundary is never reported as sunrise or sunset.
+For each threshold, the Sun's geometric altitude at the start establishes whether it is already
+below it. Ordered downward/upward crossings then define **all intervals below that threshold**,
+clipped to the observing period. Further crossings are retained on long clock-change days.
+The same intervals drive shading and sky-stage readouts in every view. A stage can continue
+throughout the period without either boundary event. Polar night can still contain midday
+twilight; it is not automatically 24 hours of true dark. The views label periods without
+astronomical darkness, for example "No true dark".
 
 ## True dark
 
-From astronomical dusk to astronomical dawn. Absent when the Sun doesn't reach −18°.
+All intervals below −18°, clipped to the noon-to-noon period. Normally this is astronomical
+dusk to astronomical dawn; it can also be the entire period, or two pieces when the selected
+clock zone puts noon inside true dark. The total sums elapsed time across every piece, including
+23/25-hour periods. Adjacent observing periods meet at noon without double counting. `td` and
+`tdH` retain the first interval for existing callers; `sunBelow.astronomical` contains every
+interval and drives all rendering, totals, moonlight and usable-window calculations.
 
 ## Moon
 
@@ -78,11 +92,14 @@ From astronomical dusk to astronomical dawn. Absent when the Sun doesn't reach �
   interval. These are numerical search tolerances, not claims about atmospheric accuracy.
 - All four supported horizon heights are computed once per night. Threshold changes choose
   a precomputed set of intervals; they do not perform more ephemeris searches.
-- The event and moon-up search window remains local noon + 2 h through local noon + 22 h.
-  Events outside it are absent, even if they occur elsewhere on that civil day. Above-horizon
-  intervals are clipped to the window; a clipped edge is not reported as a rise/set event.
+- The ordinary event and moon-up search window is local noon + 2 h through local noon + 22 h.
+  If darkness below the Sun's horizon extends outside it, the window expands to cover that
+  whole interval, rounded outward to ten-minute sample boundaries. When sunrise or sunset is
+  absent, it covers the complete noon-to-noon period, including clock changes. Events outside the
+  search window are absent. Above-horizon intervals are clipped to it; clipped edges are not
+  reported as rise/set events.
 - **Chart curves and altitude readouts still show the apparent center**, sampled every ten
-  minutes (121 samples). These samples illustrate the curve; they do not determine event times
+  minutes (121 samples on ordinary nights, more for extended periods). These samples illustrate the curve; they do not determine event times
   or planning intervals. Center-altitude curves use elevation-scaled refraction too. The Moon's
   center can be below 0° when its upper edge first appears.
 - Illumination (fraction lit) and phase angle (0° new, 180° full) are taken at local midnight.
@@ -190,7 +207,24 @@ trough tests additionally verify two-second rise/set and set/rise pairs hidden b
 samples, including near a window edge, as well as a tangent touch and all-up/all-down windows.
 The one-minute audit alone cannot rule out every sub-minute event; the extrema tests exercise
 that case directly. The search assumes the smooth lunar altitude curve has at most one extremum
-in a twenty-minute bracket, within the planner's supported latitude range (−65° to +65°).
+in a twenty-minute bracket. The same numerical audit now also covers all 365 nights at
+Kjell Henriksen Observatory (78.148° N, 520 m) and an Antarctic site at 85° S, using the full
+extended window when applicable. Both poles and solar stage membership throughout polar seasons
+have separate regression checks.
+
+### Polar references
+
+On October 31, 2026, the [USNO sunrise/sunset table for Kjell Henriksen's coordinates](https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=0&lat=78.148&lon=16.043&label=KHO&tz=0&tz_sign=1)
+was checked for March 20–21, June 21 and December 21, 2026. It confirms March 20 sunset
+at 17:20 UTC and March 21 sunrise at 04:42 UTC, continuous daylight in June and the Sun
+continuously below the horizon in December.
+The [astronomical-twilight table](https://aa.usno.navy.mil/calculated/rstt/year?year=2026&task=4&lat=78.148&lon=16.043&label=KHO&tz=0&tz_sign=1)
+confirms December 9 dusk at 15:20 UTC / December 10 dawn at 06:18 UTC, and December 21
+dusk at 15:13 UTC / December 22 dawn at 06:35 UTC; June has no astronomical darkness.
+These minute-rounded sea-level values are pinned offline in `polar.test.ts` with a 60 s tolerance.
+The independent solar model also checks the available March, June and December events within
+30 s. Continuous true dark, split intervals, both hemispheres, poles and clock changes are tested
+separately. Elevation still uses the idealized atmosphere and level horizon described above.
 
 ### Elevation checks and limits
 
@@ -230,15 +264,21 @@ samples, phases, illumination, time zones, range alignment and true-dark interva
 Adding optional elevation preserves these sea-level golden records exactly; elevated sites
 have separate tests. The external USNO fixture is not regenerated from Atlas.
 
+Polar support also preserves all three existing golden files exactly: their sites' solar bands
+and darkness remain single dusk-to-dawn intervals and their Moon windows remain 20 hours.
+The new polar intervals and extended windows have separate tests and references.
+
 Full-cycle ownership adds first/last indices to the golden lunation records. In the three captured
 ranges, the existing cycle counts, usable totals and weekend picks remain identical; the restored
 dates around full moon contribute no usable time there. Per-night records, solar/lunar event
 times, phase assignments and focus offsets are unchanged. Separate ownership tests cover edge
 cycles whose new moon lies outside the loaded range, exact ties, leap day and clock changes.
 
-Computing the 14-month range, about 425 nights, took **1.11 s** in a local Node measurement,
-versus about half a second before this change. Re-deriving a range after switching thresholds
-averaged **0.25 ms** over 100 switches. In addition to 8 sun searches and 242 chart altitude samples per night, the Moon now
-requires extrema and crossing refinements at all four horizon heights. The work runs in 24 ms slices
+Computing a 426-night range took **1.31 s** for Seattle and **1.10 s** for Kjell Henriksen in a
+local Node measurement after the polar extension. Re-deriving a range after switching thresholds
+averaged **0.29 ms** and **0.13 ms**, respectively, over 100 switches. Each night has eight initial
+Sun searches plus checks for further crossings, and ten-minute chart altitude samples (242 on
+ordinary nights, up to 302 for a 25-hour polar period). The Moon requires extrema and crossing
+refinements at all four horizon heights. The work runs in 24 ms slices
 and repeats when the site or range changes. Changing a threshold only re-derives the numbers;
 it doesn't recompute positions.

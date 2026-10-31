@@ -294,6 +294,19 @@ New-moon focus crops each cycle to ±N without changing ownership.
   opens the keyboard-accessible editor, with add, edit, duplicate and confirmed removal. The name,
   coordinates, IANA zone and optional elevation are saved together; the existing saved site becomes
   the initial favorite. Shared or unsaved sites remain visible as the current selection.
+  A fresh browser starts with Seattle's Paramount Park selected, plus Edinburgh's Royal
+  Observatory, Sydney's Linden Observatory, Chile's Vera C. Rubin Observatory, Quito's
+  Astronomical Observatory and Svalbard's Kjell Henriksen Observatory. These are editable starter
+  favorites spanning northern and southern seasons, near-equatorial nights and polar extremes.
+  The six starters are merged once into existing lists, including old empty lists and legacy
+  single-site storage. Existing records, ordering and active selection are preserved. Matching
+  IDs or exact coordinates retain the user's record. A starter revision in the saved list prevents
+  duplicates on reload and respects later edits and removals. Damaged storage is never migrated.
+  All latitudes from −90° to +90° are accepted. When sunrise or sunset is absent, every view uses
+  a noon-to-noon clock axis. Solar shading follows intervals below each threshold, including stages
+  that continue throughout the period and twilight without a sunrise. Clipped noon boundaries do
+  not invent rise/set events. The same intervals drive sky-color labels, true-dark totals and
+  moonlight in every view. Calendar Week retains the full period for these cases too.
   In the editor, choosing a favorite fills a draft; Save & use applies its complete record.
   Cancel and Escape discard form edits and return focus to the opener.
   Removing an active favorite leaves the current plan open until another site is used.
@@ -315,6 +328,19 @@ New-moon focus crops each cycle to ±N without changing ownership.
   readout shows the site's current local date/time, abbreviation, UTC offset and IANA zone.
   It updates each minute, on returning to the page and immediately on site changes; chart
   selection does not affect that clock.
+
+  Starter elevations are approximate metres above sea level, looked up during development and
+  bundled with the sites; there is no runtime elevation request:
+
+  | Starter site                          | Elevation | Source                                                                                                                                                                                              |
+  | ------------------------------------- | --------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | Seattle, Paramount Park               |     122 m | [USGS Elevation Point Query Service](https://epqs.nationalmap.gov/v1/json?x=-122.31984159452988&y=47.74028262343255&units=Meters&wkid=4326&includeDate=false), 122.16 m at the supplied coordinates |
+  | Edinburgh, Royal Observatory          |     134 m | [Nature's description of the observatory](https://www.nature.com/articles/053605e0), about 440 ft at its centre                                                                                     |
+  | Sydney, Linden Observatory            |     574 m | [Bérard et al. (2017), Table 2](https://sci2s.ugr.es/sites/default/files/ficherosPublicaciones/2418_Berard_2017_AJ_154_144.pdf), observing-station altitude                                         |
+  | Chile, Vera C. Rubin Observatory      |   2,647 m | [Rubin's site description](https://rubinobservatory.org/for-scientists/rubin-101)                                                                                                                   |
+  | Quito, Astronomical Observatory       |   2,823 m | [UNESCO–IAU Portal to the Heritage of Astronomy](https://web.astronomicalheritage.net/index.php/show-entity?identity=113&idsubentity=1), also the source for its coordinates                        |
+  | Svalbard, Kjell Henriksen Observatory |     520 m | [KHO's practical information](https://kho.unis.no/Information.html), also the source for its coordinates                                                                                            |
+
 - **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 switch views, Esc
   collapses an expanded River/Lunations night or Calendar expansion. Enter/Space toggles the selected
   River Month, Calendar Month/Week or Lunations night when the chart has focus. Lunations uses Up/Down for cycles and

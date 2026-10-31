@@ -182,6 +182,14 @@
       details. A repeated or skipped hour is real; duration totals add actual elapsed time.
     </p>
     <p>
+      A fresh browser starts at Seattle’s Paramount Park, with Edinburgh’s Royal Observatory,
+      Sydney’s Linden Observatory, Chile’s Vera C. Rubin Observatory, Quito’s Astronomical
+      Observatory and Svalbard’s Kjell Henriksen Observatory also available. Compare them to see
+      northern and southern seasons, near-equatorial nights and polar extremes. Your existing saved
+      records and selection are kept when the app updates. These six starters are added once to
+      existing saved lists; you can edit or remove them afterward.
+    </p>
+    <p>
       Choose a saved site in the location dropdown to switch immediately. Choose
       <strong>Manage sites…</strong> to add or edit favorites. Paste decimal
       <strong>latitude, longitude</strong> or a supported full Google Maps search link, check the
@@ -201,8 +209,10 @@
       drop a pin; coordinates appear in Android’s search box or the iPhone pin’s place details.
       <a href="https://support.google.com/maps/answer/18539">Google’s coordinate instructions</a>
       show the steps. Paste those coordinates into the location field; short links and the map’s
-      center do not identify a reliable observing point. Latitude is currently supported from −65°
-      to +65°.
+      center do not identify a reliable observing point. Latitudes from −90° to +90° are supported.
+      Polar charts show the full noon-to-noon period when the Sun does not rise or set. A missing
+      sunrise does not mean uninterrupted true dark: midday twilight can still occur. Darkness
+      throughout the whole period counts its actual elapsed time, including clock changes.
     </p>
     <details class="guide-detail">
       <summary>Automatic zones, elevation and what is not modeled</summary>
@@ -407,9 +417,11 @@
     <details class="guide-detail">
       <summary>Search windows, numerical tolerances and reference provenance</summary>
       <p>
-        Solar events are searched from local noon for 24 hours. Moon events and Moon-up intervals
-        use local noon +2 h through noon +22 h. Events outside that window are absent, even if they
-        occur on the same civil date. A clipped interval edge is not reported as a rise or set.
+        Solar events are searched from local noon to the next local noon, including clock changes.
+        Moon events and Moon-up intervals ordinarily use noon +2 h through noon +22 h. Longer
+        below-horizon periods extend that window; when sunrise or sunset is absent, it covers the
+        full noon-to-noon period. Events outside the search window are absent. A clipped interval
+        edge is not reported as a rise or set.
       </p>
       <p>
         Moon crossings are refined at 0°, 5°, 10° and 15°. A ten-minute scan brackets extrema,
@@ -418,10 +430,11 @@
         touch adds no Moon-up interval.
       </p>
       <p>
-        The audit checks all 365 nights of 2026 at Seattle, Edinburgh and Sydney at all four
-        heights, using an independent one-minute scan and crossing refinement of the same underlying
-        ephemeris. Synthetic tests cover two-second grazing pairs that a one-minute scan could miss.
-        These isolate numerical search error rather than testing an independent lunar ephemeris.
+        The audit checks all 365 nights of 2026 at Seattle, Edinburgh, Sydney, Kjell Henriksen
+        Observatory and an Antarctic site at 85° south at all four heights, using an independent
+        one-minute scan and crossing refinement of the same underlying ephemeris. Synthetic tests
+        cover two-second grazing pairs that a one-minute scan could miss. These isolate numerical
+        search error rather than testing an independent lunar ephemeris.
       </p>
       <p>
         Elevation checks at −400 m, 2,000 m and 4,500 m compare with Astronomy Engine’s separate
@@ -434,6 +447,13 @@
         June 20; Sydney October 3 and December 21, all in 2026. UTC tables avoid applying a fixed
         civil offset across DST. The reference fixture is never regenerated from the planner’s own
         results.
+      </p>
+      <p>
+        Additional polar checks compare Kjell Henriksen’s March, June and December 2026 solar events
+        and continuous-daylight/darkness cases with
+        <a href="https://aa.usno.navy.mil/data/RS_OneYear">USNO annual tables</a>. Polar night still
+        contains midday twilight there. Separate checks cover uninterrupted true dark nearer the
+        poles, split intervals and 23/25-hour clock-change periods.
       </p>
       <p>
         <a id="referenceFixture" download="usno-reference-2026.json"

@@ -6,8 +6,8 @@ export interface Coordinates {
 }
 
 export function checkCoordinates(lat: number, lon: number): Coordinates {
-  if (!Number.isFinite(lat) || lat < -65 || lat > 65)
-    throw new Error('Latitude must be between −65° and 65° for this planner.');
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90)
+    throw new Error('Latitude must be between −90° and 90°.');
   if (!Number.isFinite(lon) || lon < -180 || lon > 180)
     throw new Error('Longitude must be between −180° and 180°.');
   return { lat, lon };

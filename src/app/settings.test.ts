@@ -8,6 +8,17 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
+it('uses Paramount Park with its elevation on first use without writing preferences', () => {
+  expect(loadSettings().site).toEqual({
+    name: 'Seattle, Paramount Park',
+    lat: 47.74028262343255,
+    lon: -122.31984159452988,
+    tz: 'America/Los_Angeles',
+    elevation: 122,
+  });
+  expect(saved.size).toBe(0);
+});
+
 it('falls back safely from obsolete or malformed control values without altering storage', () => {
   const invalid = {
     view: 'table',

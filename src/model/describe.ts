@@ -1,5 +1,5 @@
 import { fmtClock, fmtClockS } from './format';
-import { NS, STEP, wallH, type Night } from './night';
+import { STEP, sunBandAt, wallH, type Night } from './night';
 import { MS_H, MS_M } from './time';
 
 /** Moon phase name from illumination and waxing/waning phase angle. */
@@ -14,14 +14,13 @@ export function phaseName(n: Night): string {
 
 /** Sky stage at `hh` wall-clock hours after local noon. */
 export function phaseAt(n: Night, hh: number): string {
-  const E = n.evH;
-  const inside = (a: number | null, b: number | null) =>
-    a != null && b != null && hh >= a && hh < b;
-  if (inside(E.astroDusk, E.astroDawn)) return 'True dark';
-  if (inside(E.nauticalDusk, E.nauticalDawn)) return 'Astronomical twilight';
-  if (inside(E.civilDusk, E.civilDawn)) return 'Nautical twilight';
-  if (inside(E.sunset, E.sunrise)) return 'Civil twilight';
-  return 'Day';
+  return {
+    astronomical: 'True dark',
+    nautical: 'Astronomical twilight',
+    civil: 'Nautical twilight',
+    sun: 'Civil twilight',
+    day: 'Day',
+  }[sunBandAt(n, hh)];
 }
 
 /** Interpolated moon altitude at `hh` wall-clock hours after local noon, or null outside the samples. */
@@ -30,23 +29,23 @@ export function moonAltAt(n: Night, hh: number): number | null {
   const t = n.wallNoon + hh * MS_H;
   const real = t - n.tz.offsetMin(t) * MS_M;
   const f = (real - n.S0) / STEP;
-  if (f < 0 || f > NS - 1) return null;
+  if (f < 0 || f > n.moonAlt.length - 1) return null;
   const i = Math.floor(f),
     r = f - i;
-  return n.moonAlt[i] * (1 - r) + n.moonAlt[Math.min(NS - 1, i + 1)] * r;
+  return n.moonAlt[i] * (1 - r) + n.moonAlt[Math.min(n.moonAlt.length - 1, i + 1)] * r;
 }
 
 /** Short lines for an expanded calendar cell: dark window, moon, sun, twilight lengths. */
 export function nightFacts(n: Night): string[] {
   const E = n.evH,
     out: string[] = [];
-  out.push(n.tdH ? `Dark ${fmtClockS(n.tdH[0])}–${fmtClockS(n.tdH[1])}` : 'No true dark');
+  out.push(
+    n.td
+      ? `Dark ${n.sunBelow.astronomical.map(([a, b]) => `${fmtClockS(wallH(a, n))}–${fmtClockS(wallH(b, n))}`).join(', ')}`
+      : 'No true dark',
+  );
   const inNight = (t: number | null): t is number =>
-    t != null &&
-    E.sunset != null &&
-    E.sunrise != null &&
-    wallH(t, n) > E.sunset &&
-    wallH(t, n) < E.sunrise;
+    t != null && n.sunBelow.sun.some(([a, b]) => t > a && t < b);
   const moon: string[] = [];
   if (inNight(n.moonRise)) moon.push(`rises ${fmtClockS(wallH(n.moonRise, n))}`);
   if (inNight(n.moonSet)) moon.push(`sets ${fmtClockS(wallH(n.moonSet, n))}`);
@@ -65,8 +64,8 @@ export function nightFacts(n: Night): string[] {
 
 /** The night's moon-free windows as text, or why there are none. */
 export function windowsText(n: Night): string {
-  if (!n.tdH) return 'No astronomical darkness this night';
+  if (!n.td) return 'No astronomical darkness this night';
   if (!n.mfH.length)
-    return `Moon up through all true dark (${fmtClock(n.tdH[0])} – ${fmtClock(n.tdH[1])})`;
+    return `Moon up through all true dark (${n.sunBelow.astronomical.map(([a, b]) => `${fmtClock(wallH(a, n))} – ${fmtClock(wallH(b, n))}`).join(' · ')})`;
   return n.mfH.map(([a, b]) => `${fmtClock(a)} – ${fmtClock(b)}`).join('  ·  ');
 }
