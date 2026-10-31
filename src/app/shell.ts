@@ -18,7 +18,6 @@ import { initGuide, updateGuideColors } from '../ui/guide';
 import { updateRiverReadout } from '../ui/river-readout';
 import { updateRiverMinimap } from '../ui/river-minimap';
 import { initSiteClock, updateSiteClock } from '../ui/site-clock';
-import { hideTip } from '../ui/tooltip';
 import { calendar } from '../views/calendar';
 import { lunations } from '../views/lunations';
 import { river } from '../views/river';
@@ -431,7 +430,8 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
       S.calendarMonth = `${n.y}-${String(n.m).padStart(2, '0')}`;
     }
     if (S.calZoom === 'year' && ensureCalendarYear(calendar.month().y)) return;
-    relayout();
+    // Mode controls/legend can change the available height before ResizeObserver runs.
+    resize();
     if (calNight != null) calendar.scrollTo(calNight, true);
     draw();
     return;
@@ -454,12 +454,14 @@ function ensureCalendarYear(y: number): boolean {
 
 export function setView(view: ViewId): void {
   const keep = S.sel >= 0 ? S.sel : (data.range?.tonightIdx ?? -1);
-  if (view === 'calendar' && S.view !== 'calendar') S.calendarMonth = null;
+  if (view === 'calendar' && S.view !== 'calendar') {
+    S.calendarMonth = null;
+    S.calendarWeek = null;
+  }
   S.view = view;
   remember('view', view);
   S.hover = null;
   S.riverReadoutSelected = false;
-  hideTip();
   for (const b of el('viewSeg').children)
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === view));
   const v = canvasView(view);

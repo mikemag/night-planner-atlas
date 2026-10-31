@@ -4,6 +4,7 @@ import type { Night } from '../model/night';
 import type { Axis, Month } from '../model/range';
 import { MS_H } from '../model/time';
 import { C, inkOn } from '../render/colors';
+import { drawDurationBar, usableHoursScale } from '../render/duration';
 import { calendarEvents, calendarEventLabels } from '../render/calendar-events';
 import { drawNight, hourTicks, moonGlyph } from '../render/night-draw';
 import { ctx, size, text, tw } from '../render/surface';
@@ -75,7 +76,7 @@ class CalendarView implements CanvasView {
   detailTop: number | null = null;
 
   scale(): number {
-    return Math.max(2, Math.ceil(atlas().maxMF / MS_H / 2) * 2);
+    return usableHoursScale(atlas().maxMF);
   }
   month(): Month {
     const r = atlas(),
@@ -142,6 +143,7 @@ class CalendarView implements CanvasView {
     if (S.calZoom === 'year') this.layoutYear();
     else if (S.calZoom === 'week') this.layoutWeeks();
     else this.layoutMonths();
+    if (S.calZoom !== 'year') S.calendarWeek = this.weekFor(S.sel)?.key ?? null;
     const minis = this.blocks.filter((b): b is CalendarMonthBlock => b.t === 'mini');
     if (S.calZoom === 'year') {
       prepareCalendarHeaders(r, minis, size.W, this.yr.compact);
@@ -272,7 +274,8 @@ class CalendarView implements CanvasView {
       rows = 12 / cols,
       gap = size.W < 650 ? 8 : 16,
       w = (size.W - this.PAD * 2 - gap * (cols - 1)) / cols,
-      h = Math.max(0, (size.H - this.FOOT - this.PAD * 2 - gap * (rows - 1)) / rows),
+      total = Math.max(size.H, this.FOOT + this.PAD * 2 + gap * (rows - 1) + rows * 48),
+      h = (total - this.FOOT - this.PAD * 2 - gap * (rows - 1)) / rows,
       head = size.W >= 1100 ? 46 : 38;
     this.yr = {
       cols,
@@ -293,7 +296,7 @@ class CalendarView implements CanvasView {
           h,
         });
     }
-    this.total = size.H;
+    this.total = total;
   }
   weekFor(i: number, key: string | null = S.calendarWeek): WeekBlock | undefined {
     const weeks = this.blocks.filter((b): b is WeekBlock => b.t === 'week');
@@ -314,11 +317,21 @@ class CalendarView implements CanvasView {
       : this.blocks.some((b) => b.t === 'week' && b.key === p.key && b.wk.includes(i));
   }
   anchor(): CalendarAnchor {
+    if (S.calZoom === 'year') {
+      const b = this.blocks.find((b) => b.t === 'mini' && b.y + b.h > scroller.scrollTop + 1);
+      return {
+        key: b?.mo.key ?? this.month().key,
+        offset: b ? (scroller.scrollTop - b.y) / b.h : 0,
+      };
+    }
     const p = this.active();
     return { key: p?.key ?? this.month().key, offset: p ? (scroller.scrollTop - p.y) / p.h : 0 };
   }
   restoreAnchor(a: CalendarAnchor): void {
-    const p = this.periods.find((p) => p.key === a.key);
+    const p =
+      S.calZoom === 'year'
+        ? this.blocks.find((b) => b.mo.key === a.key)
+        : this.periods.find((p) => p.key === a.key);
     scroller.scrollTop = p ? p.y + p.h * a.offset : 0;
   }
   scrollTo(i: number, top: boolean): void {
@@ -326,17 +339,22 @@ class CalendarView implements CanvasView {
     if (!n) return;
     S.calendarMonth = `${n.y}-${pad2(n.m)}`;
     if (S.calZoom === 'year') {
-      scroller.scrollTop = 0;
+      const b = this.blocks.find((b) => b.mo.key === S.calendarMonth);
+      if (b && b.y < scroller.scrollTop) scroller.scrollTop = b.y - this.PAD;
+      else if (b && b.y + b.h > scroller.scrollTop + size.H)
+        scroller.scrollTop = b.y + b.h - size.H + this.PAD;
       return;
     }
+    const row = this.weekFor(i);
+    // A direct placeholder click owns its displayed row; keyboard/view entry uses a canonical key.
+    if (S.calZoom === 'month' && row) S.calendarMonth = row.mo.key;
     const p =
       S.calZoom === 'month'
         ? this.periods.find((p) => p.key === S.calendarMonth)
         : this.periods.find((p) => p.key === `week:${i - n.dow}`);
     if (!p) return;
     if (top) scroller.scrollTop = p.y;
-    const row = this.weekFor(i),
-      y = row?.y ?? p.y,
+    const y = row?.y ?? p.y,
       bottom = y + (row?.base ?? p.base);
     if (S.calZoom === 'month') {
       if (y < scroller.scrollTop) scroller.scrollTop = y - 12;
@@ -354,7 +372,7 @@ class CalendarView implements CanvasView {
   }
   draw(st: number): void {
     this.annotations = [];
-    if (S.calZoom === 'year') this.drawYear();
+    if (S.calZoom === 'year') this.drawYear(st);
     else {
       const p = this.active();
       if (p) {
@@ -395,10 +413,10 @@ class CalendarView implements CanvasView {
   }
   bar(n: Night, x: number, y: number, w: number, h: number): void {
     if (n.mfMs <= 0) return;
-    ctx.fillStyle = C.good;
-    ctx.globalAlpha = S.focus > 0 && Math.abs(n.nmOff) > S.focus ? 0.45 : 1;
-    ctx.fillRect(x, y, Math.max(1, (w * n.mfMs) / (this.scale() * MS_H)), h);
-    ctx.globalAlpha = 1;
+    drawDurationBar(n.mfMs, this.scale() * MS_H, x, y, w, h, 'h', this.durationOpacity(n));
+  }
+  durationOpacity(n: Night): number {
+    return S.focus > 0 && Math.abs(n.nmOff) > S.focus ? 0.45 : 1;
   }
   drawMonth(p: Period, st: number): void {
     const r = atlas(),
@@ -448,7 +466,7 @@ class CalendarView implements CanvasView {
     }
   }
   drawSummary(n: Night, x: number, y: number, w: number, h: number): void {
-    const narrow = w < 105,
+    const narrow = w < 150,
       dim = S.focus > 0 && Math.abs(n.nmOff) > S.focus,
       ink = dim || !n.mfMs ? C.ink3 : C.ink,
       hours = !n.mfMs ? '0h' : narrow ? `${fmtHrs(n.mfMs)}h` : fmtDur(n.mfMs),
@@ -484,12 +502,17 @@ class CalendarView implements CanvasView {
     }
     if (n.mfMs > 0) {
       // A shared height across months makes duration differences comparable across each week.
-      const maxHeight = Math.min(96, Math.max(78, (size.H - this.TOP - 22 - this.FOOT) / 6) - 20),
-        height = (maxHeight * n.mfMs) / (this.scale() * MS_H);
-      ctx.fillStyle = C.good;
-      ctx.globalAlpha = dim ? 0.45 : 1;
-      ctx.fillRect(x + w - 7, y + h - 8 - height, 3, height);
-      ctx.globalAlpha = 1;
+      const maxHeight = Math.min(96, Math.max(78, (size.H - this.TOP - 22 - this.FOOT) / 6) - 20);
+      drawDurationBar(
+        n.mfMs,
+        this.scale() * MS_H,
+        x + w - 7,
+        y + h - 8 - maxHeight,
+        3,
+        maxHeight,
+        'v',
+        this.durationOpacity(n),
+      );
     }
   }
   outline(i: number, b: WeekBlock, x: number, y: number, w: number, h: number): void {
@@ -541,6 +564,14 @@ class CalendarView implements CanvasView {
           axis,
           dim: S.focus > 0 && Math.abs(n.nmOff) > S.focus,
         });
+        // Keep the clock guide beneath opaque time labels, including a Moon edge near midnight.
+        if (axis.start < 24 && axis.end > 24) {
+          const alpha = ctx.globalAlpha;
+          ctx.globalAlpha = 0.4;
+          ctx.fillStyle = C.ink3;
+          ctx.fillRect(x + 1, y + ((24 - axis.start) / span) * h, cw - 2, 1);
+          ctx.globalAlpha = alpha;
+        }
         const labels = calendarEventLabels(n, axis, h).map((e) => {
           const preferred = cw < 65 ? 12 : 13,
             font = Math.min(preferred, ((cw - 6) / tw(e.time, preferred, 500)) * preferred);
@@ -588,20 +619,16 @@ class CalendarView implements CanvasView {
       if (!tick.major && !tick.midnight) continue;
       const ty = y + ((tick.hh - axis.start) / span) * h;
       if (ty < y + 12 || ty > y + h - 12) continue;
-      if (tick.midnight) {
-        ctx.fillStyle = C.ink3;
-        ctx.globalAlpha = 0.4;
-        ctx.fillRect(x0, ty, size.W - x0, 1);
-        ctx.globalAlpha = 1;
-      }
       text(tick.label, x0 - 6, ty, 11, C.ink2, 'right');
     }
   }
-  drawYear(): void {
+  drawYear(st: number): void {
+    ctx.save();
+    ctx.translate(0, -st);
     const r = atlas(),
       { cw, ch, head } = this.yr;
     for (const b of this.blocks) {
-      if (b.t !== 'mini') continue;
+      if (b.t !== 'mini' || b.y + b.h < st || b.y > st + size.H) continue;
       ctx.fillStyle = C.raised;
       ctx.fillRect(b.x, b.y, b.w, b.h);
       if (b.mo.idx.includes(S.sel)) {
@@ -613,12 +640,17 @@ class CalendarView implements CanvasView {
         if (b.h >= 74)
           b.mo.idx.forEach((i, d) => {
             const n = r.nights[i],
-              bw = (b.w - 16) / b.mo.idx.length,
-              bh = (14 * n.mfMs) / (this.scale() * MS_H);
-            if (bh > 0) {
-              ctx.fillStyle = C.good;
-              ctx.fillRect(b.x + 8 + d * bw, b.y + b.h - 7 - bh, Math.max(1, bw - 1), bh);
-            }
+              bw = (b.w - 16) / b.mo.idx.length;
+            drawDurationBar(
+              n.mfMs,
+              this.scale() * MS_H,
+              b.x + 8 + d * bw,
+              b.y + b.h - 21,
+              Math.max(1, bw - 1),
+              14,
+              'v',
+              this.durationOpacity(n),
+            );
           });
         continue;
       }
@@ -653,14 +685,18 @@ class CalendarView implements CanvasView {
       );
     }
     ctx.fillStyle = C.panel;
-    ctx.fillRect(0, size.H - this.FOOT, size.W, this.FOOT);
+    ctx.fillRect(0, this.total - this.FOOT, size.W, this.FOOT);
+    const bars = !this.yr.compact || this.blocks.some((b) => b.t === 'mini' && b.h >= 74);
     text(
-      `Green: usable hours · 0–${this.scale()}h · ● New moon`,
+      bars
+        ? `Green: usable hours · 0–${this.scale()}h · ${this.yr.compact ? 'New moon dates' : '● New moon'}`
+        : 'New moon dates · select a month',
       this.PAD,
-      size.H - 12,
+      this.total - 12,
       11,
       C.ink2,
     );
+    ctx.restore();
   }
   hit(px: number, py: number): Hit | null {
     const cy = py + scroller.scrollTop;

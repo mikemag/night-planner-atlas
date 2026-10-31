@@ -27,9 +27,6 @@
   --moon-rgb: 204, 196, 172;
   --moon-accepted-rgb: 132, 217, 166;
   --moon-accepted-edge: transparent;
-  --tip-bg: #121826;
-  --tip-ink: #f1f3f7;
-  --tip-ink-2: #a9b2c3;
   --shadow: 0 1px 2px rgba(17, 23, 38, 0.06), 0 10px 30px rgba(17, 23, 38, 0.1);
 }
 @media (prefers-color-scheme: dark) {
@@ -57,9 +54,6 @@
     --sky-dark: #03050b;
     --moon-rgb: 196, 190, 168;
     --moon-accepted-rgb: 125, 210, 160;
-    --tip-bg: #1b212c;
-    --tip-ink: #eef1f6;
-    --tip-ink-2: #9aa4b6;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.45);
   }
 }
@@ -87,9 +81,6 @@
   --sky-dark: #03050b;
   --moon-rgb: 196, 190, 168;
   --moon-accepted-rgb: 125, 210, 160;
-  --tip-bg: #1b212c;
-  --tip-ink: #eef1f6;
-  --tip-ink-2: #9aa4b6;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.45);
 }
 
@@ -119,9 +110,6 @@
   --moon-rgb: 159, 145, 138;
   --moon-accepted-rgb: 176, 140, 101;
   --moon-accepted-edge: #dbc4ad;
-  --tip-bg: #302326;
-  --tip-ink: #edddd2;
-  --tip-ink-2: #c5b0a4;
   --shadow: 0 2px 20px rgba(0, 0, 0, 0.45);
 }
 .theme-control {
@@ -605,38 +593,6 @@ input {
   height: 100%;
   background: var(--good);
   border-radius: 3px;
-}
-.tip {
-  position: fixed;
-  z-index: 20;
-  pointer-events: none;
-  max-width: 300px;
-  background: var(--tip-bg);
-  color: var(--tip-ink);
-  border-radius: 9px;
-  padding: 9px 11px;
-  box-shadow: var(--shadow);
-  font-size: 12px;
-  line-height: 1.4;
-  font-variant-numeric: tabular-nums;
-}
-.tip .t1 {
-  color: var(--tip-ink-2);
-  font-size: 11px;
-}
-.tip .t2 {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 1px 0 3px;
-}
-.tip .t3 {
-  color: var(--tip-ink-2);
-}
-.tip .t4 {
-  margin-top: 5px;
-  padding-top: 5px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--tip-ink);
 }
 .site-dialog {
   width: min(520px, calc(100vw - 32px));
@@ -1468,9 +1424,10 @@ kbd {
 .calendar-mode .scroller {
   overflow-y: auto;
   overflow-x: hidden;
-  min-height: 240px;
+  min-height: 0;
 }
 .calendar-mode .stage-head {
+  flex: none;
   gap: 5px 12px;
 }
 .calendar-mode #viewCtl {

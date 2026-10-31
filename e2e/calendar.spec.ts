@@ -716,3 +716,208 @@ test('a short tablet viewport keeps twelve readable Year choices instead of sque
   await expect(page.locator('#calendarHeaders')).toHaveClass('calendar-compact-year');
   await expect(page.locator('.calendar-year-phases:visible')).toHaveCount(12);
 });
+
+interface CalendarInk {
+  text: Array<{ value: string; left: number; right: number; top: number; bottom: number }>;
+  selected: number;
+}
+declare global {
+  interface Window {
+    calendarInk: CalendarInk;
+  }
+}
+
+/** Capture actual browser text metrics, so intermediate widths get a real overlap check. */
+async function captureCalendarInk(page: Page) {
+  await page.addInitScript(() => {
+    const context = CanvasRenderingContext2D.prototype,
+      transform = context.setTransform,
+      fill = context.fillText,
+      stroke = context.strokeRect;
+    const frame = () => window.calendarInk;
+    context.setTransform = function (this: CanvasRenderingContext2D, ...args: unknown[]) {
+      if (this.canvas.id === 'cv')
+        window.calendarInk = {
+          text: [],
+          selected: 0,
+        };
+      return Reflect.apply(transform, this, args);
+    } as typeof transform;
+    context.fillText = function (value, x, y, maxWidth) {
+      if (this.canvas.id === 'cv' && frame()) {
+        const m = this.measureText(value);
+        frame().text.push({
+          value,
+          left: x - m.actualBoundingBoxLeft,
+          right: x + m.actualBoundingBoxRight,
+          top: y - m.actualBoundingBoxAscent,
+          bottom: y + m.actualBoundingBoxDescent,
+        });
+      }
+      if (maxWidth == null) fill.call(this, value, x, y);
+      else fill.call(this, value, x, y, maxWidth);
+    };
+    context.strokeRect = function (...args) {
+      if (
+        this.canvas.id === 'cv' &&
+        frame() &&
+        this.lineWidth === 2 &&
+        this.strokeStyle ===
+          getComputedStyle(document.documentElement).getPropertyValue('--select').trim()
+      )
+        frame().selected++;
+      stroke.apply(this, args);
+    };
+  });
+}
+
+for (const width of [1512, 390]) {
+  test(`closed Calendar selection remains outlined across period changes at ${width}px`, async ({
+    page,
+  }) => {
+    await captureCalendarInk(page);
+    await open(page, width);
+    await choose(page, '2026-10-09');
+    for (const name of ['Week', 'Month', 'Year', 'Month']) {
+      await page.getByRole('button', { name, exact: true }).click();
+      await expect(page.locator('#loading')).toBeHidden();
+      await painted(page);
+      if (name === 'Year') continue;
+      const marker = await page.evaluate(() => {
+        const a = window.__npa!;
+        return {
+          row: a.calendarRows.blocks.some(
+            (b) => b.t === 'week' && b.key === a.S.calendarWeek && b.wk.includes(a.S.sel),
+          ),
+          strokes: window.calendarInk.selected,
+        };
+      });
+      expect(marker.row).toBe(true);
+      expect(marker.strokes).toBeGreaterThan(0);
+    }
+  });
+}
+
+for (const width of [800, 1000]) {
+  test(`Month duration and window text do not overlap at ${width}px`, async ({ page }, info) => {
+    await captureCalendarInk(page);
+    await open(page, width);
+    await choose(page, '2026-10-09');
+    const ink = await page.evaluate(() => {
+      const a = window.__npa!,
+        n = a.nights[a.S.sel],
+        g = a.calendarRows.geometry,
+        row = a.calendarRows.blocks.find((b) => b.t === 'week' && b.key === a.S.calendarWeek)!,
+        st = document.getElementById('scroller')!.scrollTop;
+      if (row.t !== 'week') throw new Error('Expected month row');
+      const left = n.dow * g.cw,
+        top = row.y - st,
+        labels = window.calendarInk.text.filter(
+          (t) =>
+            t.left >= left && t.right <= left + g.cw && t.top >= top && t.bottom < top + row.base,
+        );
+      return {
+        hours: labels.find((t) => /^\d+(?:\.\d+)?h(?: \d+m)?$/.test(t.value))!,
+        windows: labels.filter((t) => /^\d{1,2}:\d{2}[ap]/.test(t.value)),
+      };
+    });
+    expect(ink.hours).toBeTruthy();
+    expect(ink.windows.length).toBeGreaterThan(0);
+    for (const clock of ink.windows) expect(clock.top).toBeGreaterThanOrEqual(ink.hours.bottom + 1);
+    if (process.env.SCREENSHOTS)
+      await page.screenshot({
+        path: `test-results/screenshots/${info.project.name}-calendar-month-${width}.png`,
+      });
+  });
+}
+
+test('compact Year keeps month text inside its cards on a short narrow phone', async ({
+  page,
+}, info) => {
+  await open(page, 320, undefined, 'year');
+  await page.setViewportSize({ width: 320, height: 740 });
+  await painted(page);
+  const overflow = await page.locator('button[data-calendar-month]').evaluateAll((nodes) =>
+    nodes.flatMap((node) => {
+      const b = node.getBoundingClientRect();
+      return [...node.children].flatMap((child) => {
+        const c = child.getBoundingClientRect();
+        return c.width && c.height && (c.bottom > b.bottom + 0.5 || c.right > b.right + 0.5)
+          ? [child.textContent]
+          : [];
+      });
+    }),
+  );
+  expect(overflow).toEqual([]);
+  await page.locator('[data-calendar-month="2026-12"]').focus();
+  await painted(page);
+  const target = await page.locator('[data-calendar-month="2026-12"]').boundingBox(),
+    frame = await page.locator('#cv').boundingBox();
+  expect(target!.y + target!.height).toBeLessThanOrEqual(frame!.y + frame!.height + 1);
+  if (process.env.SCREENSHOTS)
+    await page.screenshot({
+      path: `test-results/screenshots/${info.project.name}-calendar-year-short-phone.png`,
+    });
+  await page.locator('[data-calendar-month="2026-12"]').press('Enter');
+  await expect(page.locator('#periodLabel')).toHaveText('December 2026');
+  expect((await selected(page)).id).toBe('2026-12-01');
+});
+
+test('returning to Calendar selects the real date after a placeholder activation', async ({
+  page,
+}) => {
+  await open(page, 390);
+  await choose(page, '2026-10-01');
+  const p = await point(page, '2026-09-30');
+  await page.mouse.click(p.x, p.y);
+  await expect(page.locator('#periodLabel')).toHaveText('October 2026');
+  await page.locator('#viewSeg button[data-view="river"]').click();
+  await page.locator('#viewSeg button[data-view="calendar"]').click();
+  await painted(page);
+  const own = await page.evaluate(() => {
+    const a = window.__npa!,
+      b = a.calendarRows.blocks.find((b) => b.t === 'week' && b.key === a.S.calendarWeek);
+    return b?.t === 'week' && b.mo.idx.includes(a.S.sel);
+  });
+  expect((await selected(page)).id).toBe('2026-09-30');
+  expect(own).toBe(true);
+});
+
+test('Calendar Year follows a date selected in a different year in River', async ({ page }) => {
+  await open(page, 1512, undefined, 'year');
+  await page.locator('#viewSeg button[data-view="river"]').click();
+  await choose(page, '2027-01-01');
+  await page.locator('#viewSeg button[data-view="calendar"]').click();
+  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('#periodLabel')).toHaveText('2027');
+  await expect(page.locator('button[data-calendar-month^="2027-"]')).toHaveCount(12);
+  expect((await selected(page)).id).toBe('2027-01-01');
+});
+
+test('short phone Week keeps the chart inside its viewport', async ({ page }, info) => {
+  await open(page, 375, undefined, 'week');
+  await page.setViewportSize({ width: 375, height: 667 });
+  await painted(page);
+  const bounds = await page.evaluate(() => {
+    const cv = document.getElementById('cv')!.getBoundingClientRect(),
+      readout = document.getElementById('riverReadout')!.getBoundingClientRect(),
+      legend = document.getElementById('legend')!.getBoundingClientRect(),
+      heading = document.querySelector('.stage-head')!.getBoundingClientRect();
+    return {
+      bottom: cv.bottom,
+      limit: readout.top,
+      page: document.documentElement.scrollHeight,
+      viewport: innerHeight,
+      legendBottom: legend.bottom,
+      headingBottom: heading.bottom,
+    };
+  });
+  expect(bounds.bottom).toBeLessThanOrEqual(bounds.limit + 1);
+  expect(bounds.bottom).toBeLessThanOrEqual(bounds.viewport);
+  expect(bounds.page).toBeLessThanOrEqual(bounds.viewport + 1);
+  expect(bounds.legendBottom).toBeLessThanOrEqual(bounds.headingBottom);
+  if (process.env.SCREENSHOTS)
+    await page.screenshot({
+      path: `test-results/screenshots/${info.project.name}-calendar-week-short-phone.png`,
+    });
+});

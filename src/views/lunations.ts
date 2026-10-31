@@ -3,6 +3,7 @@ import { MON3, WD3, fmtHrs } from '../model/format';
 import { lunWindow, lunationWindow, visibleLunations, type Lunation } from '../model/range';
 import { MS_H } from '../model/time';
 import { C } from '../render/colors';
+import { drawDurationBar, usableHoursScale } from '../render/duration';
 import { drawNight, hourTicks } from '../render/night-draw';
 import { ctx, size, snap, text } from '../render/surface';
 import { el, scroller } from '../ui/dom';
@@ -215,7 +216,7 @@ class LunationsView implements CanvasView {
     ctx.rect(0, this.TOP, W, H - this.TOP);
     ctx.clip();
     const span = r.ax.end - r.ax.start;
-    const maxHours = Math.max(2, Math.ceil(r.maxMF / MS_H / 2) * 2);
+    const maxHours = usableHoursScale(r.maxMF);
     for (let k = this.cycleAt(st); k < this.cycles.length; k++) {
       const L = this.cycles[k];
       const window = lunationWindow(L, g.N);
@@ -265,10 +266,7 @@ class LunationsView implements CanvasView {
           n.d === 1 || c === g.N ? 700 : 500,
         );
         drawNight(n, x, sky, g.cw - 2, this.SKY, 'v', { labels: g.cw >= 58 });
-        const height = (n.mfMs / MS_H / maxHours) * 32;
-        ctx.fillStyle = C.good;
-        if (height > 0)
-          ctx.fillRect(x + 4, base - Math.max(1, height), g.cw - 10, Math.max(1, height));
+        drawDurationBar(n.mfMs, maxHours * MS_H, x + 4, base - 32, g.cw - 10, 32, 'v');
         text(
           n.mfMs ? fmtHrs(n.mfMs) : '—',
           x + (g.cw - 2) / 2,

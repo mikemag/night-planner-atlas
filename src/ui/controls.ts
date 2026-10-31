@@ -20,11 +20,9 @@ import { S, data } from '../app/state';
 import { loadTheme, setTheme, type Theme } from '../app/theme';
 import { prepareTimeZones } from '../app/timezones';
 import { cv, size } from '../render/surface';
-import { calendar } from '../views/calendar';
 import { river } from '../views/river';
 import { lunations } from '../views/lunations';
 import { el, scroller } from './dom';
-import { hideTip } from './tooltip';
 import { initSiteEditor } from './site-editor';
 import { initRiverMinimap } from './river-minimap';
 
@@ -70,7 +68,6 @@ export function initControls(): void {
     'scroll',
     () => {
       S.hover = null;
-      hideTip();
       draw();
     },
     { passive: true },
@@ -101,24 +98,15 @@ function initCanvasPointer(): void {
     }
     if (e.pointerType === 'touch') return;
     const h = v.hit(px, py);
-    const prev = S.hover;
     S.riverReadoutSelected = false;
     S.hover = h && !h.mini ? h : null;
     cv.style.cursor = h && (h.i != null || h.month || h.mini) ? 'pointer' : 'default';
     if (v === river && h?.mini) cv.style.cursor = river.miniContains(px, py) ? 'grab' : 'pointer';
-    hideTip();
-    if (
-      v === river ||
-      v === lunations ||
-      v === calendar ||
-      JSON.stringify(prev) !== JSON.stringify(S.hover)
-    )
-      draw();
+    draw();
   });
   cv.addEventListener('pointerleave', (e) => {
     S.hover = null;
     if (e.pointerType !== 'touch') S.riverReadoutSelected = false;
-    hideTip();
     draw();
   });
   cv.addEventListener('pointerdown', (e) => {
@@ -133,7 +121,6 @@ function initCanvasPointer(): void {
       dragMini = true;
       S.hover = null;
       S.riverReadoutSelected = false;
-      hideTip();
       cv.setPointerCapture(e.pointerId);
       river.beginMiniDrag(e.clientX - r.left, e.clientY - r.top);
       cv.style.cursor = 'grabbing';
@@ -240,9 +227,7 @@ function initKeyboard(): void {
       const total =
         S.view === 'lunations'
           ? document.querySelector<HTMLDetailsElement>('.lunation-total[open]')
-          : S.view === 'calendar'
-            ? document.querySelector<HTMLDetailsElement>('.calendar-month-total[open]')
-            : null;
+          : null;
       if (total) {
         total.open = false;
         return;

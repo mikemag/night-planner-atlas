@@ -2,6 +2,7 @@ import { S, atlas } from '../app/state';
 import { MON3, MONL, WD3, fmtClock, fmtDur } from '../model/format';
 import { wallH } from '../model/night';
 import { C, inkOn } from '../render/colors';
+import { drawDurationBar } from '../render/duration';
 import { drawNight, hourTicks, moonGlyph } from '../render/night-draw';
 import { ctx, roundRect, size, snap, text, tw } from '../render/surface';
 import { scroller } from '../ui/dom';
@@ -213,11 +214,7 @@ class RiverView implements CanvasView {
       const bx = x1 + 8,
         bw = this.GR - (S.riverZoom === 'year' ? 44 : 72);
       const bh = Math.max(1, Math.min(barH - gap - 2, 9));
-      const len = (bw * n.mfMs) / maxMF;
-      if (len > 0) {
-        ctx.fillStyle = C.good;
-        ctx.fillRect(bx, y + (barH - gap - bh) / 2, len, bh);
-      }
+      drawDurationBar(n.mfMs, maxMF, bx, y + (barH - gap - bh) / 2, bw, bh);
       if (barH >= 12)
         text(
           n.mfMs ? fmtDur(n.mfMs) : '—',

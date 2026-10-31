@@ -168,8 +168,9 @@ Friday/Saturday coloring do not appear in Month or Year.
   from a shared baseline within its row. Its height makes daily differences clear across the week;
   all months share the same maximum bar height and hours scale. Year day cells use horizontal bars
   on the same hours scale, rounded up to an even number. End margins keep bars distinct from the
-  grid. Compact Year cards show
-  a chronological daily bar profile when their height permits, retaining totals and new-moon dates.
+  grid. All three views use the same duration-bar renderer; Calendar and Lunations share the
+  rounded hours scale. Compact Year cards show a chronological daily bar profile when their
+  height permits, retaining totals and new-moon dates.
 - **Moon context.** A quiet glyph and, where space permits, illumination accompany the date.
   New moons are marked on the event's actual site-local civil date. This can differ from the
   evening date of the event-associated night in River or the centered cycle in Lunations.
@@ -193,6 +194,8 @@ Friday/Saturday coloring do not appear in Month or Year.
   a January-based 14-month range if needed. Previous/Next moves a calendar year; Tonight returns to
   the site's current observing night. Each entire mini calendar is a keyboard/touch month button.
   Phones and short windows show twelve compact month choices instead of microscopic day grids.
+  Exceptionally short frames scroll the choices to preserve readable captions and touch targets;
+  the ordinary desktop and phone layouts still show all twelve together.
 - **Shared night expansion.** Selecting a Month or Week date inserts the same horizontal event
   timeline used by River and Lunations after the activated row. Its height is reserved in the
   scrolling sequence, so it covers no dates. Opening it reveals the panel; scrolling can return to
