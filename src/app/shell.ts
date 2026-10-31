@@ -162,7 +162,6 @@ export function select(i: number, scroll: boolean, top?: boolean): void {
     // Keyboard/programmatic selection always uses the date's own month, not a duplicate placeholder.
     S.calendarWeek = calendar.weekFor(i, null)?.key ?? null;
     if (S.calZoom === 'year' && targetMonth) S.calendarMonth = targetMonth;
-    if (S.calZoom === 'year' && ensureCalendarYear(calendar.month().y)) return;
     relayout();
     const next = calendar.weekFor(i);
     if (
@@ -320,12 +319,7 @@ export function stepMonth(dir: number): void {
     const mo = calendar.month();
     S.calendarExpanded = false;
     if (S.calZoom === 'year') {
-      const y = Math.max(100, Math.min(9997, mo.y + dir));
-      S.calendarMonth = `${y}-${String(mo.m).padStart(2, '0')}`;
-      S.pendingNight = `${S.calendarMonth}-01`;
-      S.rangeStart = { y, m: 1 };
-      S.rangeShift = 0;
-      restart();
+      shiftRange(dir);
     } else if (S.calZoom === 'week') {
       select(Math.max(0, Math.min(r.nights.length - 1, calendar.topNight() + dir * 7)), true, true);
     } else {
@@ -400,7 +394,7 @@ function viewControls(): void {
         ? 'Hours and windows · scroll months.'
         : S.calZoom === 'week'
           ? 'Scroll weeks · evening ↓ morning · exact event times.'
-          : 'New moons at a glance · select a month.';
+          : 'Loaded months · select a month.';
   }
 }
 
@@ -429,7 +423,6 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
       const n = data.range!.nights[calNight];
       S.calendarMonth = `${n.y}-${String(n.m).padStart(2, '0')}`;
     }
-    if (S.calZoom === 'year' && ensureCalendarYear(calendar.month().y)) return;
     // Mode controls/legend can change the available height before ResizeObserver runs.
     resize();
     if (calNight != null) calendar.scrollTo(calNight, true);
@@ -441,15 +434,6 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
     if (reopening) river.scrollTo(S.sel, true);
     else river.restoreAnchor(anchor);
   } else relayout(keep);
-}
-
-/** A calendar year needs January–December, rather than a partial year of the rolling range. */
-function ensureCalendarYear(y: number): boolean {
-  if (data.range?.months.filter((mo) => mo.y === y).length === 12) return false;
-  S.rangeStart = { y, m: 1 };
-  S.rangeShift = 0;
-  restart();
-  return true;
 }
 
 export function setView(view: ViewId): void {
@@ -525,7 +509,6 @@ export function setView(view: ViewId): void {
   viewControls();
   syncSettingsControls();
   if (!data.ready) return;
-  if (view === 'calendar' && S.calZoom === 'year' && ensureCalendarYear(calendar.month().y)) return;
   bestWeekends(data.range!, lunWindow(activeFocus()));
   if (v) {
     resize();
@@ -607,10 +590,6 @@ export function restart(): void {
   el('loadingText').textContent = 'Computing sun and moon for each night…';
   el('loadingBar').style.width = '0%';
   const token = ++computeToken;
-  if (S.view === 'calendar' && S.calZoom === 'year' && !S.rangeStart) {
-    const date = selId ?? tonightId(Date.now(), new TimeZone(S.site.tz));
-    S.rangeStart = { y: Number(date.slice(0, 4)), m: 1 };
-  }
   computeRange(S.site, S.rangeShift, thresholds(), lunWindow(activeFocus()), Date.now(), {
     startMonth: S.rangeStart ? { y: S.rangeStart.y + S.rangeShift, m: S.rangeStart.m } : undefined,
     isCancelled: () => token !== computeToken,
@@ -643,8 +622,6 @@ export function restart(): void {
       S.sel = i;
       updateWeekends();
       setView(S.view);
-      // A Year chosen during loading may need a complete January-based range first.
-      if (!data.ready) return;
       const v = canvasView();
       if (v) {
         if (v === river) scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.heights().base);

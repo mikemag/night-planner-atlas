@@ -1,5 +1,5 @@
 import { S } from '../app/state';
-import { fmtDur, MONL } from '../model/format';
+import { fmtDur, MON3, MONL } from '../model/format';
 import type { NightRange } from '../model/range';
 import { MS_H } from '../model/time';
 import type { CalendarMonthBlock } from '../views/calendar';
@@ -36,7 +36,11 @@ export function prepareCalendarHeaders(
           return p.y === mo.y && p.m === mo.m ? [p.d] : [];
         });
       const name = document.createElement('strong');
-      name.textContent = MONL[mo.m - 1];
+      name.textContent = (width < 360 ? MON3 : MONL)[mo.m - 1];
+      const year = document.createElement('small');
+      year.className = 'calendar-year-label';
+      year.textContent = String(mo.y);
+      name.append(' ', year);
       const total = document.createElement('span');
       total.className = 'calendar-year-total';
       total.textContent = `${Math.round(mo.total / MS_H)}h`;

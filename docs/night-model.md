@@ -31,8 +31,8 @@ corrections), and `range.ts`
 - The default loaded range is 14 whole months starting with the month before the current one. The Range
   control shifts it by a year. A shared plan can fix the first month explicitly so its loaded
   dates remain reproducible when opened later; the Range control still shifts those dates by years.
-  Calendar Year loads a January-based 14-month range when needed to include the complete selected
-  calendar year. Night calculations and elapsed durations are identical for a given evening date.
+  Calendar Year summarizes these same 14 months. Switching periods or views never changes the
+  range or recomputes positions; its Previous/Next controls shift the shared range by a year.
 
 ## Sun events
 

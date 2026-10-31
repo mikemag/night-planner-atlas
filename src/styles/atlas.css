@@ -1489,6 +1489,12 @@ kbd {
 .calendar-month-link strong {
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
+}
+.calendar-year-label {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--ink-2);
 }
 .calendar-year-total {
   margin-left: auto;

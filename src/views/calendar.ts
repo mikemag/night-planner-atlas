@@ -108,7 +108,12 @@ class CalendarView implements CanvasView {
     return this.periods.find((p) => p.y + p.h > scroller.scrollTop + 1) ?? this.periods.at(-1);
   }
   label(): string {
-    if (S.calZoom === 'year') return String(this.month().y);
+    if (S.calZoom === 'year') {
+      const months = atlas().months,
+        first = months[0].y,
+        last = months.at(-1)!.y;
+      return first === last ? String(first) : `${first}–${last}`;
+    }
     const p = this.active();
     return p
       ? S.calZoom === 'week'
@@ -269,10 +274,9 @@ class CalendarView implements CanvasView {
   }
   layoutYear(): void {
     const r = atlas(),
-      year = this.month().y,
-      cols = size.W >= 1000 ? 4 : size.W >= 650 ? 3 : 2,
-      rows = 12 / cols,
-      gap = size.W < 650 ? 8 : 16,
+      cols = size.W >= 1000 ? 5 : size.W >= 650 ? 3 : 2,
+      rows = Math.ceil(r.months.length / cols),
+      gap = size.W < 650 ? 6 : 16,
       w = (size.W - this.PAD * 2 - gap * (cols - 1)) / cols,
       total = Math.max(size.H, this.FOOT + this.PAD * 2 + gap * (rows - 1) + rows * 48),
       h = (total - this.FOOT - this.PAD * 2 - gap * (rows - 1)) / rows,
@@ -284,17 +288,15 @@ class CalendarView implements CanvasView {
       ch: Math.max(0, Math.min(26, (h - head - 24) / 6)),
       compact: size.W < 650 || h < 200,
     };
-    for (let m = 1; m <= 12; m++) {
-      const mo = r.months.find((mo) => mo.y === year && mo.m === m);
-      if (mo)
-        this.blocks.push({
-          t: 'mini',
-          mo,
-          x: this.PAD + ((m - 1) % cols) * (w + gap),
-          y: this.PAD + Math.floor((m - 1) / cols) * (h + gap),
-          w,
-          h,
-        });
+    for (const [k, mo] of r.months.entries()) {
+      this.blocks.push({
+        t: 'mini',
+        mo,
+        x: this.PAD + (k % cols) * (w + gap),
+        y: this.PAD + Math.floor(k / cols) * (h + gap),
+        w,
+        h,
+      });
     }
     this.total = total;
   }

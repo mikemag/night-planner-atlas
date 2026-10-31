@@ -368,13 +368,13 @@ for (const width of [1512, 390]) {
     await page.getByRole('button', { name: 'Previous week', exact: true }).click();
     await expect(page.locator('#periodLabel')).toHaveText('Oct 4–10, 2026');
   });
-  test(`Year fits January–December and has keyboard month choosers at ${width}px`, async ({
+  test(`Year fits all loaded months and has keyboard month choosers at ${width}px`, async ({
     page,
   }, info) => {
     await open(page, width, 'windows', 'year');
     const months = page.locator('button[data-calendar-month]');
-    await expect(months).toHaveCount(12);
-    await expect(page.locator('#periodLabel')).toHaveText('2026');
+    await expect(months).toHaveCount(14);
+    await expect(page.locator('#periodLabel')).toHaveText('2026–2027');
     await fits(page);
     const allVisible = await months.evaluateAll((nodes) =>
       nodes.every((node) => {
@@ -384,8 +384,8 @@ for (const width of [1512, 390]) {
       }),
     );
     expect(allVisible).toBe(true);
-    await expect(page.locator('[data-calendar-month="2026-01"]')).toHaveAccessibleName(
-      /January 2026.*usable dark.*New moon 18/,
+    await expect(page.locator('[data-calendar-month="2026-09"]')).toHaveAccessibleName(
+      /September 2026.*usable dark.*New moon/,
     );
     if (width > 1000) {
       const visual = await months.first().evaluate((node) => {
@@ -420,12 +420,12 @@ for (const width of [1512, 390]) {
     await page.getByRole('button', { name: 'Year', exact: true }).click();
     await page.getByRole('button', { name: 'Next year', exact: true }).click();
     await expect(page.locator('#loading')).toBeHidden();
-    await expect(page.locator('#periodLabel')).toHaveText('2027');
-    await expect(page.locator('button[data-calendar-month^="2027-"]')).toHaveCount(12);
+    await expect(page.locator('#periodLabel')).toHaveText('2027–2028');
+    await expect(page.locator('button[data-calendar-month^="2027-"]')).toHaveCount(4);
     await fits(page);
     await page.getByRole('button', { name: 'Tonight', exact: true }).click();
     await expect(page.locator('#loading')).toBeHidden();
-    await expect(page.locator('#periodLabel')).toHaveText('2026');
+    await expect(page.locator('#periodLabel')).toHaveText('2026–2027');
     expect((await selected(page)).id).toBe('2026-10-28');
     await fits(page);
   });
@@ -712,7 +712,43 @@ test('320px keeps readable month rows and scrolls to the selected night by keybo
   await fits(page);
 });
 
-test('a Year chosen during loading publishes a complete year, with no intermediate ready event', async ({
+for (const width of [1512, 390]) {
+  test(`Calendar periods and views reuse the loaded range after refresh at ${width}px`, async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.addEventListener('npa-ready', () => {
+        const root = document.documentElement;
+        root.dataset.computedRanges = String(Number(root.dataset.computedRanges ?? 0) + 1);
+      });
+    });
+    await open(page, width);
+    await page.reload();
+    await expect(page.locator('#loading')).toBeHidden();
+    await choose(page, '2026-10-09');
+    const nights = await page.evaluateHandle(() => window.__npa!.nights),
+      range = await page.locator('#rangeLabel').textContent();
+    for (const mode of ['Year', 'Month', 'Week', 'Year']) {
+      await page.getByRole('button', { name: mode, exact: true }).click();
+      await expect(page.locator('#loading')).toBeHidden();
+      await painted(page);
+      expect(await page.evaluate((loaded) => window.__npa!.nights === loaded, nights)).toBe(true);
+      await expect(page.locator('#rangeLabel')).toHaveText(range!);
+      expect((await selected(page)).id).toBe('2026-10-09');
+    }
+    for (const view of ['river', 'lunations', 'calendar']) {
+      await page.locator(`#viewSeg button[data-view="${view}"]`).click();
+      await expect(page.locator('#loading')).toBeHidden();
+      expect(await page.evaluate((loaded) => window.__npa!.nights === loaded, nights)).toBe(true);
+      await expect(page.locator('#rangeLabel')).toHaveText(range!);
+    }
+    await expect(page.locator('button[data-calendar-month]')).toHaveCount(14);
+    await expect(page.locator('html')).toHaveAttribute('data-computed-ranges', '1');
+    await nights.dispose();
+  });
+}
+
+test('a Year chosen during loading publishes all loaded months with one ready event', async ({
   page,
 }) => {
   await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
@@ -739,8 +775,8 @@ test('a Year chosen during loading publishes a complete year, with no intermedia
   await page.waitForFunction(() => !!window.__npa);
   await page.getByRole('button', { name: 'Year', exact: true }).click();
   await expect(page.locator('#loading')).toBeHidden();
-  await expect(page.locator('button[data-calendar-month]')).toHaveCount(12);
-  await expect(page.locator('html')).toHaveAttribute('data-calendar-ready-months', '12');
+  await expect(page.locator('button[data-calendar-month]')).toHaveCount(14);
+  await expect(page.locator('html')).toHaveAttribute('data-calendar-ready-months', '14');
 });
 
 test('a long observing-site name keeps the complete phone month inside the viewport', async ({
@@ -764,7 +800,7 @@ test('a long observing-site name keeps the complete phone month inside the viewp
   await expect(page.getByRole('combobox', { name: 'Observing site', exact: true })).toBeFocused();
 });
 
-test('a short tablet viewport keeps twelve readable Year choices instead of squeezing the day grids', async ({
+test('a short tablet viewport keeps fourteen readable Year choices instead of squeezing the day grids', async ({
   page,
 }) => {
   await open(page, 736, undefined, 'year');
@@ -772,7 +808,7 @@ test('a short tablet viewport keeps twelve readable Year choices instead of sque
   await painted(page);
   await fits(page);
   await expect(page.locator('#calendarHeaders')).toHaveClass('calendar-compact-year');
-  await expect(page.locator('.calendar-year-phases:visible')).toHaveCount(12);
+  await expect(page.locator('.calendar-year-phases:visible')).toHaveCount(14);
 });
 
 interface CalendarInk {
@@ -907,18 +943,18 @@ test('compact Year keeps month text inside its cards on a short narrow phone', a
     }),
   );
   expect(overflow).toEqual([]);
-  await page.locator('[data-calendar-month="2026-12"]').focus();
+  await page.locator('[data-calendar-month="2027-10"]').focus();
   await painted(page);
-  const target = await page.locator('[data-calendar-month="2026-12"]').boundingBox(),
+  const target = await page.locator('[data-calendar-month="2027-10"]').boundingBox(),
     frame = await page.locator('#cv').boundingBox();
   expect(target!.y + target!.height).toBeLessThanOrEqual(frame!.y + frame!.height + 1);
   if (process.env.SCREENSHOTS)
     await page.screenshot({
       path: `test-results/screenshots/${info.project.name}-calendar-year-short-phone.png`,
     });
-  await page.locator('[data-calendar-month="2026-12"]').press('Enter');
-  await expect(page.locator('#periodLabel')).toHaveText('December 2026');
-  expect((await selected(page)).id).toBe('2026-12-01');
+  await page.locator('[data-calendar-month="2027-10"]').press('Enter');
+  await expect(page.locator('#periodLabel')).toHaveText('October 2027');
+  expect((await selected(page)).id).toBe('2027-10-01');
 });
 
 test('returning to Calendar selects the real date after a placeholder activation', async ({
@@ -941,15 +977,24 @@ test('returning to Calendar selects the real date after a placeholder activation
   expect(own).toBe(true);
 });
 
-test('Calendar Year follows a date selected in a different year in River', async ({ page }) => {
+test('Calendar Year keeps the loaded range after selecting another year in River', async ({
+  page,
+}) => {
   await open(page, 1512, undefined, 'year');
+  const nights = await page.evaluateHandle(() => window.__npa!.nights);
   await page.locator('#viewSeg button[data-view="river"]').click();
   await choose(page, '2027-01-01');
   await page.locator('#viewSeg button[data-view="calendar"]').click();
   await expect(page.locator('#loading')).toBeHidden();
-  await expect(page.locator('#periodLabel')).toHaveText('2027');
-  await expect(page.locator('button[data-calendar-month^="2027-"]')).toHaveCount(12);
+  await expect(page.locator('#periodLabel')).toHaveText('2026–2027');
+  await expect(page.locator('button[data-calendar-month^="2027-"]')).toHaveCount(10);
+  await expect(page.locator('[data-calendar-month="2027-01"]')).toHaveAttribute(
+    'aria-current',
+    'true',
+  );
+  expect(await page.evaluate((loaded) => window.__npa!.nights === loaded, nights)).toBe(true);
   expect((await selected(page)).id).toBe('2027-01-01');
+  await nights.dispose();
 });
 
 test('short phone Week keeps the chart inside its viewport', async ({ page }, info) => {

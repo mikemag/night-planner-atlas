@@ -191,13 +191,15 @@ Friday/Saturday coloring do not appear in Month or Year.
   receive leaders back to their exact boundaries. There are no green interval boundary lines.
   Dense or short weeks can grow enough to keep event labels separate; named events remain in the
   shared night expansion.
-- **Year navigation.** Twelve mini calendars cover January through December, with larger month
-  headings on wide screens, new-moon dates, usable-hour totals and daily bars. Opening a year loads
-  a January-based 14-month range if needed. Previous/Next moves a calendar year; Tonight returns to
-  the site's current observing night. Each entire mini calendar is a keyboard/touch month button.
-  Phones and short windows show twelve compact month choices instead of microscopic day grids.
+- **Year navigation.** Fourteen mini calendars cover the same loaded range as every other view,
+  in chronological order, with larger month headings on wide screens, new-moon dates, usable-hour
+  totals and daily bars. Each heading includes its year. Switching periods or views reuses the
+  computed nights without changing the range. Previous/Next shifts that range by a year, just like
+  the shared Range controls; Tonight returns to the site's current observing night. Each entire
+  mini calendar is a keyboard/touch month button. Phones and short windows show fourteen compact
+  month choices instead of microscopic day grids.
   Exceptionally short frames scroll the choices to preserve readable captions and touch targets;
-  the ordinary desktop and phone layouts still show all twelve together.
+  the ordinary desktop and phone layouts still show all fourteen together.
 - **Shared night expansion.** Selecting a Month or Week date inserts the same horizontal event
   timeline used by River and Lunations after the activated row. Its height is reserved in the
   scrolling sequence, so it covers no dates. Opening it reveals the panel; scrolling can return to
