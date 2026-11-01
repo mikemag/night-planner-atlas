@@ -22,7 +22,8 @@ import { calendar } from '../views/calendar';
 import { lunations } from '../views/lunations';
 import { river } from '../views/river';
 import type { CanvasView } from '../views/view';
-import { store, type ViewId } from './settings';
+import { type ViewId } from './settings';
+import { savePreferences, type Preferences } from './personal-data';
 import { S, activeFocus, data, type AppState } from './state';
 
 const sizer = el('sizer');
@@ -36,7 +37,7 @@ export function canvasView(view: ViewId = S.view): CanvasView | null {
 
 const thresholds = () => ({ moonAlt: S.moonAlt, crescent: S.crescent });
 const remember = (key: string, value: unknown) => {
-  if (!S.sharedSettings) store.set(key, value);
+  if (!S.sharedSettings) void savePreferences({ [key]: value } as Preferences);
 };
 
 // ---------- layout and drawing
@@ -442,8 +443,8 @@ export function setView(view: ViewId): void {
     S.calendarMonth = null;
     S.calendarWeek = null;
   }
+  if (S.view !== view) remember('view', view);
   S.view = view;
-  remember('view', view);
   S.hover = null;
   S.riverReadoutSelected = false;
   for (const b of el('viewSeg').children)
@@ -568,9 +569,8 @@ export function siteLabel(): void {
   updateSiteClock();
 }
 
-export function applySite(site: Site, persist = true): void {
+export function applySite(site: Site): void {
   S.site = site;
-  if (persist) store.set('site', site);
   siteLabel();
   restart();
 }

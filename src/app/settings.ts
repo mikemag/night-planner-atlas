@@ -1,78 +1,38 @@
 import type { Site } from '../model/night';
-import { isSite } from '../model/site-input';
-import { readSiteBook, siteRecord } from './site-book';
+import { siteRecord } from './site-book';
 import { DEFAULT_SITES } from './default-sites';
+import { currentSite, personal } from './personal-data';
 
 export type ViewId = 'river' | 'calendar' | 'lunations' | 'notes';
 export type RiverZoom = 'year' | 'month';
 export type CalZoom = 'month' | 'week' | 'year';
 export type CalOrient = 'v' | 'h';
-
-/** Preferences remembered in this browser. */
 export interface Settings {
   view: ViewId;
   site: Site;
   focus: number;
   moonAlt: number;
   crescent: number;
-  /** Retained for compatibility with saved settings and v1 share links. */
+  /** Retained for v1 share links. */
   calOrient: CalOrient;
   calZoom: CalZoom;
   riverZoom: RiverZoom;
 }
-
 export const DEFAULT_SITE: Site = siteRecord(DEFAULT_SITES[0]);
-
-/** Per-viewer conveniences in localStorage; storage may be unavailable, so nothing depends on it. */
-export const store = {
-  raw(k: string): string | null | undefined {
-    try {
-      return localStorage.getItem('npa:' + k);
-    } catch {
-      return undefined;
-    }
-  },
-  get<T>(k: string, d: T): T {
-    try {
-      const v = localStorage.getItem('npa:' + k);
-      return v == null ? d : (JSON.parse(v) as T);
-    } catch {
-      return d;
-    }
-  },
-  set(k: string, v: unknown): boolean {
-    try {
-      localStorage.setItem('npa:' + k, JSON.stringify(v));
-      return true;
-    } catch {
-      return false;
-    }
-  },
-};
-
-function choice<T extends string | number>(key: string, allowed: readonly T[], fallback: T): T {
-  const value = store.get<unknown>(key, fallback);
-  return allowed.includes(value as T) ? (value as T) : fallback;
-}
-
-/** A deliberate focus choice, including Off, takes precedence over responsive defaults. */
 export function hasFocusPreference(): boolean {
-  return [0, 3, 5, 7, 10].includes(store.get('focus', -1));
+  return personal.snapshot().preferences.focus !== undefined;
 }
-
 export function loadSettings(): Settings {
-  const savedSite = store.get<unknown>('site', null);
-  const legacy = isSite(savedSite) ? savedSite : DEFAULT_SITE;
-  const { book } = readSiteBook(store.raw('favorites'), savedSite);
-  const site = book.sites.find((site) => site.id === book.selectedId) ?? legacy;
+  const value = personal.snapshot(),
+    p = value.preferences;
   return {
-    view: choice<ViewId>('view', ['river', 'calendar', 'lunations', 'notes'], 'river'),
-    site: siteRecord(site),
-    focus: choice('focus', [0, 3, 5, 7, 10], 0),
-    moonAlt: choice('moonAlt', [0, 5, 10, 15], 0),
-    crescent: choice('crescent', [0, 0.1, 0.2, 0.3], 0),
-    calOrient: choice<CalOrient>('calOrient', ['v', 'h'], 'v'),
-    calZoom: choice<CalZoom>('calZoom', ['month', 'week', 'year'], 'month'),
-    riverZoom: choice<RiverZoom>('riverZoom', ['year', 'month'], 'month'),
+    site: currentSite(value),
+    view: p.view ?? 'river',
+    focus: p.focus ?? 0,
+    moonAlt: p.moonAlt ?? 0,
+    crescent: p.crescent ?? 0,
+    calOrient: p.calOrient ?? 'v',
+    calZoom: p.calZoom ?? 'month',
+    riverZoom: p.riverZoom ?? 'month',
   };
 }

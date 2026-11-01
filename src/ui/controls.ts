@@ -25,6 +25,7 @@ import { lunations } from '../views/lunations';
 import { el, scroller } from './dom';
 import { initSiteEditor } from './site-editor';
 import { initRiverMinimap } from './river-minimap';
+import { initBrowserData } from './browser-data';
 
 const VIEW_KEYS: ViewId[] = ['calendar', 'river', 'lunations', 'notes'];
 
@@ -34,6 +35,7 @@ export function initControls(): void {
   initKeyboard();
   initHeader();
   initSiteEditor();
+  initBrowserData();
   initRiverMinimap();
   void prepareTimeZones().catch(() => {
     /* Manual zone entry remains available. */

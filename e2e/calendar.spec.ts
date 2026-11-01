@@ -1,3 +1,4 @@
+import { seedPersonal } from './storage';
 import { expect, test, type Page } from '@playwright/test';
 import { fmtClock, fmtClockS, fmtDur, nightTitle, SUN_NAMES } from '../src/model/format';
 import { SUN_EVENTS } from '../src/model/night';
@@ -19,19 +20,15 @@ async function open(
 ) {
   await page.setViewportSize({ width, height: width < 700 ? 844 : 920 });
   await page.clock.setFixedTime(new Date(summer ? '2026-06-15T03:00:00Z' : '2026-10-28T22:00:00Z'));
-  await page.addInitScript(
-    ({ style, period, summer }) => {
-      localStorage.setItem('npa:view', '"calendar"');
-      localStorage.setItem('npa:calZoom', JSON.stringify(period));
-      if (style) localStorage.setItem('npa:calMonthStyle', JSON.stringify(style));
-      if (summer)
-        localStorage.setItem(
-          'npa:site',
-          JSON.stringify({ name: 'Edinburgh', lat: 55.95, lon: -3.19, tz: 'Europe/London' }),
-        );
-    },
-    { style, period, summer },
-  );
+  await seedPersonal(page, {
+    preferences: { view: 'calendar', calZoom: period as 'month' },
+    ...(summer ? { site: { name: 'Edinburgh', lat: 55.95, lon: -3.19, tz: 'Europe/London' } } : {}),
+  });
+  if (style)
+    await page.addInitScript(
+      (style) => localStorage.setItem('npa:calMonthStyle', JSON.stringify(style)),
+      style,
+    );
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
   await painted(page);
@@ -753,7 +750,25 @@ test('a Year chosen during loading publishes all loaded months with one ready ev
 }) => {
   await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
   await page.addInitScript(() => {
-    localStorage.setItem('npa:view', '"calendar"');
+    localStorage.setItem(
+      'npa:personal',
+      JSON.stringify({
+        version: 1,
+        revision: 0,
+        starterVersion: 1,
+        sites: [],
+        active: {
+          site: {
+            name: 'Seattle',
+            lat: 47.74028262343255,
+            lon: -122.31984159452988,
+            tz: 'America/Los_Angeles',
+            elevation: 122,
+          },
+        },
+        preferences: { view: 'calendar' },
+      }),
+    );
     document.addEventListener(
       'click',
       (event) => {
@@ -782,17 +797,14 @@ test('a Year chosen during loading publishes all loaded months with one ready ev
 test('a long observing-site name keeps the complete phone month inside the viewport', async ({
   page,
 }) => {
-  await page.addInitScript(() =>
-    localStorage.setItem(
-      'npa:site',
-      JSON.stringify({
-        name: 'A very long observing-site name beside the reservoir and mountain trail',
-        lat: 47.60621,
-        lon: -122.34253,
-        tz: 'America/Los_Angeles',
-      }),
-    ),
-  );
+  await seedPersonal(page, {
+    site: {
+      name: 'A very long observing-site name beside the reservoir and mountain trail',
+      lat: 47.60621,
+      lon: -122.34253,
+      tz: 'America/Los_Angeles',
+    },
+  });
   await open(page, 390);
   await choose(page, '2027-01-01');
   await fits(page);

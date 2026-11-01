@@ -12,7 +12,8 @@
     <script>
       // Apply explicit themes before CSS paints, including when a saved observing mode is used.
       try {
-        const theme = JSON.parse(localStorage.getItem('npa:theme') || '"system"');
+        const saved = JSON.parse(localStorage.getItem('npa:personal') || 'null');
+        const theme = saved?.version === 1 ? saved.preferences?.theme : 'system';
         if (['light', 'dark', 'observing'].includes(theme))
           document.documentElement.dataset.theme = theme;
       } catch {
@@ -319,6 +320,9 @@
                 <p id="siteZoneStatus" role="status"></p>
               </div>
               <p id="siteStorage"></p>
+              <div class="dialog-actions">
+                <button class="btn" type="button" id="browserDataOpen">Browser data…</button>
+              </div>
               <div class="dialog-actions dialog-footer">
                 <button class="btn" type="button" id="siteCancel">Cancel</button>
                 <button class="btn primary" type="submit" id="siteApply">
@@ -326,6 +330,72 @@
                 </button>
               </div>
             </form>
+          </dialog>
+          <dialog class="site-dialog" id="browserData" aria-labelledby="browserDataTitle">
+            <div class="data-controls">
+              <div class="dialog-heading">
+                <h2 id="browserDataTitle">Browser data</h2>
+                <button
+                  class="icon-btn"
+                  type="button"
+                  id="browserDataClose"
+                  aria-label="Close browser data"
+                >
+                  ×
+                </button>
+              </div>
+              <p>
+                Sites and preferences stay on this device. Export a copy to keep a backup or move to
+                another browser. The file includes your site coordinates; share it deliberately.
+              </p>
+              <p id="dataSummary"></p>
+              <div class="dialog-actions">
+                <button class="btn" id="dataExport" type="button">
+                  Export sites and preferences</button
+                ><button class="btn" id="dataImport" type="button">Import…</button>
+              </div>
+              <input
+                id="dataFile"
+                type="file"
+                accept="application/json,.json"
+                aria-label="Personal data file"
+                hidden
+              />
+              <div id="dataReview" class="removal-confirm" hidden>
+                <p id="dataImportSummary"></p>
+                <div class="dialog-actions">
+                  <button class="btn" id="dataCancelImport" type="button">Cancel import</button
+                  ><button class="btn" id="dataConfirmImport" type="button">
+                    Replace saved sites and preferences
+                  </button>
+                </div>
+              </div>
+              <details>
+                <summary>Reset and recovery</summary>
+                <div class="data-controls">
+                  <p>
+                    Reset preferences restores the view, planning controls and theme. Your sites are
+                    kept. Restoring starter sites adds missing examples without replacing edited
+                    sites.
+                  </p>
+                  <div class="dialog-actions">
+                    <button class="btn" id="dataResetPreferences" type="button">
+                      Reset preferences</button
+                    ><button class="btn" id="dataRestoreStarters" type="button">
+                      Restore missing starter sites
+                    </button>
+                  </div>
+                  <div class="dialog-actions">
+                    <button class="btn" id="dataBackup" type="button">
+                      Export previous saved copy</button
+                    ><button class="btn" id="dataStored" type="button" hidden>
+                      Export unreadable stored data
+                    </button>
+                  </div>
+                </div>
+              </details>
+              <p id="browserDataStatus" role="status"></p>
+            </div>
           </dialog>
           <dialog class="site-dialog" id="shareDialog" aria-labelledby="shareTitle">
             <form id="shareForm">

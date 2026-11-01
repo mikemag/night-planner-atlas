@@ -1,3 +1,4 @@
+import { seedPersonal, readSite } from './storage';
 import { expect, test } from '@playwright/test';
 import { DEFAULT_SITES } from '../src/app/default-sites';
 
@@ -39,7 +40,7 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#loading')).toBeHidden();
     await expect(picker).toHaveValue('site:svalbard-kjell-henriksen-observatory');
     expect(
-      await page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!).sites),
+      await page.evaluate(() => JSON.parse(localStorage.getItem('npa:personal')!).sites),
     ).toEqual(DEFAULT_SITES);
   });
 
@@ -116,7 +117,7 @@ for (const width of [1512, 390]) {
     await page.locator('#siteApply').click();
     await expect(page.locator('#sitePop')).not.toBeVisible();
     await expect(page.locator('#loading')).toBeHidden();
-    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('npa:site')!))).toEqual(site);
+    expect(await readSite(page)).toEqual(site);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   });
 
@@ -142,13 +143,7 @@ for (const width of [1512, 390]) {
       { id: 'east', ...record },
     ];
     await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
-    await page.addInitScript((sites) => {
-      if (!localStorage.getItem('npa:favorites'))
-        localStorage.setItem(
-          'npa:favorites',
-          JSON.stringify({ version: 1, starterVersion: 1, sites, selectedId: 'west' }),
-        );
-    }, sites);
+    await seedPersonal(page, { sites, active: { id: 'west' } });
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     const picker = page.getByRole('combobox', { name: 'Observing site', exact: true });
@@ -161,15 +156,13 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#loading')).toBeHidden();
     await expect(page.locator('#siteClock')).toContainText('Europe/London');
     expect(await page.evaluate(() => window.__npa!.S.site)).toEqual(record);
-    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('npa:site')!))).toEqual(
-      record,
-    );
-    const stored = await page.evaluate(() => localStorage.getItem('npa:favorites'));
-    expect(JSON.parse(stored!)).toEqual({
+    expect(await readSite(page)).toEqual(record);
+    const stored = await page.evaluate(() => localStorage.getItem('npa:personal'));
+    expect(JSON.parse(stored!)).toMatchObject({
       version: 1,
       starterVersion: 1,
       sites,
-      selectedId: 'east',
+      active: { id: 'east' },
     });
     await picker.selectOption('manage');
     await expect(page.getByRole('dialog', { name: 'Observing sites' })).toBeVisible();
@@ -179,7 +172,7 @@ for (const width of [1512, 390]) {
     await page.locator('#siteName').fill('Unsaved edit');
     await page.keyboard.press('Escape');
     await expect(picker).toBeFocused();
-    expect(await page.evaluate(() => localStorage.getItem('npa:favorites'))).toBe(stored);
+    expect(await page.evaluate(() => localStorage.getItem('npa:personal'))).toBe(stored);
     expect(await page.evaluate(() => window.__npa!.S.site)).toEqual(record);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     if (process.env.SCREENSHOTS)
@@ -195,7 +188,7 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#siteClock')).toContainText('America/Los_Angeles');
     expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
     expect(
-      await page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!).sites),
+      await page.evaluate(() => JSON.parse(localStorage.getItem('npa:personal')!).sites),
     ).toEqual(sites);
   });
 
@@ -204,18 +197,19 @@ for (const width of [1512, 390]) {
   }, info) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
-    await page.addInitScript(() => {
-      if (!localStorage.getItem('npa:site'))
-        localStorage.setItem(
-          'npa:site',
-          JSON.stringify({
-            name: 'Legacy ridge',
-            lat: 55.95,
-            lon: -3.19,
-            tz: 'Europe/London',
-            elevation: 1234,
-          }),
-        );
+    await seedPersonal(page, {
+      sites: [
+        {
+          id: 'ridge',
+          name: 'Saved ridge',
+          lat: 55.95,
+          lon: -3.19,
+          tz: 'Europe/London',
+          elevation: 1234,
+        },
+        ...DEFAULT_SITES,
+      ],
+      active: { id: 'ridge' },
     });
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
@@ -224,9 +218,9 @@ for (const width of [1512, 390]) {
     await page.locator('#siteName').fill('Unsaved edit');
     await page.keyboard.press('Escape');
     await expect(page.locator('#siteSel')).toBeFocused();
-    await expect(page.locator('#siteSel option:checked')).toContainText('Legacy ridge');
+    await expect(page.locator('#siteSel option:checked')).toContainText('Saved ridge');
     await page.locator('#siteSel').selectOption('manage');
-    await expect(page.locator('#siteName')).toHaveValue('Legacy ridge');
+    await expect(page.locator('#siteName')).toHaveValue('Saved ridge');
     await page.locator('#siteAdd').click();
     await page
       .locator('#siteLocation')
@@ -246,9 +240,10 @@ for (const width of [1512, 390]) {
         path: `test-results/screenshots/${info.project.name}-sites-${width}.png`,
       });
     await page.locator('#siteApply').click();
+    await expect(page.locator('#sitePop')).toBeHidden();
     await expect(page.locator('#loading')).toBeHidden();
     await expect(page.locator('#siteClock')).toContainText('America/Los_Angeles');
-    const stored = await page.evaluate(() => localStorage.getItem('npa:favorites')!);
+    const stored = await page.evaluate(() => localStorage.getItem('npa:personal')!);
     expect(stored).not.toMatch(/google|discard-me|query=/);
     expect(JSON.parse(stored).sites).toHaveLength(8);
     await page.reload();
@@ -259,12 +254,13 @@ for (const width of [1512, 390]) {
     await page.locator('#siteDuplicate').click();
     await page.locator('#siteCancel').click();
     expect(
-      await page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!).sites.length),
+      await page.evaluate(() => JSON.parse(localStorage.getItem('npa:personal')!).sites.length),
     ).toBe(8);
     await page.locator('#siteSel').selectOption('manage');
     await page.locator('#siteDuplicate').click();
     await page.locator('#siteName').fill('Baker copy');
     await page.locator('#siteApply').click();
+    await expect(page.locator('#sitePop')).toBeHidden();
     await expect(page.locator('#loading')).toBeHidden();
     await page.locator('#siteSel').selectOption('manage');
     await page.locator('#siteRemove').click();
@@ -277,15 +273,16 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#siteSel option:checked')).toContainText('Baker copy');
     const legacyId = await page
       .locator('#siteFavorite option')
-      .filter({ hasText: 'Legacy ridge' })
+      .filter({ hasText: 'Saved ridge' })
       .getAttribute('value');
     await page.locator('#siteFavorite').selectOption(legacyId!);
     await expect(page.locator('#siteLocation')).toHaveValue('55.95, -3.19');
     await expect(page.locator('#siteElevation')).toHaveValue('1234');
     await expect(page.locator('#siteTz')).toHaveValue('Europe/London');
     await page.locator('#siteApply').click();
+    await expect(page.locator('#sitePop')).toBeHidden();
     await expect(page.locator('#loading')).toBeHidden();
-    await expect(page.locator('#siteSel option:checked')).toContainText('Legacy ridge');
+    await expect(page.locator('#siteSel option:checked')).toContainText('Saved ridge');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   });
 }
@@ -315,7 +312,7 @@ test('failed writes and damaged storage are visible and never erase existing dat
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('npa:favorites', '{unreadable old data');
+    localStorage.setItem('npa:personal', '{unreadable old data');
   });
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
@@ -324,7 +321,7 @@ test('failed writes and damaged storage are visible and never erase existing dat
   await page.locator('#siteName').fill('Temporary ridge');
   await page.locator('#siteApply').click();
   await expect(page.locator('#siteStorageNotice')).toContainText('left unchanged');
-  expect(await page.evaluate(() => localStorage.getItem('npa:favorites'))).toBe(
+  expect(await page.evaluate(() => localStorage.getItem('npa:personal'))).toBe(
     '{unreadable old data',
   );
   await expect(page.locator('#siteSel option:checked')).toContainText('Temporary ridge');
@@ -342,6 +339,7 @@ test('storage write failure still permits a temporary site', async ({ page }) =>
   await page.locator('#siteDuplicate').click();
   await page.locator('#siteName').fill('Temporary site');
   await page.locator('#siteApply').click();
+  await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#siteStorageNotice')).toContainText('cannot be kept');
   await expect(page.locator('#siteSel option:checked')).toContainText('Temporary site');

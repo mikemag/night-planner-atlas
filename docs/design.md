@@ -292,16 +292,16 @@ New-moon focus crops each cycle to ±N without changing ownership.
   every number and the weekend picks, not just the drawing.
 - **Site.** A native dropdown switches directly between named local favorites. **Manage sites…**
   opens the keyboard-accessible editor, with add, edit, duplicate and confirmed removal. The name,
-  coordinates, IANA zone and optional elevation are saved together; the existing saved site becomes
-  the initial favorite. Shared or unsaved sites remain visible as the current selection.
+  coordinates, IANA zone and optional elevation are saved together. Shared or unsaved sites remain
+  visible as the current selection.
   A fresh browser starts with Seattle's Paramount Park selected, plus Edinburgh's Royal
   Observatory, Sydney's Linden Observatory, Chile's Vera C. Rubin Observatory, Quito's
   Astronomical Observatory and Svalbard's Kjell Henriksen Observatory. These are editable starter
   favorites spanning northern and southern seasons, near-equatorial nights and polar extremes.
-  The six starters are merged once into existing lists, including old empty lists and legacy
-  single-site storage. Existing records, ordering and active selection are preserved. Matching
-  IDs or exact coordinates retain the user's record. A starter revision in the saved list prevents
-  duplicates on reload and respects later edits and removals. Damaged storage is never migrated.
+  The versioned personal-data namespace starts with fresh defaults; earlier per-setting storage is
+  ignored and left untouched. A separate starter revision records applied additions. Future starter
+  revisions add only their own new entries, preserving earlier removals and edits. Restoring missing
+  starters is a deliberate action in **Browser data…**, reached from the site manager.
   All latitudes from −90° to +90° are accepted. When sunrise or sunset is absent, every view uses
   a noon-to-noon clock axis. Solar shading follows intervals below each threshold, including stages
   that continue throughout the period and twilight without a sunrise. Clipped noon boundaries do
@@ -321,7 +321,7 @@ New-moon focus crops each cycle to ±N without changing ownership.
   names. Both site selectors retain native selection behavior, with consistent
   closed-control styling. The guide credits the ODbL data and links its matching dataset and full
   notices alongside the other credits.
-  Unknown/damaged favorites are left untouched, and unavailable storage is explained.
+  Unknown/damaged personal data is left untouched, and unavailable storage is explained.
   Blank elevation uses sea level; existing saved sites keep their coordinates.
   Elevation adjusts observer position and idealized refraction while assuming
   a level horizon, with no terrain lookup. The default is Seattle. Beside the location, a reserved
@@ -386,3 +386,31 @@ Rationale that isn't obvious from the result:
 - **Considered and not built.** A radial year clock was pretty, but it made times hard to read and
   nights hard to compare. A plain heat-map calendar loses _when_ in the night the dark falls. Calendar now separates
   the month summary from the detailed week and selected-night timeline, keeping each period visible.
+
+## Browser storage
+
+`npa:personal` is the single authoritative localStorage document for favorite sites, the active
+favorite ID (or a complete current unsaved site), and optional planning/view/theme preferences.
+Schema version 1 starts fresh and does not import the earlier individual keys. Missing preferences
+retain app/responsive defaults; an explicit focus of zero means Off. The inline theme bootstrap
+reads this same document before CSS paints. Share-link version 1 remains independent.
+
+All writes use a short Web Lock, reread/validate the latest document, apply a specific edit and
+increment its revision. Cross-tab storage events refresh site pickers without switching the open
+plan or discarding an editor draft. Saving/removing a site checks the draft's original record;
+conflicts preserve the draft. Unavailable locking/storage or failed writes allow explicit tab-only
+changes. Unsupported/corrupt records are preserved and never overwritten with fallback defaults.
+
+Schema migration steps advance one version at a time in memory, validate the final document, save
+the exact original to `npa:personal:backup`, then atomically replace the main record. The initial
+schema has no historical migrations. Future releases retain all released schema readers/migrations;
+older writers must recheck the schema before each edit and use temporary state if it is newer.
+There is no automatic downgrade. Starter revisions are separate from schema versions.
+
+**Browser data…** exports/imports the versioned personal document without calculations. Import is
+validated and reviewed before explicit replacement; a changed revision blocks a stale import.
+Import and preference reset preserve the previous saved document for export/recovery. Preference
+reset keeps sites, and starter restoration keeps existing records and selection. Unreadable raw
+data can be exported for recovery. These controls work without reloading the page. Browser-cleared
+storage is outside app migration guarantees; a deliberate export supplies an external backup and
+supports moving between browsers or origins. Data and coordinates never enter diagnostic logs.

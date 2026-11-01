@@ -52,6 +52,7 @@ test('a failed lookup leaves deliberate manual entry usable', async ({ page }) =
   await expect(page.locator('#siteTz')).toBeFocused();
   await page.locator('#siteTz').fill('Europe/London');
   await page.locator('#siteApply').click();
+  await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#siteClock')).toContainText('Europe/London');
 });
@@ -121,6 +122,7 @@ test('editing or closing during a save lookup never applies a stale draft', asyn
   await expect(page.locator('#siteName')).toHaveValue('Seattle, Paramount Park');
   await page.locator('#siteName').fill('Current draft');
   await page.locator('#siteApply').click();
+  await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden();
   expect(await page.evaluate(() => window.__npa!.S.site.name)).toBe('Current draft');
 });

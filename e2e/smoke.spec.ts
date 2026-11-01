@@ -1,3 +1,4 @@
+import { seedPersonal } from './storage';
 import { expect, test, type Page } from '@playwright/test';
 import path from 'node:path';
 
@@ -129,17 +130,14 @@ test('optional elevation persists, corrects events, and can be cleared without c
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 390, height: 844 });
   // Pin the sea-level baseline independently of the public starter site's elevation.
-  await page.addInitScript(() =>
-    localStorage.setItem(
-      'npa:site',
-      JSON.stringify({
-        name: 'Sea-level Seattle',
-        lat: 47.60621,
-        lon: -122.34253,
-        tz: 'America/Los_Angeles',
-      }),
-    ),
-  );
+  await seedPersonal(page, {
+    site: {
+      name: 'Sea-level Seattle',
+      lat: 47.60621,
+      lon: -122.34253,
+      tz: 'America/Los_Angeles',
+    },
+  });
   const errors = await open(page);
   const before = await page.evaluate(() => {
     const n = window.__npa!.nights.find((n) => n.id === '2026-10-03')!;
@@ -149,6 +147,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
   await expect(page.getByLabel('Elevation (m above sea level, optional)')).toHaveValue('');
   await page.locator('#siteElevation').fill('2000');
   await page.locator('#siteApply').click();
+  await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   await expect(page.locator('#siteSel option:checked')).toContainText('2000 m');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
@@ -166,6 +165,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
   await expect(page.locator('#siteLocation')).toHaveValue('47.60621, -122.34253');
   await page.locator('#siteElevation').fill('');
   await page.locator('#siteApply').click();
+  await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
   expect(
@@ -189,27 +189,26 @@ test('elevation validates range, accepts below sea level, and can be cleared', a
   }
   await page.locator('#siteElevation').fill('-400');
   await page.locator('#siteApply').click();
+  await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   await expect(page.locator('#siteSel option:checked')).toContainText('-400 m');
   await page.locator('#siteSel').selectOption('manage');
   await page.locator('#siteElevation').fill('');
   await page.locator('#siteApply').click();
+  await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(await page.evaluate(() => window.__npa!.S.site.elevation)).toBeUndefined();
   expect(errors).toEqual([]);
 });
 
-test('sites saved before elevation was supported retain their coordinates and use sea level', async ({
+test('saved sites without elevation retain their coordinates and use sea level', async ({
   page,
 }) => {
-  await page.addInitScript(() =>
-    localStorage.setItem(
-      'npa:site',
-      JSON.stringify({ name: 'Legacy site', lat: 55.95, lon: -3.19, tz: 'Europe/London' }),
-    ),
-  );
+  await seedPersonal(page, {
+    site: { name: 'Sea-level site', lat: 55.95, lon: -3.19, tz: 'Europe/London' },
+  });
   const errors = await open(page);
-  await expect(page.locator('#siteSel option:checked')).toContainText('Legacy site');
+  await expect(page.locator('#siteSel option:checked')).toContainText('Sea-level site');
   await page.locator('#siteSel').selectOption('manage');
   await expect(page.locator('#siteElevation')).toHaveValue('');
   await expect(page.locator('#siteLocation')).toHaveValue('55.95, -3.19');

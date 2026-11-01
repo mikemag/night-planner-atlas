@@ -1,5 +1,5 @@
-import { store } from '../app/settings';
-import { readSiteBook, siteRecord } from '../app/site-book';
+import { personal, EditConflict, type PersonalData, type SaveResult } from '../app/personal-data';
+import { siteRecord, type Favorite } from '../app/site-book';
 import { applySite } from '../app/shell';
 import { S } from '../app/state';
 import type { Site } from '../model/night';
@@ -24,9 +24,8 @@ export function initSiteEditor(): void {
     [elevation, el('siteElevationErr')],
     [zone, el('siteTzErr')],
   ]);
-  const raw = store.raw('favorites');
-  const { book, readable, migrated } = readSiteBook(raw, store.get<unknown>('site', null));
-  let storageFailed = !readable;
+  let book = personal.snapshot();
+  let editingBase: Favorite | null = null;
   let editingId: string | null = null;
   let point: Coordinates | null = null;
   let coordinateError = '';
@@ -34,12 +33,18 @@ export function initSiteEditor(): void {
   let opener: HTMLElement = picker;
   const matchesCurrent = (site: Site) =>
     JSON.stringify(siteRecord(site)) === JSON.stringify(siteRecord(S.site));
-  const activeFavorite = () =>
-    book.sites.find((site) => site.id === book.selectedId && matchesCurrent(site)) ??
-    book.sites.find(matchesCurrent);
+  const activeFavorite = () => {
+    const active = book.active;
+    return (
+      ('id' in active
+        ? book.sites.find((site) => site.id === active.id && matchesCurrent(site))
+        : undefined) ?? book.sites.find(matchesCurrent)
+    );
+  };
   const siteCaption = (site: Site) =>
     `${site.name} · ${Math.abs(site.lat).toFixed(2)}°${site.lat >= 0 ? 'N' : 'S'} ${Math.abs(site.lon).toFixed(2)}°${site.lon >= 0 ? 'E' : 'W'}${site.elevation == null ? '' : ` · ${site.elevation} m`}`;
   const refreshPicker = () => {
+    book = personal.snapshot();
     const active = activeFavorite();
     picker.replaceChildren();
     if (!active) picker.appendChild(new Option(siteCaption(S.site), 'current'));
@@ -55,22 +60,23 @@ export function initSiteEditor(): void {
     status,
     el<HTMLDataListElement>('siteZoneChoices'),
   );
-  const storageWarning = readable
-    ? 'This site is active for this tab. Browser storage is unavailable, so changes cannot be kept after closing.'
-    : raw === undefined
-      ? 'Browser storage is unavailable. Sites can be used in this tab but cannot be kept after closing.'
-      : 'Saved favorites could not be read. Their stored data was left unchanged; changes are temporary in this tab.';
-  const persist = () => {
-    const saved = readable && store.set('favorites', book);
-    storageFailed = !saved;
-    if (!saved) {
-      el('siteStorageNotice').textContent = storageWarning;
-      el('siteStorageNotice').hidden = false;
-      el('siteStorage').textContent = storageWarning;
-    }
-    return saved;
+  const showResult = (result?: SaveResult) => {
+    const message = result?.message ?? personal.status();
+    el('siteStorageNotice').textContent = message ?? '';
+    el('siteStorageNotice').hidden = !message;
+    el('siteStorage').textContent =
+      message ?? 'Favorites and preferences stay in this browser. No account is needed.';
   };
-  if (migrated) persist();
+  const persist = async (edit: (draft: PersonalData) => void) => {
+    const result = await personal.update(edit);
+    showResult(result);
+    refreshPicker();
+    return result;
+  };
+  const checkDraft = (draft: PersonalData, base: Favorite | null) => {
+    if (base && JSON.stringify(draft.sites.find((s) => s.id === base.id)) !== JSON.stringify(base))
+      throw new EditConflict();
+  };
   const setSaving = (saving: boolean) => {
     save.disabled = saving;
     save.textContent = saving ? 'Finding time zone…' : 'Save & use site';
@@ -103,6 +109,7 @@ export function initSiteEditor(): void {
     lookup.cancel();
     cancelSave();
     editingId = id;
+    editingBase = structuredClone(book.sites.find((site) => site.id === id) ?? null);
     name.value = site?.name ?? '';
     location.value = site ? `${site.lat}, ${site.lon}` : '';
     elevation.value = site?.elevation == null ? '' : String(site.elevation);
@@ -135,9 +142,7 @@ export function initSiteEditor(): void {
       : 'New favorite';
     el<HTMLButtonElement>('siteRemove').disabled = id === null;
     preview();
-    el('siteStorage').textContent = storageFailed
-      ? storageWarning
-      : 'Favorites and preferences stay in this browser. No account is needed.';
+    showResult();
   };
   const openEditor = (source: HTMLElement) => {
     opener = source;
@@ -146,21 +151,28 @@ export function initSiteEditor(): void {
     dialog.showModal();
     favorites.focus();
   };
-  picker.addEventListener('change', () => {
+  picker.addEventListener('change', async () => {
     if (picker.value === 'manage') {
       openEditor(picker);
       return;
     }
     const favorite = book.sites.find((site) => `site:${site.id}` === picker.value);
     if (!favorite) return;
-    book.selectedId = favorite.id;
-    const saved = persist();
-    applySite(siteRecord(favorite), saved);
+    applySite(siteRecord(favorite));
+    await persist((draft) => {
+      checkDraft(draft, favorite);
+      draft.active = { id: favorite.id };
+    });
   });
   el('shareReviewSite').addEventListener('click', (event) =>
     openEditor(event.currentTarget as HTMLElement),
   );
   window.addEventListener('npa-site-change', refreshPicker);
+  personal.subscribe(() => {
+    refreshPicker();
+    showResult();
+  });
+  showResult();
   refreshPicker();
   for (const id of ['siteCancel', 'siteClose'])
     el(id).addEventListener('click', () => dialog.close());
@@ -194,12 +206,17 @@ export function initSiteEditor(): void {
     el('siteRemoval').hidden = true;
     el('siteRemove').focus();
   });
-  el('siteConfirmRemove').addEventListener('click', () => {
-    book.sites = book.sites.filter((site) => site.id !== editingId);
-    if (book.selectedId === editingId) book.selectedId = null;
-    persist();
-    refreshPicker();
-    const next = book.sites.find((site) => site.id === book.selectedId) ?? book.sites[0];
+  el('siteConfirmRemove').addEventListener('click', async () => {
+    const base = editingBase;
+    if (!base) return;
+    const result = await persist((draft) => {
+      checkDraft(draft, base);
+      draft.sites = draft.sites.filter((site) => site.id !== base.id);
+      if ('id' in draft.active && draft.active.id === base.id)
+        draft.active = { site: siteRecord(base) };
+    });
+    if (result.conflict) return;
+    const next = book.sites[0];
     fill(next ?? S.site, next?.id ?? null);
     favorites.focus();
   });
@@ -274,14 +291,22 @@ export function initSiteEditor(): void {
       return;
     }
     const id = editingId ?? crypto.randomUUID();
-    if (editingId)
-      book.sites = book.sites.map((favorite) =>
-        favorite.id === id ? { ...favorite, ...site, elevation: site.elevation } : favorite,
-      );
-    else book.sites.push({ ...site, id });
-    book.selectedId = id;
-    const saved = persist();
+    const base = editingBase;
+    save.disabled = true;
+    picker.disabled = true;
+    const result = await persist((draft) => {
+      checkDraft(draft, base);
+      if (base)
+        draft.sites = draft.sites.map((favorite) =>
+          favorite.id === id ? { ...site, id } : favorite,
+        );
+      else draft.sites.push({ ...site, id });
+      draft.active = { id };
+    });
+    save.disabled = false;
+    picker.disabled = false;
+    if (result.conflict) return;
     dialog.close();
-    applySite(site, saved);
+    applySite(site);
   });
 }

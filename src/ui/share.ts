@@ -1,9 +1,11 @@
 import { createShareLink, readSharedPlan, type SharedPlan } from '../app/share-state';
-import { hasFocusPreference, loadSettings, store } from '../app/settings';
+import { hasFocusPreference, loadSettings } from '../app/settings';
+import { savePreferences } from '../app/personal-data';
 import { restart, siteLabel, syncSettingsControls } from '../app/shell';
 import { S, activeFocus, data } from '../app/state';
 import { nightTitle, pad2 } from '../model/format';
 import { siteRecord } from '../app/site-book';
+import { applyTheme, loadTheme } from '../app/theme';
 import { el } from './dom';
 
 const preferenceKeys = [
@@ -15,6 +17,30 @@ const preferenceKeys = [
   'calZoom',
   'riverZoom',
 ] as const;
+
+/** Apply an explicit restore/import/reset without reloading or depending on the network. */
+export function useSavedPlan(keepSite = false): void {
+  Object.assign(S, loadSettings(), {
+    ...(keepSite ? { site: S.site } : {}),
+    sharedSettings: false,
+    rangeStart: null,
+    rangeShift: 0,
+    pendingNight: null,
+    riverExpanded: false,
+    lunationsExpanded: false,
+    calendarExpanded: false,
+    calendarWeek: null,
+    calendarMonth: null,
+    focusExplicit: hasFocusPreference(),
+  });
+  history.replaceState(null, '', location.pathname + location.search);
+  el('sharedNotice').hidden = true;
+  applyTheme(loadTheme());
+  el<HTMLSelectElement>('themeSel').value = loadTheme();
+  syncSettingsControls();
+  siteLabel();
+  restart();
+}
 
 /** Run after controls capture the recipient's saved site book, and before the first computation. */
 export function initSharing(): void {
@@ -65,9 +91,10 @@ export function initSharing(): void {
     return false;
   };
   applyIncoming();
-  el('shareKeepSettings').addEventListener('click', () => {
-    const saved = preferenceKeys.map((key) => store.set(key, S[key])).every(Boolean);
-    if (saved) {
+  el('shareKeepSettings').addEventListener('click', async () => {
+    const patch = Object.fromEntries(preferenceKeys.map((key) => [key, S[key]]));
+    const result = await savePreferences(patch);
+    if (result.saved) {
       S.sharedSettings = false;
       S.focusExplicit = true;
       message.textContent =
@@ -80,23 +107,7 @@ export function initSharing(): void {
       message.textContent = 'Browser storage is unavailable; these view settings remain temporary.';
   });
   el('shareRestore').addEventListener('click', () => {
-    Object.assign(S, loadSettings(), {
-      sharedSettings: false,
-      rangeStart: null,
-      rangeShift: 0,
-      pendingNight: null,
-      riverExpanded: false,
-      lunationsExpanded: false,
-      calendarExpanded: false,
-      calendarWeek: null,
-      calendarMonth: null,
-      focusExplicit: hasFocusPreference(),
-    });
-    history.replaceState(null, '', location.pathname + location.search);
-    notice.hidden = true;
-    syncSettingsControls();
-    siteLabel();
-    restart();
+    useSavedPlan();
   });
   // Apply same-document incoming links without a reload, including after going offline.
   window.addEventListener('hashchange', () => {

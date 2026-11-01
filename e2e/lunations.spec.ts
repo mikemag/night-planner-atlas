@@ -1,3 +1,4 @@
+import { seedPersonal, readPreference } from './storage';
 import { expect, test, type Page } from '@playwright/test';
 import { fmtClock, fmtDur, nightTitle } from '../src/model/format';
 
@@ -13,18 +14,10 @@ async function painted(page: Page) {
 async function open(page: Page, width = 1512, focus: number | null = null, site = false) {
   await page.setViewportSize({ width, height: width < 700 ? 844 : 920 });
   await page.clock.setFixedTime(new Date('2026-06-15T03:00:00Z'));
-  await page.addInitScript(
-    ({ focus, site }) => {
-      localStorage.setItem('npa:view', JSON.stringify('lunations'));
-      if (focus !== null) localStorage.setItem('npa:focus', JSON.stringify(focus));
-      if (site)
-        localStorage.setItem(
-          'npa:site',
-          JSON.stringify({ name: 'Edinburgh', lat: 55.95, lon: -3.19, tz: 'Europe/London' }),
-        );
-    },
-    { focus, site },
-  );
+  await seedPersonal(page, {
+    preferences: { view: 'lunations', ...(focus === null ? {} : { focus: focus as 0 }) },
+    ...(site ? { site: { name: 'Edinburgh', lat: 55.95, lon: -3.19, tz: 'Europe/London' } } : {}),
+  });
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
   await page.evaluate(() => {
@@ -121,7 +114,7 @@ test('Full cycle covers every night once, restores formerly missing dates, and i
   );
   expect((await selected(page)).geometry.N).toBe(15);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
-  expect(await page.evaluate(() => localStorage.getItem('npa:focus'))).toBeNull();
+  expect(await readPreference(page, 'focus')).toBeNull();
 });
 
 for (const width of [1512, 390]) {
@@ -225,7 +218,7 @@ test('phone defaults stay local to Lunations, survive sharing, and preserve the 
     'aria-pressed',
     'true',
   );
-  expect(await page.evaluate(() => localStorage.getItem('npa:focus'))).toBeNull();
+  expect(await readPreference(page, 'focus')).toBeNull();
   const initial = await selected(page);
   const browsed = await page.evaluate(() => {
     const a = window.__npa!;
@@ -269,7 +262,7 @@ test('phone defaults stay local to Lunations, survive sharing, and preserve the 
     'true',
   );
   await expect(page.locator('#lunationsDetail')).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem('npa:focus'))).toBeNull();
+  expect(await readPreference(page, 'focus')).toBeNull();
 });
 
 test('resizing retains an open night even outside the automatic phone window', async ({ page }) => {

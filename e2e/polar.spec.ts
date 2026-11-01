@@ -73,45 +73,24 @@ for (const width of [1512, 390]) {
   });
 }
 
-test('older saved lists gain the starters once while keeping selection, edits and later removals', async ({
+test('former saved data is ignored without erasing it, and new removals persist', async ({
   page,
 }) => {
-  const privateSite = {
-    id: 'initial-site',
-    name: 'My saved ridge',
-    lat: 45,
-    lon: -120,
-    tz: 'America/Los_Angeles',
-    elevation: 1234,
-  };
-  await page.addInitScript((site) => {
-    if (!localStorage.getItem('npa:favorites'))
-      localStorage.setItem(
-        'npa:favorites',
-        JSON.stringify({ version: 1, sites: [site], selectedId: site.id }),
-      );
-  }, privateSite);
+  const old = '{"version":1,"sites":[],"selectedId":null}';
+  await page.addInitScript((raw) => localStorage.setItem('npa:favorites', raw), old);
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
-  const picker = page.locator('#siteSel');
-  await expect(picker).toHaveValue('site:initial-site');
-  const merged = await page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!));
-  expect(merged.sites).toHaveLength(7);
-  expect(merged.sites[0]).toEqual(privateSite);
-  expect(merged.selectedId).toBe('initial-site');
-  expect(merged.starterVersion).toBe(1);
-  await picker.selectOption('manage');
+  await expect(page.locator('#siteSel')).toHaveValue('site:seattle-paramount-park');
+  await page.locator('#siteSel').selectOption('manage');
   await page.locator('#siteFavorite').selectOption('quito-astronomical-observatory');
   await page.locator('#siteRemove').click();
   await page.locator('#siteConfirmRemove').click();
+  await expect(page.locator('#siteFavorite option')).toHaveCount(5);
   await page.keyboard.press('Escape');
   await page.reload();
   await expect(page.locator('#loading')).toBeHidden();
-  await expect(picker).toHaveValue('site:initial-site');
-  await expect(picker.locator('option[value="site:quito-astronomical-observatory"]')).toHaveCount(
-    0,
-  );
-  const after = await page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!));
-  expect(after.sites).toHaveLength(6);
-  expect(after.sites[0]).toEqual(privateSite);
+  await expect(
+    page.locator('#siteSel option[value="site:quito-astronomical-observatory"]'),
+  ).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('npa:favorites'))).toBe(old);
 });

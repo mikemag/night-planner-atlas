@@ -608,9 +608,13 @@ input {
 .site-dialog::backdrop {
   background: rgba(0, 0, 0, 0.5);
 }
-.site-dialog form {
+.site-dialog form,
+.data-controls {
   display: grid;
   gap: 10px;
+}
+.data-controls details > .data-controls {
+  padding-top: 10px;
 }
 .dialog-heading {
   display: flex;

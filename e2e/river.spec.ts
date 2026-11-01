@@ -1,3 +1,4 @@
+import { seedPersonal } from './storage';
 import { expect, test, type Page } from '@playwright/test';
 import { fmtClock, fmtClockS, fmtDur } from '../src/model/format';
 
@@ -737,17 +738,14 @@ test.describe('new-moon event markers', () => {
 
     test(`new-moon labels also fit over summer twilight at ${width}px`, async ({ page }, info) => {
       await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
-      await page.addInitScript(() =>
-        localStorage.setItem(
-          'npa:site',
-          JSON.stringify({
-            name: 'Twilight check',
-            lat: 60,
-            lon: 0,
-            tz: 'Europe/London',
-          }),
-        ),
-      );
+      await seedPersonal(page, {
+        site: {
+          name: 'Twilight check',
+          lat: 60,
+          lon: 0,
+          tz: 'Europe/London',
+        },
+      });
       await openRiver(page);
       await page.evaluate(() => {
         const a = window.__npa!;

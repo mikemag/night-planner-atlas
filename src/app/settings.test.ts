@@ -1,68 +1,39 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { DEFAULT_SITE, loadSettings } from './settings';
-
+import { DEFAULT_SITE, hasFocusPreference, loadSettings } from './settings';
+import { freshPersonalData, PERSONAL_KEY } from './personal-data';
 let saved: Map<string, string>;
 beforeEach(() => {
   saved = new Map();
   vi.stubGlobal('localStorage', { getItem: (key: string) => saved.get(key) ?? null });
 });
 afterEach(() => vi.unstubAllGlobals());
-
-it('uses Paramount Park with its elevation on first use without writing preferences', () => {
-  expect(loadSettings().site).toEqual({
-    name: 'Seattle, Paramount Park',
-    lat: 47.74028262343255,
-    lon: -122.31984159452988,
-    tz: 'America/Los_Angeles',
-    elevation: 122,
-  });
-  expect(saved.size).toBe(0);
+it('uses fresh elevated Seattle defaults and ignores all former storage', () => {
+  saved.set('npa:site', JSON.stringify({ name: 'Old', lat: 0, lon: 0, tz: 'UTC' }));
+  saved.set('npa:view', '"calendar"');
+  expect(loadSettings()).toMatchObject({ site: DEFAULT_SITE, view: 'river', riverZoom: 'month' });
+  expect(hasFocusPreference()).toBe(false);
+  expect(saved.size).toBe(2);
 });
-
-it('falls back safely from obsolete or malformed control values without altering storage', () => {
-  const invalid = {
-    view: 'table',
-    focus: -5,
-    moonAlt: 7,
-    crescent: '0.2',
-    calOrient: 'diagonal',
-    calZoom: null,
-    calMonthStyle: 'nautical',
-    riverZoom: 'week',
-  };
-  for (const [key, value] of Object.entries(invalid))
-    saved.set('npa:' + key, JSON.stringify(value));
-  expect(loadSettings()).toEqual({
-    view: 'river',
-    site: DEFAULT_SITE,
-    focus: 0,
-    moonAlt: 0,
-    crescent: 0,
-    calOrient: 'v',
-    calZoom: 'month',
-    riverZoom: 'month',
-  });
-  expect(saved.get('npa:moonAlt')).toBe('7');
+it('loads a complete saved favorite and keeps unset focus distinct from Off', () => {
+  const data = freshPersonalData();
+  data.sites[0].elevation = 2100;
+  data.preferences = { moonAlt: 15, focus: 0 };
+  saved.set(PERSONAL_KEY, JSON.stringify(data));
+  expect(loadSettings().site.elevation).toBe(2100);
+  expect(loadSettings().site).not.toHaveProperty('id');
+  expect(loadSettings().moonAlt).toBe(15);
+  expect(hasFocusPreference()).toBe(true);
 });
-
-it('restores the selected full favorite even if the legacy site key is older', () => {
-  const site = { name: 'Saved ridge', lat: 35, lon: -110, tz: 'America/Phoenix', elevation: 2100 };
-  saved.set('npa:site', JSON.stringify(DEFAULT_SITE));
-  saved.set(
-    'npa:favorites',
-    JSON.stringify({ version: 1, sites: [{ ...site, id: 'ridge' }], selectedId: 'ridge' }),
-  );
-  saved.set('npa:moonAlt', '15');
-  const settings = loadSettings();
-  expect(settings.site).toEqual(site);
-  expect(settings.site).not.toHaveProperty('id');
-  expect(settings.moonAlt).toBe(15);
+it('uses a current unsaved site when the active favorite was removed', () => {
+  const data = freshPersonalData();
+  data.active = { site: { name: 'Current', lat: 35, lon: -110, tz: 'America/Phoenix' } };
+  data.sites = [];
+  saved.set(PERSONAL_KEY, JSON.stringify(data));
+  expect(loadSettings().site.name).toBe('Current');
 });
-
-it('ignores the retired month presentation without deleting saved data or the selected period', () => {
-  saved.set('npa:calMonthStyle', '"windows"');
-  saved.set('npa:calZoom', '"week"');
-  expect(loadSettings()).toMatchObject({ calZoom: 'week' });
-  expect(loadSettings()).not.toHaveProperty('calMonthStyle');
-  expect(saved.get('npa:calMonthStyle')).toBe('"windows"');
+it('leaves invalid or future personal data untouched', () => {
+  const raw = JSON.stringify({ ...freshPersonalData(), version: 2 });
+  saved.set(PERSONAL_KEY, raw);
+  expect(loadSettings().site).toEqual(DEFAULT_SITE);
+  expect(saved.get(PERSONAL_KEY)).toBe(raw);
 });

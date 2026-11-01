@@ -1,3 +1,4 @@
+import { seedPersonal, readPersonal, readSite, readPreference } from './storage';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
 const ownSite = {
@@ -23,22 +24,22 @@ async function receiver(browser: Browser) {
   });
   const page = await context.newPage();
   await page.clock.setFixedTime(new Date('2028-05-12T00:00:00Z'));
-  await page.addInitScript(
-    ({ site, book, prefs }) => {
-      if (localStorage.getItem('npa:seeded')) return;
-      localStorage.setItem('npa:site', JSON.stringify(site));
-      localStorage.setItem('npa:favorites', JSON.stringify(book));
-      for (const [key, value] of Object.entries(prefs))
-        localStorage.setItem('npa:' + key, JSON.stringify(value));
-      localStorage.setItem('npa:seeded', 'true');
-    },
-    { site: ownSite, book: ownBook, prefs: ownPrefs },
-  );
+  await seedPersonal(page, {
+    sites: ownBook.sites,
+    active: { id: 'mine' },
+    preferences: ownPrefs as never,
+  });
   return { context, page };
 }
 
 async function favorites(page: Page) {
-  return page.evaluate(() => JSON.parse(localStorage.getItem('npa:favorites')!));
+  const data = await readPersonal(page);
+  return {
+    version: data.version,
+    starterVersion: data.starterVersion,
+    sites: data.sites,
+    selectedId: 'id' in data.active ? data.active.id : null,
+  };
 }
 
 async function openAuthor(page: Page) {
@@ -94,7 +95,7 @@ test('a site-free link restores dates and controls later while preserving recipi
         saved: Object.fromEntries(
           ['view', 'riverZoom', 'focus', 'moonAlt', 'crescent'].map((key) => [
             key,
-            JSON.parse(localStorage.getItem('npa:' + key)!),
+            JSON.parse(localStorage.getItem('npa:personal')!).preferences[key],
           ]),
         ),
       };
@@ -111,13 +112,10 @@ test('a site-free link restores dates and controls later while preserving recipi
     });
     expect(await favorites(target.page)).toEqual(ownBook);
     await target.page.locator('#focusSeg button[data-val="0"]').click();
-    expect(await target.page.evaluate(() => JSON.parse(localStorage.getItem('npa:focus')!))).toBe(
-      7,
-    );
+    expect(await readPreference(target.page, 'focus')).toBe(7);
     await target.page.locator('#shareKeepSettings').click();
-    expect(await target.page.evaluate(() => JSON.parse(localStorage.getItem('npa:focus')!))).toBe(
-      0,
-    );
+    await expect(target.page.locator('#shareKeepSettings')).toBeHidden();
+    expect(await readPreference(target.page, 'focus')).toBe(0);
     expect(await favorites(target.page)).toEqual(ownBook);
     await target.page.locator('#shareRestore').click();
     await expect(target.page.locator('#sharedNotice')).toBeHidden();
@@ -141,6 +139,7 @@ test('including a site requires a preview and saving it never replaces existing 
   await expect(page.locator('#siteTz')).toHaveValue('America/Los_Angeles');
   await page.locator('#siteElevation').fill('1234');
   await page.locator('#siteApply').click();
+  await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden();
   await page.getByRole('button', { name: 'Share', exact: true }).click();
   await page.getByLabel('Include this site', { exact: true }).check();
@@ -162,10 +161,9 @@ test('including a site requires a preview and saving it never replaces existing 
     await expect(target.page.locator('#loading')).toBeHidden();
     await expect(target.page.locator('#siteSel option:checked')).toContainText('Private meadow');
     expect(await favorites(target.page)).toEqual(ownBook);
-    expect(await target.page.evaluate(() => JSON.parse(localStorage.getItem('npa:site')!))).toEqual(
-      ownSite,
-    );
+    expect(await readSite(target.page)).toEqual(ownSite);
     await target.page.locator('#shareKeepSettings').click();
+    await expect(target.page.locator('#shareKeepSettings')).toBeHidden();
     expect(await favorites(target.page)).toEqual(ownBook);
     await target.page.locator('#shareReviewSite').click();
     await expect(target.page.locator('#siteName')).toHaveValue('Private meadow');
@@ -174,6 +172,7 @@ test('including a site requires a preview and saving it never replaces existing 
     expect(await favorites(target.page)).toEqual(ownBook);
     await target.page.locator('#shareReviewSite').click();
     await target.page.locator('#siteApply').click();
+    await expect(target.page.locator('#sitePop')).toBeHidden();
     await expect(target.page.locator('#loading')).toBeHidden();
     const saved = await favorites(target.page);
     expect(saved.sites).toHaveLength(2);
