@@ -282,3 +282,44 @@ ordinary nights, up to 302 for a 25-hour polar period). The Moon requires extrem
 refinements at all four horizon heights. The work runs in 24 ms slices
 and repeats when the site or range changes. Changing a threshold only re-derives the numbers;
 it doesn't recompute positions.
+
+## Rebuildable monthly cache
+
+Production builds optionally persist complete site-month calculation blocks in IndexedDB under
+`npa:computed`. Main-thread computation retains the same 24 ms slices, cancellation checks and
+single completed-range publication. Cache hits restore night data; misses alone run the night
+calculation. Development HMR sessions bypass the cache because their build fingerprint is fixed
+at server startup. No worker, progressive rendering or third-party service is involved.
+
+The key combines cache format 1, a build-generated compute fingerprint, exact latitude/longitude,
+elevation (missing equals zero), IANA zone and calendar year/month. The fingerprint includes all
+non-test model sources, the cache codec and the resolved Astronomy Engine dependency. UI-only
+releases retain compatible results. Changed computation/codec generations are never reused;
+older entries remain disposable within the same bounded least-recently-used cache. Schema
+versions of saved personal data and share links do not determine numerical cache compatibility.
+
+The payload preserves UTC solar events, below-threshold solar intervals, all four refined Moon
+threshold windows/crossings, illumination/phase, sample origin and the original Float32 altitude
+arrays. Classes, wall-clock fields, range structures and threshold summaries are rebuilt. A block
+must contain every expected date and valid finite arrays/intervals. Current browser rules must
+still map each local noon, midnight and next noon to the stored instants; otherwise that month
+is recomputed. Fresh clock fields use the current time-zone rules. Cache hydration preserves the
+existing numerical precision, including polar and 23/25-hour nights.
+
+One block serves every planning threshold, focus, view, zoom and theme. Site names and favorite
+IDs are excluded from its key. A rolling 14-month range can reuse 13 previous months; year-shifted
+ranges share their overlapping months. The current site's saved status determines eligibility:
+unsaved shared sites and tab-only edits do not acquire persistent private calculation records.
+
+The cache has a 32 MiB estimated uncompressed payload budget and a 512-month ceiling. Metadata
+tracks approximate bytes and recency separately from calculation payloads. Writes/eviction are
+atomic across the two cache stores; least-recently-used blocks leave first. Native IndexedDB
+serialization retains typed arrays. Storage failure falls back to computation; a failed write
+clears only disposable cache data and retries once, then disables caching for that tab if needed.
+Opening/transaction deadlines keep unavailable storage from holding up calculations indefinitely.
+New writes are scheduled after the ready range publishes, and a cache-clear epoch prevents an
+in-flight calculation from repopulating an explicitly cleared cache.
+
+`Manage sites… → Browser data…` reports cache size/count and clears calculations independently
+of sites/preferences and their recovery copy. No cache keys or coordinates enter URLs or logs.
+Cache operations require no network access.

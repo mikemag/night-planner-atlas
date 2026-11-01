@@ -1,6 +1,7 @@
 import type { NightRange } from '../model/range';
 import type { Hit } from '../views/view';
 import { hasFocusPreference, loadSettings, type Settings } from './settings';
+import type { ComputeStats } from './compute-cached';
 
 export interface UiState {
   /** Years to shift the loaded range from the default. */
@@ -65,7 +66,8 @@ export function activeFocus(): number {
  * The computed range. `ready` is false while a range computes; the previous range stays in
  * place (and on screen) until the new one replaces it.
  */
-export const data: { range: NightRange | null; ready: boolean } = { range: null, ready: false };
+export const data: { range: NightRange | null; ready: boolean; computation: ComputeStats | null } =
+  { range: null, ready: false, computation: null };
 
 /** The current range; only call once a range has been computed. */
 export function atlas(): NightRange {

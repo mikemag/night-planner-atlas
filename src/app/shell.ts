@@ -1,14 +1,7 @@
 import { MON3, MONL, fmtDur, nightTitle } from '../model/format';
 import { windowsText } from '../model/describe';
 import type { Site } from '../model/night';
-import {
-  bestWeekends,
-  computeRange,
-  deriveRange,
-  lunWindow,
-  tonightId,
-  type NightRange,
-} from '../model/range';
+import { bestWeekends, deriveRange, lunWindow, tonightId, type NightRange } from '../model/range';
 import { TimeZone } from '../model/time';
 import { C, readColors } from '../render/colors';
 import { ctx, cv, size, sizeSurface } from '../render/surface';
@@ -25,6 +18,7 @@ import type { CanvasView } from '../views/view';
 import { type ViewId } from './settings';
 import { savePreferences, type Preferences } from './personal-data';
 import { S, activeFocus, data, type AppState } from './state';
+import { computeCachedRange } from './compute-cached';
 
 const sizer = el('sizer');
 
@@ -590,9 +584,12 @@ export function restart(): void {
   el('loadingText').textContent = 'Computing sun and moon for each night…';
   el('loadingBar').style.width = '0%';
   const token = ++computeToken;
-  computeRange(S.site, S.rangeShift, thresholds(), lunWindow(activeFocus()), Date.now(), {
+  computeCachedRange(S.site, S.rangeShift, thresholds(), lunWindow(activeFocus()), Date.now(), {
     startMonth: S.rangeStart ? { y: S.rangeStart.y + S.rangeShift, m: S.rangeStart.m } : undefined,
     isCancelled: () => token !== computeToken,
+    onStats: (stats) => {
+      if (token === computeToken) data.computation = stats;
+    },
     onProgress: (done, total) => {
       el('loadingBar').style.width = ((100 * done) / total).toFixed(0) + '%';
     },
@@ -677,6 +674,7 @@ export function boot(): void {
 }
 
 export interface TestHooks {
+  readonly computation: typeof data.computation;
   S: typeof S;
   select: typeof select;
   setView: typeof setView;
@@ -719,6 +717,9 @@ declare global {
 
 function exposeTestHooks(): void {
   window.__npa = {
+    get computation() {
+      return data.computation;
+    },
     S,
     select,
     toggleCalendarNight,

@@ -616,6 +616,9 @@ input {
 .data-controls details > .data-controls {
   padding-top: 10px;
 }
+.cache-summary {
+  min-height: 2.9em;
+}
 .dialog-heading {
   display: flex;
   align-items: center;

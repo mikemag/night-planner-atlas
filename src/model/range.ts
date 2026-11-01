@@ -330,6 +330,8 @@ export function weekendsAhead(r: NightRange): WeekendPick[] {
 }
 
 export interface ComputeOptions {
+  /** Validated, threshold-independent nights restored by the app's optional month cache. */
+  cachedNights?: ReadonlyMap<string, Night>;
   /** An explicit first month, e.g. a shared plan; otherwise use the current site-local date. */
   startMonth?: Pick<RangeSpec, 'y' | 'm'>;
   /** Called after each slice with the number of nights done and the total. */
@@ -368,7 +370,8 @@ export async function computeRange(
     const t = performance.now();
     while (k < list.length && performance.now() - t < slice) {
       const [y, m, d] = list[k];
-      nights.push(computeNight(observer, tz, y, m, d));
+      const id = `${y}-${pad2(m)}-${pad2(d)}`;
+      nights.push(opts.cachedNights?.get(id) ?? computeNight(observer, tz, y, m, d));
       k++;
     }
     opts.onProgress?.(k, list.length);

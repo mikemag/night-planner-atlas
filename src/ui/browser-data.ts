@@ -8,6 +8,7 @@ import {
 } from '../app/personal-data';
 import { el } from './dom';
 import { useSavedPlan } from './share';
+import { CACHE_BUDGET, nightCache } from '../app/night-cache';
 
 function download(contents: string, name: string): void {
   const url = URL.createObjectURL(new Blob([contents], { type: 'application/json' }));
@@ -33,11 +34,18 @@ export function initBrowserData(): void {
     el<HTMLButtonElement>('dataBackup').disabled = !personal.stored(true);
     el<HTMLButtonElement>('dataStored').hidden = !personal.status() || !personal.stored();
   };
+  const refreshCache = async () => {
+    const info = await nightCache.info();
+    el('dataCacheSummary').textContent = info
+      ? `${info.months} cached site-months · approximately ${(info.bytes / 1024 / 1024).toFixed(1)} MiB of ${CACHE_BUDGET / 1024 / 1024} MiB. Calculations can be rebuilt.`
+      : 'Calculation caching is unavailable. Nights are still computed on this device.';
+  };
   el('browserDataOpen').addEventListener('click', () => {
     refresh();
     status.textContent = personal.status() ?? '';
     review.hidden = true;
     dialog.showModal();
+    void refreshCache();
   });
   el('browserDataClose').addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => {
@@ -45,6 +53,16 @@ export function initBrowserData(): void {
     el('browserDataOpen').focus();
   });
   personal.subscribe(refresh);
+  el('dataClearCache').addEventListener('click', async () => {
+    const button = el<HTMLButtonElement>('dataClearCache');
+    button.disabled = true;
+    const cleared = await nightCache.clear();
+    await refreshCache();
+    status.textContent = cleared
+      ? 'Computed cache cleared. Saved sites and preferences were kept.'
+      : 'The cache could not be cleared. Saved sites and preferences were kept.';
+    button.disabled = false;
+  });
   el('dataExport').addEventListener('click', () =>
     download(JSON.stringify(personal.snapshot(), null, 2), 'night-planner-atlas-personal.json'),
   );

@@ -474,15 +474,16 @@
   <section id="privacy-credits" aria-labelledby="privacyTitle">
     <h3 id="privacyTitle">Privacy and credits</h3>
     <p>
-      Saved sites and preferences are kept in this browser’s local storage. There are no accounts,
-      analytics or remote coordinate lookups. The app loads its static assets from its own origin
-      and calculations keep working after loading when the network is disconnected. Clearing browser
-      site data removes saved favorites and preferences. If storage is unavailable, temporary
-      changes are identified. Open <strong>Manage sites… → Browser data…</strong> to export or
-      import sites and preferences, restore missing starters, or reset preferences while keeping
-      your sites. Exported files include coordinates; keep a copy somewhere you control. Import is
-      reviewed before replacing saved data, and the previous saved copy can be exported for
-      recovery.
+      Saved sites and preferences are kept in this browser’s local storage. Rebuildable calculations
+      for saved sites are cached in this browser’s IndexedDB storage, including their coordinates.
+      There are no accounts, analytics or remote coordinate lookups. The app loads its static assets
+      from its own origin and calculations keep working after loading when the network is
+      disconnected. Clearing browser site data removes saved favorites and preferences. If storage
+      is unavailable, temporary changes are identified. Open
+      <strong>Manage sites… → Browser data…</strong> to export or import sites and preferences,
+      restore missing starters, or reset preferences while keeping your sites. Exported files
+      include coordinates; keep a copy somewhere you control. Import is reviewed before replacing
+      saved data, and the previous saved copy can be exported for recovery.
     </p>
     <p>
       A shared link normally omits the whole site record. Choosing

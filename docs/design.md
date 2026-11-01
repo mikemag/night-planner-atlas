@@ -414,3 +414,17 @@ reset keeps sites, and starter restoration keeps existing records and selection.
 data can be exported for recovery. These controls work without reloading the page. Browser-cleared
 storage is outside app migration guarantees; a deliberate export supplies an external backup and
 supports moving between browsers or origins. Data and coordinates never enter diagnostic logs.
+
+Computed results live separately in the disposable IndexedDB database `npa:computed`. Complete
+site-month blocks reuse every planning/display variation for matching computational site inputs,
+and share overlapping months between ranges. The production cache is bounded to 32 MiB of
+estimated payload and 512 monthly entries, with least-recently-used eviction. Engine/codec
+fingerprints invalidate calculations automatically while personal schema migrations preserve user
+data. Development HMR sessions compute fresh. Unsupported, missing or damaged cache entries simply
+compute again in the existing main-thread slices. The completed range still publishes at once.
+
+**Browser data…** shows approximate cache size/count and a separate **Clear computed cache** action.
+Personal exports omit calculations, and clearing calculations preserves the personal document,
+preferences and recovery copy. Unsaved shared sites and tab-only edits do not persist private
+calculation blocks. The privacy boundary is the browser origin for both kinds of storage; no new
+runtime requests or services are introduced.
