@@ -35,11 +35,7 @@ export async function computeCachedRange(
     identity = siteKey(input),
     profile = personal.snapshot();
   // Temporary shared/private sites do not silently acquire a persistent coordinate record.
-  // Dev HMR does not rebuild the compute fingerprint; use fresh computation in dev instead.
-  const eligible =
-    !import.meta.env.DEV &&
-    !personal.status() &&
-    profile.sites.some((s) => siteKey(s) === identity);
+  const eligible = !personal.status() && profile.sites.some((s) => siteKey(s) === identity);
   const epoch = nightCache.epoch;
   const keys = months.map((m) => monthKey(input, m.y, m.m));
   const stored = eligible ? await nightCache.get(keys) : new Map<string, unknown>();

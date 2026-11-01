@@ -417,11 +417,13 @@ supports moving between browsers or origins. Data and coordinates never enter di
 
 Computed results live separately in the disposable IndexedDB database `npa:computed`. Complete
 site-month blocks reuse every planning/display variation for matching computational site inputs,
-and share overlapping months between ranges. The production cache is bounded to 32 MiB of
+and share overlapping months between ranges. The cache is bounded to 32 MiB of
 estimated payload and 512 monthly entries, with least-recently-used eviction. Engine/codec
 fingerprints invalidate calculations automatically while personal schema migrations preserve user
-data. Development HMR sessions compute fresh. Unsupported, missing or damaged cache entries simply
-compute again in the existing main-thread slices. The completed range still publishes at once.
+data. Development uses the same cache; calculation/codec and dependency-lock edits restart Vite
+with a fresh fingerprint while UI/style hot reloads preserve compatible calculations. Unsupported,
+missing or damaged cache entries compute again in the existing main-thread slices. The completed
+range still publishes at once.
 
 **Browser data…** shows approximate cache size/count and a separate **Clear computed cache** action.
 Personal exports omit calculations, and clearing calculations preserves the personal document,

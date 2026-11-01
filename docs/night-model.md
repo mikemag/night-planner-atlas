@@ -285,11 +285,12 @@ it doesn't recompute positions.
 
 ## Rebuildable monthly cache
 
-Production builds optionally persist complete site-month calculation blocks in IndexedDB under
-`npa:computed`. Main-thread computation retains the same 24 ms slices, cancellation checks and
+Both development and production builds optionally persist complete site-month calculation blocks
+in IndexedDB under `npa:computed`. Main-thread computation retains the same 24 ms slices, cancellation checks and
 single completed-range publication. Cache hits restore night data; misses alone run the night
-calculation. Development HMR sessions bypass the cache because their build fingerprint is fixed
-at server startup. No worker, progressive rendering or third-party service is involved.
+calculation. In development, edits to fingerprinted calculation/codec sources or the dependency
+lockfile restart Vite and reload the page with a fresh fingerprint. UI/style hot reloads retain
+compatible calculations. No worker, progressive rendering or third-party service is involved.
 
 The key combines cache format 1, a build-generated compute fingerprint, exact latitude/longitude,
 elevation (missing equals zero), IANA zone and calendar year/month. The fingerprint includes all
