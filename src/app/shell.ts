@@ -10,6 +10,7 @@ import { updateWeekends } from '../ui/weekends';
 import { initGuide, updateGuideColors } from '../ui/guide';
 import { updateRiverReadout } from '../ui/river-readout';
 import { updateRiverMinimap } from '../ui/river-minimap';
+import { updateChartLegend } from '../ui/chart-legend';
 import { initSiteClock, updateSiteClock } from '../ui/site-clock';
 import { calendar } from '../views/calendar';
 import { lunations } from '../views/lunations';
@@ -57,13 +58,6 @@ export function resize(): void {
 export function relayout(keepNight?: number | null): void {
   const v = canvasView();
   if (!v || !data.ready) return;
-  if (v === lunations) {
-    const hint =
-      lunations.geom().width > size.W + 1
-        ? 'New moon centered · Evening ↓ morning · Swipe sideways; select a night for its timeline.'
-        : VIEW_INFO.lunations[1];
-    if (el('viewSub').textContent !== hint) el('viewSub').textContent = hint;
-  }
   // Remove the old absolute minimap bounds before shrinking content (e.g. Month → Year).
   el('riverMinimap').hidden = true;
   v.layout();
@@ -298,17 +292,11 @@ function updatePeriod(): void {
 
 // ---------- views and options
 
-const VIEW_INFO: Record<ViewId, [string, string]> = {
-  calendar: ['Calendar', 'Evening dates in complete weeks · Select a night for its timeline.'],
-  river: [
-    'River',
-    'One row per night, clock time across — the moon’s diagonal and the seasons show as shapes.',
-  ],
-  lunations: [
-    'Lunations',
-    'New moon centered · Evening ↓ morning · Select a night for its timeline.',
-  ],
-  notes: ['How it works', 'Calculations, conventions, accuracy and practical help.'],
+const VIEW_TITLES: Record<ViewId, string> = {
+  calendar: 'Calendar',
+  river: 'River',
+  lunations: 'Lunations',
+  notes: 'How it works',
 };
 
 type ViewOption = 'riverZoom' | 'calZoom' | 'calOrient';
@@ -334,7 +322,6 @@ function viewControls(): void {
       s.appendChild(b);
     }
     box.appendChild(s);
-    box.appendChild(document.createTextNode(' '));
   };
   if (S.view === 'river') {
     seg('riverZoom', [
@@ -348,14 +335,8 @@ function viewControls(): void {
       ['month', 'Month'],
       ['week', 'Week'],
     ]);
-    el('legend').style.display = S.calZoom === 'week' ? '' : 'none';
-    el('viewSub').textContent =
-      S.calZoom === 'month'
-        ? 'Hours and windows · scroll months.'
-        : S.calZoom === 'week'
-          ? 'Scroll weeks · evening ↓ morning · exact event times.'
-          : 'Loaded months · select a month.';
   }
+  box.hidden = !box.childElementCount;
 }
 
 /** Change a view option; River keeps the browsed position rather than jumping to selection. */
@@ -453,16 +434,8 @@ export function setView(view: ViewId): void {
         : 'River readout',
   );
   el('notesView').hidden = view !== 'notes';
-  el('legend').style.display = view === 'notes' ? 'none' : '';
-  el('riverMoonKey').hidden = view !== 'river';
-  el('durationCaption').parentElement!.hidden = view === 'calendar';
-  el('moonLegendText').textContent =
-    view === 'calendar' ? 'Moonlight' : 'Moon above horizon (brighter = fuller)';
-  el('acceptedMoonLegendText').textContent =
-    view === 'calendar' ? 'Accepted moonlight' : 'Moonlit, accepted by settings';
   el('planningControls').hidden = view === 'notes';
-  el('viewTitle').textContent = VIEW_INFO[view][0];
-  el('viewSub').textContent = VIEW_INFO[view][1];
+  el('viewTitle').textContent = VIEW_TITLES[view];
   viewControls();
   syncSettingsControls();
   if (!data.ready) return;
@@ -611,6 +584,7 @@ export function onTheme(): void {
 }
 
 export function syncSettingsControls(): void {
+  updateChartLegend();
   for (const x of el('focusSeg').children) {
     const focus = Number((x as HTMLElement).dataset.val);
     x.setAttribute('aria-pressed', String(focus === activeFocus()));

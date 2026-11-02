@@ -289,7 +289,8 @@ input {
   color: var(--ink);
 }
 .app-menu,
-.theme-submenu {
+.theme-submenu,
+.legend-popover {
   box-sizing: border-box;
   position: fixed;
   inset: auto;
@@ -510,7 +511,8 @@ input {
   min-width: 112px;
 }
 .view-period {
-  min-width: 8.8em;
+  min-width: 0;
+  font-size: 12px;
   font-weight: 620;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -672,36 +674,137 @@ input {
   overflow: hidden;
 }
 .stage-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px 16px;
-  flex-wrap: wrap;
-  padding: 8px 12px;
+  gap: 6px 16px;
+  padding: 6px 12px;
   border-bottom: 1px solid var(--hair);
   min-height: 30px;
+  flex: none;
 }
-.view-title {
-  font-weight: 650;
-  font-size: 13px;
-  white-space: nowrap;
+#viewCtl {
+  grid-column: 1;
+  display: flex;
 }
-.view-sub {
-  color: var(--ink-3);
-  font-size: 12px;
+#viewCtl .seg {
+  flex-wrap: nowrap;
+}
+#viewCtl .seg button {
+  min-height: 26px;
+}
+.stage-head .view-period {
+  grid-column: 2;
+}
+#viewCtl[hidden] + .view-period {
+  grid-column: 1 / 3;
+}
+.panel-key {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.legend-trigger {
+  min-height: 30px;
 }
 .legend {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  margin-left: auto;
+  align-items: center;
+  gap: 12px;
   font-size: 11px;
   color: var(--ink-2);
 }
-.legend span {
+.legend-sky {
+  display: flex;
+  gap: 8px;
+}
+.legend-term {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   white-space: nowrap;
+}
+.legend-detail {
+  display: none;
+}
+.legend-popover {
+  width: 360px;
+  padding: 12px;
+  font-size: 13px;
+}
+.legend-heading {
+  position: sticky;
+  top: -12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -12px -12px 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--raised);
+}
+.legend-popover .legend {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 12px;
+}
+.legend-popover .legend-sky {
+  display: contents;
+}
+.legend-popover .legend-term {
+  font-weight: 600;
+  color: var(--ink);
+}
+.legend-popover .legend-detail {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+@media (max-width: 1100px) {
+  .panel-key > .legend {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  .stage-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    padding: 6px 10px;
+  }
+  #viewCtl {
+    grid-row: 1;
+  }
+  #viewCtl .seg button {
+    min-height: 36px;
+  }
+  .stage-head .view-period {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  #viewCtl[hidden] + .view-period {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .panel-key {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .legend-trigger,
+  .legend-heading .btn {
+    min-height: 40px;
+  }
+}
+@media (pointer: coarse) {
+  #viewCtl .seg button {
+    min-height: 40px;
+  }
+  .legend-trigger,
+  .legend-heading .btn {
+    min-height: 44px;
+  }
 }
 .sw {
   width: 13px;
@@ -715,24 +818,6 @@ input {
 .sw.line {
   height: 3px;
   border-radius: 1px;
-}
-.new-moon-label {
-  display: inline-block;
-  padding: 0 5px;
-  height: 16px;
-  border-radius: 4px;
-  background: var(--ink);
-  color: var(--panel);
-  font-size: 10px;
-  font-weight: 650;
-  line-height: 16px;
-  text-align: center;
-}
-.sw.new-moon-tick {
-  width: 14px;
-  height: 2px;
-  border-radius: 0;
-  background: var(--ink);
 }
 .scroller {
   flex: 1;
@@ -1044,9 +1129,6 @@ button:disabled {
   }
   .stage {
     height: 72vh;
-  }
-  .legend {
-    margin-left: 0;
   }
   .river-readout {
     height: 72px;
@@ -1722,18 +1804,6 @@ kbd {
   overflow-x: hidden;
   min-height: 0;
 }
-.calendar-mode .stage-head {
-  flex: none;
-  gap: 5px 12px;
-}
-.calendar-mode #viewCtl {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px 10px;
-}
-.calendar-mode .view-sub {
-  font-size: 11px;
-}
 .calendar-mode .river-readout {
   height: 32px;
   padding: 6px 10px;
@@ -1809,18 +1879,6 @@ kbd {
 @media (max-width: 700px) {
   .calendar-period-heading h2 {
     font-size: 16px;
-  }
-  .calendar-mode .stage-head {
-    padding: 6px 8px;
-  }
-  .calendar-mode .view-title {
-    display: none;
-  }
-  .calendar-mode .view-sub {
-    font-size: 11px;
-  }
-  .calendar-mode .legend {
-    gap: 3px 9px;
   }
 }
 .calendar-compact-year .calendar-month-link {

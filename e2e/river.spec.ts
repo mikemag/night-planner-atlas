@@ -733,7 +733,7 @@ test.describe('new-moon event markers', () => {
           fullPage: true,
         });
       await page.locator('#viewSeg').getByRole('button', { name: 'Calendar', exact: true }).click();
-      await expect(page.locator('#riverMoonKey')).toBeHidden();
+      await expect(page.locator('#riverMoonKey')).toHaveCount(0);
     });
 
     test(`new-moon labels also fit over summer twilight at ${width}px`, async ({ page }, info) => {

@@ -298,6 +298,23 @@ New-moon focus crops each cycle to ±N without changing ownership.
   both thresholds inline. Resizing preserves keyboard access to the threshold controls; changing
   views preserves the disclosure's state. Header controls use larger touch targets and fit at
   320 px without horizontal page scrolling. How it works hides the planning band.
+- **Chart toolbar and legend.** The panel header keeps zoom controls and the browsed period;
+  the active view is already identified by the shared navigation. Its view heading remains
+  available to assistive technology. Explanatory sentences belong in How it works and chart help.
+  River and Calendar start Year/Month at the same position with identical control sizes, and
+  Calendar adds Week. Lunations shows its browsed period without an empty zoom control. Desktop
+  uses one row; phones put the period below the zoom controls, with Legend alongside the controls.
+  All views share padding, spacing and touch targets.
+  The compact inline key groups the five named sky stages and uses short Moonlight, Accepted
+  moonlight and Usable dark labels. Accepted moonlight appears only with relaxed planning settings.
+  Calendar Month/Year already label their duration scale and omit the sky key; Week keeps the sky
+  and Moon keys. New-moon annotations label themselves in the charts and have no legend entry.
+  A labeled Legend button opens the full explanations in a nonmodal popover. The same key moves
+  into that popover, preserving its colors, entries and theme treatment. At 1100 px and below,
+  only the button is shown until the key is opened. Escape and Close return focus to Legend;
+  clicking outside dismisses it. Arrow keys scroll the key without navigating the chart. The
+  popover fits the available viewport, including short phones, and does not resize the chart or
+  change the browsed position. Full-size layouts retain the compact key inline when it closes.
 - **Sharing.** A versioned, validated URL fragment carries the first of 14 loaded months, current
   view/zooms/orientation, focus, thresholds, selected evening date and River/Lunations expansion. The site
   record is omitted by default; the Share dialog explains that recipients use their own site and

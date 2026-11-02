@@ -25,6 +25,7 @@ import { initSiteEditor } from './site-editor';
 import { initRiverMinimap } from './river-minimap';
 import { initBrowserData } from './browser-data';
 import { closeAppMenu, initAppMenu } from './app-menu';
+import { initChartLegend } from './chart-legend';
 
 const VIEW_KEYS: ViewId[] = ['river', 'lunations', 'calendar', 'notes'];
 
@@ -33,6 +34,7 @@ export function initControls(): void {
   initCanvasPointer();
   initKeyboard();
   initHeader();
+  initChartLegend();
   initSiteEditor();
   initBrowserData();
   initRiverMinimap();
@@ -179,7 +181,7 @@ function initKeyboard(): void {
   window.addEventListener('keydown', (e) => {
     const target = e.target as HTMLElement | null;
     if (
-      document.querySelector('dialog[open], #appMenu:popover-open') ||
+      document.querySelector('dialog[open], [popover]:popover-open') ||
       target?.closest('#riverMinimap') ||
       (e.key !== 'Escape' && target?.closest('#calendarHeaders')) ||
       !data.ready ||

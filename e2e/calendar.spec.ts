@@ -274,7 +274,9 @@ for (const width of [1512, 390]) {
     await page.getByRole('button', { name: 'Week', exact: true }).click();
     await expect(page.locator('#periodLabel')).toHaveText('Oct 4–10, 2026');
     await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveCount(0);
-    await expect(page.locator('#legend')).toBeVisible();
+    await expect(page.locator('#legendBtn')).toBeVisible();
+    if (width > 1100) await expect(page.locator('#legend')).toBeVisible();
+    else await expect(page.locator('#legend')).toBeHidden();
     await fits(page);
     const extent = await page.evaluate(() => {
       const a = window.__npa!,
@@ -1024,7 +1026,7 @@ test('short phone Week keeps the chart inside its viewport', async ({ page }, in
   const bounds = await page.evaluate(() => {
     const cv = document.getElementById('cv')!.getBoundingClientRect(),
       readout = document.getElementById('riverReadout')!.getBoundingClientRect(),
-      legend = document.getElementById('legend')!.getBoundingClientRect(),
+      legend = document.getElementById('legendBtn')!.getBoundingClientRect(),
       heading = document.querySelector('.stage-head')!.getBoundingClientRect();
     return {
       bottom: cv.bottom,

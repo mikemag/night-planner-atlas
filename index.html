@@ -173,34 +173,110 @@
       </aside>
 
       <div class="body" id="viewBody">
-        <section class="stage" id="stage">
+        <section class="stage" id="stage" aria-labelledby="viewTitle">
           <div class="stage-head">
-            <span class="view-title" id="viewTitle">River</span>
+            <h2 class="sr-only" id="viewTitle">River</h2>
             <span id="viewCtl"></span>
             <span class="view-period" id="periodLabel">—</span>
-            <span class="view-sub" id="viewSub"></span>
-            <div class="legend" id="legend">
-              <span><i class="sw" style="background: var(--sky-day)"></i>Day</span>
-              <span><i class="sw" style="background: var(--sky-civil)"></i>Civil</span>
-              <span><i class="sw" style="background: var(--sky-naut)"></i>Nautical</span>
-              <span><i class="sw" style="background: var(--sky-astro)"></i>Astronomical</span>
-              <span><i class="sw" style="background: var(--sky-dark)"></i>True dark</span>
-              <span
-                ><i class="sw" id="moonSw"></i
-                ><span id="moonLegendText">Moon above horizon (brighter = fuller)</span></span
+            <div class="panel-key" id="panelKey">
+              <div class="legend" id="legend" role="list" aria-label="Chart color key">
+                <div class="legend-sky" role="presentation">
+                  <div class="legend-item" role="listitem">
+                    <span class="legend-term"
+                      ><i class="sw" style="background: var(--sky-day)" aria-hidden="true"></i
+                      >Day</span
+                    >
+                    <span class="legend-detail">Daylight, before sunset or after sunrise.</span>
+                  </div>
+                  <div class="legend-item" role="listitem">
+                    <span class="legend-term"
+                      ><i class="sw" style="background: var(--sky-civil)" aria-hidden="true"></i
+                      >Civil</span
+                    >
+                    <span class="legend-detail"
+                      >Between sunset and civil dusk, or civil dawn and sunrise.</span
+                    >
+                  </div>
+                  <div class="legend-item" role="listitem">
+                    <span class="legend-term"
+                      ><i class="sw" style="background: var(--sky-naut)" aria-hidden="true"></i
+                      >Nautical</span
+                    >
+                    <span class="legend-detail"
+                      >Between the civil and nautical twilight boundaries.</span
+                    >
+                  </div>
+                  <div class="legend-item" role="listitem">
+                    <span class="legend-term"
+                      ><i class="sw" style="background: var(--sky-astro)" aria-hidden="true"></i
+                      >Astronomical</span
+                    >
+                    <span class="legend-detail"
+                      >Between the nautical and astronomical twilight boundaries.</span
+                    >
+                  </div>
+                  <div class="legend-item" role="listitem">
+                    <span class="legend-term"
+                      ><i class="sw" style="background: var(--sky-dark)" aria-hidden="true"></i>True
+                      dark</span
+                    >
+                    <span class="legend-detail"
+                      >From astronomical dusk to dawn, with the Sun at least 18° below the horizon.
+                      Moonlight can brighten this interval.</span
+                    >
+                  </div>
+                </div>
+                <div class="legend-item" role="listitem">
+                  <span class="legend-term"
+                    ><i class="sw" id="moonSw" aria-hidden="true"></i>Moonlight</span
+                  >
+                  <span class="legend-detail"
+                    >The Moon’s upper edge is above the natural horizon during true dark. Brighter
+                    means fuller.</span
+                  >
+                </div>
+                <div class="legend-item" id="acceptedMoonKey" role="listitem" hidden>
+                  <span class="legend-term"
+                    ><i class="sw accepted-moonlight" id="acceptedMoonSw" aria-hidden="true"></i
+                    >Accepted moonlight</span
+                  >
+                  <span class="legend-detail"
+                    >Moonlit true-dark time accepted by your altitude or crescent settings.
+                    Brightness still follows illumination; Observing adds a dashed boundary.</span
+                  >
+                </div>
+                <div class="legend-item" id="durationKey" role="listitem">
+                  <span class="legend-term"
+                    ><i class="sw line" style="background: var(--good)" aria-hidden="true"></i
+                    >Usable dark</span
+                  >
+                  <span class="legend-detail"
+                    >Duration bars and window brackets show time accepted by your settings. Strict
+                    settings count only moon-free true dark.</span
+                  >
+                </div>
+              </div>
+              <button
+                class="btn legend-trigger"
+                id="legendBtn"
+                popovertarget="legendPopover"
+                aria-haspopup="dialog"
+                aria-expanded="false"
               >
-              <span
-                ><i class="sw accepted-moonlight" id="acceptedMoonSw"></i
-                ><span id="acceptedMoonLegendText">Moonlit, accepted by settings</span></span
+                Legend
+              </button>
+              <div
+                class="legend-popover"
+                id="legendPopover"
+                popover
+                role="dialog"
+                aria-label="Chart legend"
+                tabindex="-1"
               >
-              <span
-                ><i class="sw line" style="background: var(--good)"></i
-                ><span id="durationCaption">Usable dark duration</span></span
-              >
-              <span id="riverMoonKey"
-                ><b class="new-moon-label">New Moon</b><i class="sw new-moon-tick"></i>New-moon
-                night</span
-              >
+                <div class="legend-heading">
+                  <strong>Legend</strong><button class="btn" id="legendClose">Close</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="scroller" id="scroller">
