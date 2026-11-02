@@ -259,9 +259,15 @@ input {
   margin-top: 21px;
 }
 .icon-btn.more-trigger {
+  --bs-btn-color: var(--ink-2);
+  --bs-btn-border-width: 0;
+  --bs-btn-bg: transparent;
+  --bs-btn-hover-color: var(--ink);
+  --bs-btn-hover-bg: transparent;
+  --bs-btn-active-color: var(--ink);
+  --bs-btn-active-bg: transparent;
   width: 32px;
   height: 30px;
-  font-size: 24px;
 }
 .app-menu {
   width: 240px;
@@ -400,9 +406,6 @@ input {
   #viewSeg {
     height: auto;
     margin-top: 0;
-  }
-  .more-menu {
-    margin-top: 17px;
   }
   #viewSeg button {
     flex: 1;

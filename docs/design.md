@@ -277,7 +277,8 @@ New-moon focus crops each cycle to ±N without changing ownership.
   Desktop control faces share a 30 px height and top edge; small labels align with the app title,
   while the site clock occupies its own line below. The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
-  An upper-right **More options (⋯)** button opens a Bootstrap dropdown containing Share plan,
+  An upper-right, unboxed **More options (⋯)** button with vertically centered dots opens a
+  Bootstrap dropdown containing Share plan,
   a Theme group and How it works. System, Light, Dark and Observing appear together with a
   checkmark on the current preference. Choosing a theme dismisses the menu and returns focus
   to More. The “Theme” heading stays unchanged. Arrow keys navigate items, Escape dismisses
