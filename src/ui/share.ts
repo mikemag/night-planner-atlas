@@ -1,3 +1,4 @@
+import Modal from 'bootstrap/js/dist/modal';
 import { createShareLink, readSharedPlan, type SharedPlan } from '../app/share-state';
 import { hasFocusPreference, loadSettings } from '../app/settings';
 import { savePreferences } from '../app/personal-data';
@@ -118,7 +119,8 @@ export function initSharing(): void {
     }
   });
 
-  const dialog = el<HTMLDialogElement>('shareDialog');
+  const dialog = el('shareDialog');
+  const modal = new Modal(dialog);
   const include = el<HTMLInputElement>('shareIncludeSite');
   const link = el<HTMLTextAreaElement>('shareLink');
   const status = el('shareStatus');
@@ -181,13 +183,13 @@ export function initSharing(): void {
       preview.append(term, definition);
     }
     update();
-    dialog.showModal();
-    include.focus();
+    modal.show();
   });
   include.addEventListener('change', update);
   for (const id of ['shareClose', 'shareCancel'])
-    el(id).addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => el('moreBtn').focus({ preventScroll: true }));
+    el(id).addEventListener('click', () => modal.hide());
+  dialog.addEventListener('shown.bs.modal', () => include.focus());
+  dialog.addEventListener('hidden.bs.modal', () => el('moreBtn').focus({ preventScroll: true }));
   el('shareForm').addEventListener('submit', (event) => {
     event.preventDefault();
     void navigator.clipboard

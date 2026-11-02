@@ -2,6 +2,9 @@
    Theme tokens first (light on :root, dark via prefers-color-scheme or data-theme),
    then layout and components. Canvas colors are read from these tokens at runtime. */
 
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import './bootstrap.css';
+
 :root {
   color-scheme: light;
   --bg: #e9edf2;
@@ -190,6 +193,7 @@ input {
   flex: 0 0 260px;
   max-width: 100%;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 5px;
   min-width: 0;
 }
@@ -201,54 +205,29 @@ input {
   color: var(--ink-2);
 }
 .site-picker {
-  height: 30px;
   min-width: 0;
   max-width: 100%;
+  height: 30px;
+  padding-block: 2px;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
-  border: 0;
-  background: none;
-  padding: 2px 4px;
-  border-radius: 5px;
-  color: var(--ink);
+  white-space: nowrap;
   font-size: 18px;
   font-weight: 650;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.site-picker:hover {
-  color: var(--ink);
-  background: var(--chip);
-}
-.site-picker option {
-  color: var(--ink);
-  background: var(--raised);
 }
 .site-select {
   position: relative;
   display: inline-grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
   min-width: 0;
   max-width: 100%;
 }
 .site-heading > .site-select {
   max-width: min(100%, 420px);
 }
-.site-select::after {
-  content: '';
-  pointer-events: none;
-  position: absolute;
-  inset-inline-end: 12px;
-  top: 50%;
-  width: 6px;
-  height: 6px;
-  border: solid currentColor;
-  border-width: 0 1.5px 1.5px 0;
-  transform: translateY(-70%) rotate(45deg);
-}
-.site-select select {
-  appearance: none;
-  padding-inline-end: 30px;
-}
+
 .site-heading {
   display: flex;
   flex-direction: column;
@@ -274,130 +253,32 @@ input {
   height: 30px;
   margin-top: 21px;
 }
-.icon-btn.more-trigger {
+.more-menu {
   grid-column: 2;
   grid-row: 1;
+  margin-top: 21px;
+}
+.icon-btn.more-trigger {
   width: 32px;
   height: 30px;
-  margin-top: 21px;
   font-size: 24px;
-  color: var(--ink-2);
-  background: transparent;
-}
-.more-trigger[aria-expanded='true'] {
-  background: var(--chip);
-  color: var(--ink);
-}
-.app-menu,
-.theme-submenu,
-.legend-popover {
-  box-sizing: border-box;
-  position: fixed;
-  inset: auto;
-  max-width: calc(100vw - 16px);
-  margin: 0;
-  padding: 8px;
-  overflow: auto;
-  border: 1px solid var(--hair-2);
-  border-radius: 10px;
-  background: var(--raised);
-  color: var(--ink);
-  box-shadow: var(--shadow);
 }
 .app-menu {
   width: 240px;
-}
-.app-menu-action {
-  appearance: none;
-  display: block;
-  width: 100%;
-  min-height: 36px;
-  padding: 8px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.app-menu-action:hover,
-.app-menu-action[aria-pressed='true'] {
-  background: var(--chip);
-}
-.app-menu-action:disabled {
-  color: var(--ink-3);
-  cursor: default;
-}
-.theme-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.theme-chevron {
-  font-size: 18px;
-  line-height: 1;
-}
-.theme-submenu {
-  width: 180px;
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
 }
 .theme-option {
-  display: grid;
-  grid-template-columns: 1.1em minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: 8px;
 }
 .theme-check {
+  width: 1.1em;
   visibility: hidden;
 }
 .theme-option[aria-checked='true'] .theme-check {
   visibility: visible;
-}
-@media (min-width: 701px) {
-  .theme-trigger[data-side='left'] .theme-chevron {
-    transform: rotate(180deg);
-  }
-}
-.app-menu hr {
-  margin: 6px 0;
-  border: 0;
-  border-top: 1px solid var(--hair);
-}
-.seg {
-  display: inline-flex;
-  background: var(--chip);
-  border-radius: 8px;
-  padding: 2px;
-  gap: 2px;
-  flex-wrap: wrap;
-}
-.seg button {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--ink-2);
-  font-weight: 560;
-  padding: 4px 11px;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.seg.small button {
-  padding: 2px 8px;
-  font-size: 12px;
-}
-.seg button:hover {
-  color: var(--ink);
-}
-.seg button[aria-pressed='true'] {
-  background: var(--raised);
-  color: var(--ink);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
-}
-#viewSeg button[aria-pressed='true'] {
-  background: color-mix(in srgb, var(--accent) 14%, var(--raised));
-  box-shadow:
-    inset 0 0 0 1px var(--accent),
-    inset 0 -3px 0 var(--accent);
 }
 .range-actions {
   display: flex;
@@ -414,32 +295,13 @@ input {
 .btn.tonight-trigger {
   margin-left: 4px;
 }
-.icon-btn,
-.btn {
-  appearance: none;
-  border: 1px solid var(--hair-2);
-  background: var(--raised);
-  color: var(--ink);
-  border-radius: 7px;
-  cursor: pointer;
-  line-height: 1;
-}
 .icon-btn {
   width: 26px;
   height: 26px;
   font-size: 16px;
-  display: grid;
+  display: inline-grid;
   place-items: center;
   padding: 0;
-}
-.btn {
-  padding: 6px 10px;
-  font-weight: 560;
-  font-size: 12px;
-}
-.icon-btn:hover,
-.btn:hover {
-  border-color: var(--ink-3);
 }
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -468,12 +330,8 @@ input {
   line-height: 16px;
 }
 .ctl select {
-  background: var(--raised);
-  border: 1px solid var(--hair-2);
-  border-radius: 6px;
   min-height: 30px;
   height: 30px;
-  padding: 4px 8px;
   font-size: 12px;
 }
 .range-actions .icon-btn {
@@ -543,7 +401,7 @@ input {
     height: auto;
     margin-top: 0;
   }
-  .icon-btn.more-trigger {
+  .more-menu {
     margin-top: 17px;
   }
   #viewSeg button {
@@ -601,28 +459,14 @@ input {
   .topbar button,
   .topbar .seg button,
   .topbar .ctl select {
-    min-height: 40px;
+    min-height: 30px;
+    height: 30px;
+    font-size: 12px;
   }
   .topbar .ctl select {
-    height: 40px;
-    font-size: 16px;
-  }
-  .theme-submenu {
-    position: static;
-    width: auto;
-    margin: 4px 0 4px 8px;
-    padding: 2px 0 2px 8px;
-    overflow: visible;
-    border: 0;
-    border-left: 1px solid var(--hair-2);
-    border-radius: 0;
-    box-shadow: none;
-  }
-  .theme-chevron {
-    transform: rotate(90deg);
-  }
-  .theme-trigger[aria-expanded='true'] .theme-chevron {
-    transform: rotate(-90deg);
+    min-height: 30px;
+    height: 30px;
+    font-size: 12px;
   }
 }
 
@@ -643,7 +487,6 @@ input {
   }
   .icon-btn.more-trigger {
     width: 44px;
-    margin-top: 21px;
   }
   .topbar button,
   .topbar .seg button,
@@ -729,7 +572,9 @@ input {
   display: none;
 }
 .legend-popover {
-  width: 360px;
+  width: min(360px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
   padding: 12px;
   font-size: 13px;
 }
@@ -778,7 +623,7 @@ input {
     grid-row: 1;
   }
   #viewCtl .seg button {
-    min-height: 36px;
+    min-height: 40px;
   }
   .stage-head .view-period {
     grid-column: 1 / -1;
@@ -977,23 +822,14 @@ input {
   border-radius: 3px;
 }
 .site-dialog {
-  width: min(520px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
-  overflow: auto;
-  padding: 20px;
-  border: 1px solid var(--hair-2);
-  border-radius: 12px;
-  background: var(--raised);
-  color: var(--ink);
-  box-shadow: var(--shadow);
+  --bs-modal-width: 560px;
+  font-size: 1rem;
+  line-height: 1.5;
 }
-.site-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.5);
-}
-.site-dialog form,
+.site-dialog .modal-body,
 .data-controls {
   display: grid;
-  gap: 10px;
+  gap: 16px;
 }
 .data-controls details > .data-controls {
   padding-top: 10px;
@@ -1001,43 +837,18 @@ input {
 .cache-summary {
   min-height: 2.9em;
 }
-.dialog-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.dialog-heading h2 {
-  margin: 0;
-  font-size: 17px;
-}
-.site-dialog label {
+
+.site-dialog .form-label {
   display: grid;
-  gap: 4px;
-  color: var(--ink-2);
-  font-size: 12px;
+  gap: 6px;
+  margin-bottom: 0;
 }
-.site-dialog input,
-.site-dialog select {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid var(--hair-2);
-  background: var(--panel);
-  border-radius: 6px;
-  padding: 8px;
-}
-.site-dialog .site-select select {
-  padding-inline-end: 30px;
-  line-height: 1.4;
-}
-.site-field {
+
+.site-dialog .site-field {
   display: grid;
   gap: 5px;
 }
-.site-dialog input[aria-invalid='true'] {
-  border-color: var(--error);
-  box-shadow: 0 0 0 1px var(--error);
-}
+
 .site-dialog .field-error {
   color: var(--error);
   font-weight: 600;
@@ -1045,8 +856,8 @@ input {
 .site-dialog p {
   margin: 0;
   color: var(--ink-2);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 .dialog-actions {
   display: flex;
@@ -1056,16 +867,7 @@ input {
 .dialog-actions .btn {
   min-height: 34px;
 }
-.dialog-footer {
-  justify-content: flex-end;
-  border-top: 1px solid var(--hair);
-  padding-top: 12px;
-}
-.btn.primary {
-  background: var(--ink);
-  color: var(--panel);
-  border-color: var(--ink);
-}
+
 button:disabled {
   opacity: 0.5;
   cursor: default;
@@ -1744,32 +1546,11 @@ kbd {
   color: var(--ink-2);
 }
 .site-dialog textarea {
-  width: 100%;
-  min-width: 0;
   resize: vertical;
-  box-sizing: border-box;
-  padding: 8px;
-  border: 1px solid var(--hair-2);
-  border-radius: 6px;
-  background: var(--panel);
-  color: var(--ink);
-  font:
-    12px/1.5 ui-monospace,
-    monospace;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
 }
-.site-dialog .share-site-choice {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 650;
-  min-height: 32px;
-}
-.site-dialog input[type='checkbox'] {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  accent-color: var(--accent);
-}
+
 .share-site-fields {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

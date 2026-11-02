@@ -181,7 +181,9 @@ function initKeyboard(): void {
   window.addEventListener('keydown', (e) => {
     const target = e.target as HTMLElement | null;
     if (
-      document.querySelector('dialog[open], [popover]:popover-open') ||
+      e.defaultPrevented ||
+      document.querySelector('.modal.show, .dropdown-menu.show') ||
+      target?.closest('.modal, .dropdown-menu') ||
       target?.closest('#riverMinimap') ||
       (e.key !== 'Escape' && target?.closest('#calendarHeaders')) ||
       !data.ready ||

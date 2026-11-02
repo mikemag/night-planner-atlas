@@ -16,6 +16,12 @@
         const theme = saved?.version === 1 ? saved.preferences?.theme : 'system';
         if (['light', 'dark', 'observing'].includes(theme))
           document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.bsTheme =
+          theme === 'light' ||
+          (!['dark', 'observing'].includes(theme) &&
+            !matchMedia('(prefers-color-scheme: dark)').matches)
+            ? 'light'
+            : 'dark';
       } catch {
         // Storage is optional; the system theme remains usable.
       }
@@ -31,7 +37,11 @@
             <h1>Night Planner Atlas</h1>
             <div class="site-heading">
               <span class="site-select">
-                <select class="site-picker" id="siteSel" aria-label="Observing site">
+                <select
+                  class="site-picker form-select form-select-sm"
+                  id="siteSel"
+                  aria-label="Observing site"
+                >
                   <option>Seattle</option>
                 </select>
               </span>
@@ -40,31 +50,48 @@
               ></span>
             </div>
           </div>
-          <div class="seg" id="viewSeg" role="group" aria-label="View">
-            <button data-view="river">River</button>
-            <button data-view="lunations">Lunations</button>
-            <button data-view="calendar">Calendar</button>
+          <div class="seg btn-group btn-group-sm" id="viewSeg" role="group" aria-label="View">
+            <button data-view="river" class="btn btn-outline-secondary">River</button>
+            <button data-view="lunations" class="btn btn-outline-secondary">Lunations</button>
+            <button data-view="calendar" class="btn btn-outline-secondary">Calendar</button>
           </div>
           <div class="controls" id="planningControls">
             <div class="ctl range-control" id="rangeCtl" role="group" aria-label="Loaded range">
               <span class="control-label">Range</span>
               <div class="range-actions">
-                <button class="icon-btn" id="rangePrev" aria-label="Load range one year earlier">
+                <button
+                  class="icon-btn btn btn-outline-secondary"
+                  id="rangePrev"
+                  aria-label="Load range one year earlier"
+                >
                   ‹
                 </button>
                 <span id="rangeLabel">—</span>
-                <button class="icon-btn" id="rangeNext" aria-label="Load range one year later">
+                <button
+                  class="icon-btn btn btn-outline-secondary"
+                  id="rangeNext"
+                  aria-label="Load range one year later"
+                >
                   ›
                 </button>
-                <button class="btn tonight-trigger" id="todayBtn">Tonight</button>
+                <button class="btn tonight-trigger btn-outline-secondary" id="todayBtn">
+                  Tonight
+                </button>
               </div>
             </div>
             <div class="ctl focus-control">
               <span class="control-label" id="focusLabel">New-moon focus</span>
-              <span class="seg small" id="focusSeg" role="group" aria-labelledby="focusLabel">
-                <button data-val="0">Off</button><button data-val="3">±3</button
-                ><button data-val="5">±5</button><button data-val="7">±7</button
-                ><button data-val="10">±10</button>
+              <span
+                class="seg small btn-group btn-group-sm"
+                id="focusSeg"
+                role="group"
+                aria-labelledby="focusLabel"
+              >
+                <button data-val="0" class="btn btn-outline-secondary">Off</button
+                ><button data-val="3" class="btn btn-outline-secondary">±3</button
+                ><button data-val="5" class="btn btn-outline-secondary">±5</button
+                ><button data-val="7" class="btn btn-outline-secondary">±7</button
+                ><button data-val="10" class="btn btn-outline-secondary">±10</button>
               </span>
             </div>
             <details class="moon-settings" id="moonSettings" open>
@@ -72,7 +99,7 @@
               <div class="moon-fields">
                 <label class="ctl" for="moonAltSel"
                   ><span class="control-label">Moon’s upper edge above</span>
-                  <select id="moonAltSel">
+                  <select id="moonAltSel" class="form-select form-select-sm">
                     <option value="0">0° (horizon)</option>
                     <option value="5">5°</option>
                     <option value="10">10°</option>
@@ -81,7 +108,7 @@
                 </label>
                 <label class="ctl" for="crescentSel"
                   ><span class="control-label">Ignore a Moon under</span>
-                  <select id="crescentSel">
+                  <select id="crescentSel" class="form-select form-select-sm">
                     <option value="0">Off (strict)</option>
                     <option value="0.1">10% lit</option>
                     <option value="0.2">20% lit</option>
@@ -92,73 +119,66 @@
             </details>
           </div>
         </div>
-        <button
-          class="icon-btn more-trigger"
-          id="moreBtn"
-          popovertarget="appMenu"
-          aria-label="More options"
-          aria-haspopup="dialog"
-          aria-expanded="false"
-          title="More options"
-        >
-          <span aria-hidden="true">⋯</span>
-        </button>
-        <div class="app-menu" id="appMenu" popover role="dialog" aria-label="Planner options">
-          <button class="app-menu-action" id="shareBtn" disabled>Share plan…</button>
+        <div class="dropdown more-menu">
           <button
-            class="app-menu-action theme-trigger"
-            id="themeBtn"
+            class="btn btn-outline-secondary icon-btn more-trigger"
+            id="moreBtn"
+            data-bs-toggle="dropdown"
+            aria-label="More options"
             aria-haspopup="menu"
-            aria-controls="themeMenu"
             aria-expanded="false"
-            aria-describedby="themeHint"
+            title="More options"
           >
-            <span id="themeMenuLabel">Theme · System</span>
-            <span class="theme-chevron" aria-hidden="true">›</span>
+            <span aria-hidden="true">⋯</span>
           </button>
-          <div class="theme-submenu" id="themeMenu" popover role="menu" aria-label="Theme">
-            <button
-              class="app-menu-action theme-option"
-              role="menuitemradio"
-              aria-checked="true"
-              data-theme-choice="system"
-              tabindex="-1"
-            >
-              <span class="theme-check" aria-hidden="true">✓</span>System
-            </button>
-            <button
-              class="app-menu-action theme-option"
-              role="menuitemradio"
-              aria-checked="false"
-              data-theme-choice="light"
-              tabindex="-1"
-            >
-              <span class="theme-check" aria-hidden="true">✓</span>Light
-            </button>
-            <button
-              class="app-menu-action theme-option"
-              role="menuitemradio"
-              aria-checked="false"
-              data-theme-choice="dark"
-              tabindex="-1"
-            >
-              <span class="theme-check" aria-hidden="true">✓</span>Dark
-            </button>
-            <button
-              class="app-menu-action theme-option"
-              role="menuitemradio"
-              aria-checked="false"
-              data-theme-choice="observing"
-              tabindex="-1"
-            >
-              <span class="theme-check" aria-hidden="true">✓</span>Observing
-            </button>
-          </div>
-          <span class="sr-only" id="themeHint"
-            >Theme descriptions and OS red-filter setup are in How it works.</span
+          <div
+            class="dropdown-menu dropdown-menu-end app-menu"
+            id="appMenu"
+            role="menu"
+            aria-label="Planner options"
           >
-          <hr />
-          <button class="app-menu-action" id="guideBtn">How it works</button>
+            <button class="dropdown-item" id="shareBtn" role="menuitem" disabled>
+              Share plan…
+            </button>
+            <div class="dropdown-divider" role="separator"></div>
+            <div id="themeMenu" role="group" aria-labelledby="themeMenuLabel">
+              <h2 class="dropdown-header" id="themeMenuLabel">Theme</h2>
+              <button
+                class="dropdown-item theme-option"
+                role="menuitemradio"
+                aria-checked="true"
+                data-theme-choice="system"
+              >
+                <span class="theme-check" aria-hidden="true">✓</span>System
+              </button>
+              <button
+                class="dropdown-item theme-option"
+                role="menuitemradio"
+                aria-checked="false"
+                data-theme-choice="light"
+              >
+                <span class="theme-check" aria-hidden="true">✓</span>Light
+              </button>
+              <button
+                class="dropdown-item theme-option"
+                role="menuitemradio"
+                aria-checked="false"
+                data-theme-choice="dark"
+              >
+                <span class="theme-check" aria-hidden="true">✓</span>Dark
+              </button>
+              <button
+                class="dropdown-item theme-option"
+                role="menuitemradio"
+                aria-checked="false"
+                data-theme-choice="observing"
+              >
+                <span class="theme-check" aria-hidden="true">✓</span>Observing
+              </button>
+            </div>
+            <div class="dropdown-divider" role="separator"></div>
+            <button class="dropdown-item" id="guideBtn" role="menuitem">How it works</button>
+          </div>
         </div>
       </header>
 
@@ -166,9 +186,13 @@
       <aside id="sharedNotice" class="shared-notice" aria-label="Shared plan" hidden>
         <p id="sharedNoticeText" role="status"></p>
         <div class="dialog-actions">
-          <button class="btn" id="shareKeepSettings">Save these view settings</button>
-          <button class="btn" id="shareReviewSite">Review site in favorites…</button>
-          <button class="btn" id="shareRestore">Use my saved plan</button>
+          <button class="btn btn-outline-secondary" id="shareKeepSettings">
+            Save these view settings
+          </button>
+          <button class="btn btn-outline-secondary" id="shareReviewSite">
+            Review site in favorites…
+          </button>
+          <button class="btn btn-outline-secondary" id="shareRestore">Use my saved plan</button>
         </div>
       </aside>
 
@@ -178,7 +202,7 @@
             <h2 class="sr-only" id="viewTitle">River</h2>
             <span id="viewCtl"></span>
             <span class="view-period" id="periodLabel">—</span>
-            <div class="panel-key" id="panelKey">
+            <div class="panel-key dropdown" id="panelKey">
               <div class="legend" id="legend" role="list" aria-label="Chart color key">
                 <div class="legend-sky" role="presentation">
                   <div class="legend-item" role="listitem">
@@ -257,24 +281,24 @@
                 </div>
               </div>
               <button
-                class="btn legend-trigger"
+                class="btn legend-trigger btn-outline-secondary"
                 id="legendBtn"
-                popovertarget="legendPopover"
+                data-bs-toggle="dropdown"
                 aria-haspopup="dialog"
                 aria-expanded="false"
               >
                 Legend
               </button>
               <div
-                class="legend-popover"
+                class="legend-popover dropdown-menu dropdown-menu-end"
                 id="legendPopover"
-                popover
                 role="dialog"
                 aria-label="Chart legend"
                 tabindex="-1"
               >
                 <div class="legend-heading">
-                  <strong>Legend</strong><button class="btn" id="legendClose">Close</button>
+                  <strong>Legend</strong
+                  ><button class="btn btn-outline-secondary" id="legendClose">Close</button>
                 </div>
               </div>
             </div>
@@ -346,228 +370,6 @@
               <div class="bar"><i id="loadingBar"></i></div>
             </div>
           </div>
-          <dialog class="site-dialog" id="sitePop" aria-labelledby="siteTitle">
-            <form id="siteForm" novalidate>
-              <div class="dialog-heading">
-                <h2 id="siteTitle">Observing sites</h2>
-                <button
-                  class="icon-btn"
-                  id="siteClose"
-                  type="button"
-                  aria-label="Close site manager"
-                >
-                  ×
-                </button>
-              </div>
-              <label for="siteFavorite"
-                >Saved sites<span class="site-select"><select id="siteFavorite"></select></span
-              ></label>
-              <div class="dialog-actions" role="group" aria-label="Site actions">
-                <button class="btn" type="button" id="siteAdd">Add site</button>
-                <button class="btn" type="button" id="siteDuplicate">Duplicate</button>
-                <button class="btn" type="button" id="siteRemove">Remove…</button>
-              </div>
-              <div id="siteRemoval" class="removal-confirm" hidden>
-                <p>
-                  Remove <strong id="siteRemoveName"></strong> from favorites? Your current night
-                  plan stays open.
-                </p>
-                <div class="dialog-actions">
-                  <button class="btn" id="siteKeep" type="button">Keep site</button>
-                  <button class="btn" id="siteConfirmRemove" type="button">Remove favorite</button>
-                </div>
-              </div>
-              <p class="site-edit-target" id="siteEditTarget"></p>
-              <label for="siteName"
-                >Name<input id="siteName" autocomplete="off" maxlength="100"
-              /></label>
-              <div class="site-field">
-                <label for="siteLocation"
-                  >Coordinates or full Google Maps link
-                  <input
-                    id="siteLocation"
-                    autocomplete="off"
-                    spellcheck="false"
-                    placeholder="47.60621, -122.34253"
-                    aria-describedby="siteLocationHint siteCoordinates siteLocationErr"
-                  />
-                </label>
-                <p class="field-error" id="siteLocationErr" role="alert" hidden></p>
-                <output id="siteCoordinates" for="siteLocation" hidden></output>
-                <p id="siteLocationHint">Use decimal degrees: latitude first, then longitude.</p>
-                <details class="coordinate-help">
-                  <summary>Get coordinates from Google Maps</summary>
-                  <p>
-                    If a Maps link doesn’t work, open it in Google Maps and find your intended
-                    location. Copy the point’s coordinates, then paste them in the field above:
-                  </p>
-                  <ul>
-                    <li>
-                      Computer: right-click the point, then click the latitude/longitude at the top
-                      of the menu to copy it.
-                    </li>
-                    <li>
-                      Phone: touch and hold an unlabeled point to drop a pin. On Android, copy the
-                      coordinates from the search box; on iPhone, find them in the pin’s place
-                      details.
-                    </li>
-                  </ul>
-                  <p>
-                    Full search links containing <code>query=latitude,longitude</code> or
-                    <code>q=latitude,longitude</code> also work. A short link or the center of a map
-                    does not give us a reliable point. Pasted links are read locally and never
-                    opened by the planner.
-                  </p>
-                </details>
-              </div>
-              <div class="site-field">
-                <label for="siteElevation"
-                  >Elevation (m above sea level, optional)
-                  <input
-                    id="siteElevation"
-                    type="number"
-                    inputmode="decimal"
-                    min="-500"
-                    max="10000"
-                    step="any"
-                    aria-describedby="siteElevationHint siteElevationErr"
-                  />
-                </label>
-                <p class="field-error" id="siteElevationErr" role="alert" hidden></p>
-                <p id="siteElevationHint">
-                  Blank uses sea level. A level horizon is assumed; no terrain lookup.
-                </p>
-              </div>
-              <div class="site-field">
-                <label for="siteTz"
-                  >Time zone (IANA, optional override)<input
-                    id="siteTz"
-                    list="siteZoneChoices"
-                    autocomplete="off"
-                    placeholder="Automatic from coordinates"
-                    aria-describedby="siteZoneStatus siteTzErr"
-                /></label>
-                <p class="field-error" id="siteTzErr" role="alert" hidden></p>
-                <datalist id="siteZoneChoices"></datalist>
-                <p id="siteZoneStatus" role="status"></p>
-              </div>
-              <p id="siteStorage"></p>
-              <div class="dialog-actions">
-                <button class="btn" type="button" id="browserDataOpen">Browser data…</button>
-              </div>
-              <div class="dialog-actions dialog-footer">
-                <button class="btn" type="button" id="siteCancel">Cancel</button>
-                <button class="btn primary" type="submit" id="siteApply">
-                  Save &amp; use site
-                </button>
-              </div>
-            </form>
-          </dialog>
-          <dialog class="site-dialog" id="browserData" aria-labelledby="browserDataTitle">
-            <div class="data-controls">
-              <div class="dialog-heading">
-                <h2 id="browserDataTitle">Browser data</h2>
-                <button
-                  class="icon-btn"
-                  type="button"
-                  id="browserDataClose"
-                  aria-label="Close browser data"
-                >
-                  ×
-                </button>
-              </div>
-              <p>
-                Sites and preferences stay on this device. Export a copy to keep a backup or move to
-                another browser. The file includes your site coordinates; share it deliberately.
-              </p>
-              <p id="dataSummary"></p>
-              <p id="dataCacheSummary" class="cache-summary">Checking saved calculations…</p>
-              <div class="dialog-actions">
-                <button class="btn" id="dataClearCache" type="button">Clear computed cache</button>
-              </div>
-              <div class="dialog-actions">
-                <button class="btn" id="dataExport" type="button">
-                  Export sites and preferences</button
-                ><button class="btn" id="dataImport" type="button">Import…</button>
-              </div>
-              <input
-                id="dataFile"
-                type="file"
-                accept="application/json,.json"
-                aria-label="Personal data file"
-                hidden
-              />
-              <div id="dataReview" class="removal-confirm" hidden>
-                <p id="dataImportSummary"></p>
-                <div class="dialog-actions">
-                  <button class="btn" id="dataCancelImport" type="button">Cancel import</button
-                  ><button class="btn" id="dataConfirmImport" type="button">
-                    Replace saved sites and preferences
-                  </button>
-                </div>
-              </div>
-              <details>
-                <summary>Reset and recovery</summary>
-                <div class="data-controls">
-                  <p>
-                    Reset preferences restores the view, planning controls and theme. Your sites are
-                    kept. Restoring starter sites adds missing examples without replacing edited
-                    sites.
-                  </p>
-                  <div class="dialog-actions">
-                    <button class="btn" id="dataResetPreferences" type="button">
-                      Reset preferences</button
-                    ><button class="btn" id="dataRestoreStarters" type="button">
-                      Restore missing starter sites
-                    </button>
-                  </div>
-                  <div class="dialog-actions">
-                    <button class="btn" id="dataBackup" type="button">
-                      Export previous saved copy</button
-                    ><button class="btn" id="dataStored" type="button" hidden>
-                      Export unreadable stored data
-                    </button>
-                  </div>
-                </div>
-              </details>
-              <p id="browserDataStatus" role="status"></p>
-            </div>
-          </dialog>
-          <dialog class="site-dialog" id="shareDialog" aria-labelledby="shareTitle">
-            <form id="shareForm">
-              <div class="dialog-heading">
-                <h2 id="shareTitle">Share this plan</h2>
-                <button class="icon-btn" id="shareClose" type="button" aria-label="Close sharing">
-                  ×
-                </button>
-              </div>
-              <p id="shareContext"></p>
-              <p>
-                The link restores dates, view, focus, planning thresholds and the selected night. By
-                default the recipient uses their own site, so their results may differ from yours.
-              </p>
-              <label class="share-site-choice" for="shareIncludeSite"
-                ><input type="checkbox" id="shareIncludeSite" />Include this site</label
-              >
-              <div id="shareSitePreview" hidden>
-                <p><strong>These site fields will be included:</strong></p>
-                <dl class="share-site-fields" id="shareSiteFields"></dl>
-                <p>
-                  The fields above will appear in the copied URL fragment and may remain in browser
-                  history. Anyone with the link can read them. Opening the link does not save the
-                  site to the recipient’s favorites.
-                </p>
-              </div>
-              <label for="shareLink"
-                >Share link<textarea id="shareLink" rows="3" readonly spellcheck="false"></textarea>
-              </label>
-              <p id="shareStatus" role="status"></p>
-              <div class="dialog-actions dialog-footer">
-                <button class="btn" id="shareCancel" type="button">Close</button>
-                <button class="btn primary" id="shareCopy" type="submit">Copy link</button>
-              </div>
-            </form>
-          </dialog>
         </section>
       </div>
       <details class="weekends-tray" id="riverWeekends" hidden>
@@ -583,6 +385,295 @@
       </details>
     </div>
 
+    <div
+      class="modal site-dialog"
+      id="sitePop"
+      tabindex="-1"
+      aria-labelledby="siteTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content" id="siteForm" novalidate>
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="siteTitle">Observing sites</h2>
+            <button
+              class="btn-close"
+              id="siteClose"
+              type="button"
+              aria-label="Close site manager"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <label for="siteFavorite" class="form-label"
+              >Saved sites<span class="site-select"
+                ><select id="siteFavorite" class="form-select"></select></span
+            ></label>
+            <div class="dialog-actions" role="group" aria-label="Site actions">
+              <button class="btn btn-outline-secondary" type="button" id="siteAdd">Add site</button>
+              <button class="btn btn-outline-secondary" type="button" id="siteDuplicate">
+                Duplicate
+              </button>
+              <button class="btn btn-outline-secondary" type="button" id="siteRemove">
+                Remove…
+              </button>
+            </div>
+            <div id="siteRemoval" class="removal-confirm" hidden>
+              <p>
+                Remove <strong id="siteRemoveName"></strong> from favorites? Your current night plan
+                stays open.
+              </p>
+              <div class="dialog-actions">
+                <button class="btn btn-outline-secondary" id="siteKeep" type="button">
+                  Keep site
+                </button>
+                <button class="btn btn-outline-secondary" id="siteConfirmRemove" type="button">
+                  Remove favorite
+                </button>
+              </div>
+            </div>
+            <p class="site-edit-target" id="siteEditTarget"></p>
+            <label for="siteName" class="form-label"
+              >Name<input id="siteName" autocomplete="off" maxlength="100" class="form-control"
+            /></label>
+            <div class="site-field">
+              <label for="siteLocation" class="form-label"
+                >Coordinates or full Google Maps link
+                <input
+                  id="siteLocation"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="47.60621, -122.34253"
+                  aria-describedby="siteLocationHint siteCoordinates siteLocationErr"
+                  class="form-control"
+                />
+              </label>
+              <p class="field-error invalid-feedback" id="siteLocationErr" role="alert" hidden></p>
+              <output id="siteCoordinates" for="siteLocation" hidden></output>
+              <p id="siteLocationHint" class="form-text">
+                Use decimal degrees: latitude first, then longitude.
+              </p>
+              <details class="coordinate-help">
+                <summary>Get coordinates from Google Maps</summary>
+                <p>
+                  If a Maps link doesn’t work, open it in Google Maps and find your intended
+                  location. Copy the point’s coordinates, then paste them in the field above:
+                </p>
+                <ul>
+                  <li>
+                    Computer: right-click the point, then click the latitude/longitude at the top of
+                    the menu to copy it.
+                  </li>
+                  <li>
+                    Phone: touch and hold an unlabeled point to drop a pin. On Android, copy the
+                    coordinates from the search box; on iPhone, find them in the pin’s place
+                    details.
+                  </li>
+                </ul>
+                <p>
+                  Full search links containing <code>query=latitude,longitude</code> or
+                  <code>q=latitude,longitude</code> also work. A short link or the center of a map
+                  does not give us a reliable point. Pasted links are read locally and never opened
+                  by the planner.
+                </p>
+              </details>
+            </div>
+            <div class="site-field">
+              <label for="siteElevation" class="form-label"
+                >Elevation (m above sea level, optional)
+                <input
+                  id="siteElevation"
+                  type="number"
+                  inputmode="decimal"
+                  min="-500"
+                  max="10000"
+                  step="any"
+                  aria-describedby="siteElevationHint siteElevationErr"
+                  class="form-control"
+                />
+              </label>
+              <p class="field-error invalid-feedback" id="siteElevationErr" role="alert" hidden></p>
+              <p id="siteElevationHint" class="form-text">
+                Blank uses sea level. A level horizon is assumed; no terrain lookup.
+              </p>
+            </div>
+            <div class="site-field">
+              <label for="siteTz" class="form-label"
+                >Time zone (IANA, optional override)<input
+                  id="siteTz"
+                  list="siteZoneChoices"
+                  autocomplete="off"
+                  placeholder="Automatic from coordinates"
+                  aria-describedby="siteZoneStatus siteTzErr"
+                  class="form-control"
+              /></label>
+              <p class="field-error invalid-feedback" id="siteTzErr" role="alert" hidden></p>
+              <datalist id="siteZoneChoices"></datalist>
+              <p id="siteZoneStatus" role="status" class="form-text"></p>
+            </div>
+            <p id="siteStorage" class="form-text"></p>
+            <div class="dialog-actions">
+              <button class="btn btn-outline-secondary" type="button" id="browserDataOpen">
+                Browser data…
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary" type="button" id="siteCancel">Cancel</button>
+            <button class="btn btn-primary" type="submit" id="siteApply">
+              Save &amp; use site
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div
+      class="modal site-dialog"
+      id="browserData"
+      tabindex="-1"
+      aria-labelledby="browserDataTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="browserDataTitle">Browser data</h2>
+            <button
+              class="btn-close"
+              type="button"
+              id="browserDataClose"
+              aria-label="Close browser data"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              Sites and preferences stay on this device. Export a copy to keep a backup or move to
+              another browser. The file includes your site coordinates; share it deliberately.
+            </p>
+            <p id="dataSummary" class="form-text"></p>
+            <p id="dataCacheSummary" class="cache-summary form-text">
+              Checking saved calculations…
+            </p>
+            <div class="dialog-actions">
+              <button class="btn btn-outline-secondary" id="dataClearCache" type="button">
+                Clear computed cache
+              </button>
+            </div>
+            <div class="dialog-actions">
+              <button class="btn btn-outline-secondary" id="dataExport" type="button">
+                Export sites and preferences</button
+              ><button class="btn btn-outline-secondary" id="dataImport" type="button">
+                Import…
+              </button>
+            </div>
+            <input
+              id="dataFile"
+              type="file"
+              accept="application/json,.json"
+              aria-label="Personal data file"
+              hidden
+            />
+            <div id="dataReview" class="removal-confirm" hidden>
+              <p id="dataImportSummary"></p>
+              <div class="dialog-actions">
+                <button class="btn btn-outline-secondary" id="dataCancelImport" type="button">
+                  Cancel import</button
+                ><button class="btn btn-outline-secondary" id="dataConfirmImport" type="button">
+                  Replace saved sites and preferences
+                </button>
+              </div>
+            </div>
+            <details>
+              <summary>Reset and recovery</summary>
+              <div class="data-controls">
+                <p>
+                  Reset preferences restores the view, planning controls and theme. Your sites are
+                  kept. Restoring starter sites adds missing examples without replacing edited
+                  sites.
+                </p>
+                <div class="dialog-actions">
+                  <button class="btn btn-outline-secondary" id="dataResetPreferences" type="button">
+                    Reset preferences</button
+                  ><button class="btn btn-outline-secondary" id="dataRestoreStarters" type="button">
+                    Restore missing starter sites
+                  </button>
+                </div>
+                <div class="dialog-actions">
+                  <button class="btn btn-outline-secondary" id="dataBackup" type="button">
+                    Export previous saved copy</button
+                  ><button class="btn btn-outline-secondary" id="dataStored" type="button" hidden>
+                    Export unreadable stored data
+                  </button>
+                </div>
+              </div>
+            </details>
+            <p id="browserDataStatus" role="status" class="form-text"></p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary" id="browserDataDone" type="button">
+              Back to sites
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal site-dialog"
+      id="shareDialog"
+      tabindex="-1"
+      aria-labelledby="shareTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content" id="shareForm">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="shareTitle">Share this plan</h2>
+            <button
+              class="btn-close"
+              id="shareClose"
+              type="button"
+              aria-label="Close sharing"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="shareContext" class="form-text"></p>
+            <p>
+              The link restores dates, view, focus, planning thresholds and the selected night. By
+              default the recipient uses their own site, so their results may differ from yours.
+            </p>
+            <div class="form-check">
+              <input type="checkbox" id="shareIncludeSite" class="form-check-input" /><label
+                class="form-check-label"
+                for="shareIncludeSite"
+                >Include this site</label
+              >
+            </div>
+            <div id="shareSitePreview" hidden>
+              <p><strong>These site fields will be included:</strong></p>
+              <dl class="share-site-fields" id="shareSiteFields"></dl>
+              <p>
+                The fields above will appear in the copied URL fragment and may remain in browser
+                history. Anyone with the link can read them. Opening the link does not save the site
+                to the recipient’s favorites.
+              </p>
+            </div>
+            <label for="shareLink" class="form-label"
+              >Share link<textarea
+                id="shareLink"
+                rows="3"
+                readonly
+                spellcheck="false"
+                class="form-control"
+              ></textarea>
+            </label>
+            <p id="shareStatus" role="status" class="form-text"></p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary" id="shareCancel" type="button">Close</button>
+            <button class="btn btn-primary" id="shareCopy" type="submit">Copy link</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

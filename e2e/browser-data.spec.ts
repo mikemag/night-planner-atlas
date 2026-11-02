@@ -10,6 +10,29 @@ async function openData(page: Page) {
   await expect(page.getByRole('dialog', { name: 'Browser data', exact: true })).toBeVisible();
 }
 for (const width of [1512, 390])
+  test(`Browser data returns to the same unsaved site draft at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('./');
+    await expect(page.locator('#loading')).toBeHidden();
+    const before = await readPersonal(page);
+    await page.locator('#siteSel').selectOption('manage');
+    await page.locator('#siteName').fill('Keep this unsaved draft');
+    await page.locator('#browserDataOpen').click();
+    await expect(page.locator('#sitePop')).toBeHidden();
+    await expect(page.locator('.modal.show')).toHaveCount(1);
+    await expect(page.locator('.modal-backdrop')).toHaveCount(1);
+    await page.locator('#browserDataDone').click();
+    await expect(page.locator('#sitePop')).toBeVisible();
+    await expect(page.locator('#siteName')).toHaveValue('Keep this unsaved draft');
+    await expect(page.locator('#browserDataOpen')).toBeFocused();
+    await expect(page.locator('.modal.show')).toHaveCount(1);
+    await expect(page.locator('.modal-backdrop')).toHaveCount(1);
+    await page.locator('#siteCancel').click();
+    await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+    expect(await readPersonal(page)).toEqual(before);
+  });
+
+for (const width of [1512, 390])
   test(`personal data exports, imports, resets and restores independently at ${width}px`, async ({
     page,
   }, info) => {

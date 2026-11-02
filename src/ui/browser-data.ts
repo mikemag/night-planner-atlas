@@ -1,3 +1,4 @@
+import Modal from 'bootstrap/js/dist/modal';
 import { DEFAULT_SITES } from '../app/default-sites';
 import {
   decodePersonalData,
@@ -21,7 +22,9 @@ function download(contents: string, name: string): void {
 
 /** Deliberate, separately labeled controls for personal data; cache controls live alongside. */
 export function initBrowserData(): void {
-  const dialog = el<HTMLDialogElement>('browserData');
+  const dialog = el('browserData');
+  const modal = new Modal(dialog);
+  const sites = Modal.getOrCreateInstance(el('sitePop'));
   const status = el('browserDataStatus');
   const file = el<HTMLInputElement>('dataFile');
   const review = el('dataReview');
@@ -44,12 +47,15 @@ export function initBrowserData(): void {
     refresh();
     status.textContent = personal.status() ?? '';
     review.hidden = true;
-    dialog.showModal();
+    sites.hide();
+    modal.show();
     void refreshCache();
   });
-  el('browserDataClose').addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => {
+  for (const id of ['browserDataClose', 'browserDataDone'])
+    el(id).addEventListener('click', () => modal.hide());
+  dialog.addEventListener('hidden.bs.modal', () => {
     imported = null;
+    sites.show();
     el('browserDataOpen').focus();
   });
   personal.subscribe(refresh);

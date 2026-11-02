@@ -1,50 +1,25 @@
+import Dropdown from 'bootstrap/js/dist/dropdown';
 import { el } from './dom';
 import { initThemeMenu } from './theme-menu';
+import { dropdownOptions } from './dropdown';
 
 export function closeAppMenu(): void {
-  const menu = el('appMenu');
-  if (menu.matches(':popover-open')) menu.hidePopover();
+  Dropdown.getInstance(el('moreBtn'))?.hide();
+  el('moreBtn').focus({ preventScroll: true });
 }
 
-/** A native, nonmodal popover supplies light dismissal and Escape behavior. */
+/** Bootstrap owns positioning, keyboard navigation, light dismissal and Escape. */
 export function initAppMenu(): void {
-  const positionThemeMenu = initThemeMenu();
-  const menu = el('appMenu');
+  initThemeMenu();
   const trigger = el('moreBtn');
-  const position = () => {
-    const anchor = trigger.getBoundingClientRect();
-    menu.style.top = `${anchor.bottom + 6}px`;
-    menu.style.right = `${Math.max(8, innerWidth - anchor.right)}px`;
-    menu.style.maxHeight = `${Math.max(80, innerHeight - anchor.bottom - 14)}px`;
-    positionThemeMenu();
-  };
-  menu.addEventListener('beforetoggle', (event) => {
-    if (event.newState === 'open') position();
+  const menu = el('appMenu');
+  new Dropdown(trigger, dropdownOptions);
+  trigger.addEventListener('shown.bs.dropdown', () => {
+    menu
+      .querySelector<HTMLElement>('.dropdown-item:not(:disabled)')
+      ?.focus({ preventScroll: true });
   });
-  menu.addEventListener('toggle', () => {
-    const open = menu.matches(':popover-open');
-    trigger.setAttribute('aria-expanded', String(open));
-    if (open && !menu.contains(document.activeElement))
-      menu.querySelector<HTMLElement>('button:not(:disabled)')?.focus({ preventScroll: true });
+  trigger.addEventListener('hidden.bs.dropdown', () => {
+    if (menu.contains(document.activeElement)) trigger.focus({ preventScroll: true });
   });
-  menu.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape' || event.defaultPrevented) return;
-    event.preventDefault();
-    event.stopPropagation();
-    closeAppMenu();
-    trigger.focus({ preventScroll: true });
-  });
-  window.addEventListener('resize', () => {
-    if (menu.matches(':popover-open')) position();
-  });
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (!menu.matches(':popover-open')) return;
-      const anchor = trigger.getBoundingClientRect();
-      if (anchor.bottom < 0 || anchor.top > innerHeight) closeAppMenu();
-      else position();
-    },
-    { passive: true },
-  );
 }

@@ -3,12 +3,14 @@ import { el } from './dom';
 import guide from './guide.html?raw';
 import astronomyNotices from '/licenses/astronomy-engine.txt?raw';
 import timezoneNotices from '/licenses/timezone-notices.txt?raw';
+import bootstrapNotices from '/licenses/bootstrap-notices.txt?raw';
 import reference from '../model/testdata/usno.json';
 
 export function initGuide(): void {
   el('notesView').innerHTML = guide;
   el('astronomyNotices').textContent = astronomyNotices;
   el('timezoneNotices').textContent = timezoneNotices;
+  el('bootstrapNotices').textContent = bootstrapNotices;
   const list = el('referenceQueries');
   for (const source of reference.sources) {
     const item = document.createElement('li');

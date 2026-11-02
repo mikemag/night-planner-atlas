@@ -155,3 +155,20 @@ test('the key follows planning settings and themes while resizing safely', async
       }
     }
 });
+
+test('Legend supports native Page Down scrolling in a short phone viewport', async ({ page }) => {
+  await open(page, 390);
+  await page.setViewportSize({ width: 390, height: 300 });
+  const selected = await page.evaluate(() => window.__npa!.S.sel);
+  await page.locator('#legendBtn').click();
+  const popup = page.getByRole('dialog', { name: 'Chart legend', exact: true });
+  await expect(popup).toBeVisible();
+  await expect(popup).toBeFocused();
+  const before = await popup.evaluate((element) => element.scrollTop);
+  await page.keyboard.press('PageDown');
+  await expect.poll(() => popup.evaluate((element) => element.scrollTop)).toBeGreaterThan(before);
+  expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(selected);
+  await page.keyboard.press('Escape');
+  await expect(popup).toBeHidden();
+  await expect(page.locator('#legendBtn')).toBeFocused();
+});

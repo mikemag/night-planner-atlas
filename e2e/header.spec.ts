@@ -160,7 +160,7 @@ test('More options supports keyboard dismissal and does not pass keys through to
   const more = page.getByRole('button', { name: 'More options', exact: true });
   await more.focus();
   await more.press('Enter');
-  await expect(page.getByRole('dialog', { name: 'Planner options', exact: true })).toBeVisible();
+  await expect(page.getByRole('menu', { name: 'Planner options', exact: true })).toBeVisible();
   await expect(more).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('#shareBtn')).toBeFocused();
   await page.keyboard.press('ArrowDown');

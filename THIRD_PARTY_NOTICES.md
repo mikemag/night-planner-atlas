@@ -25,3 +25,15 @@ The lockfile's platform-only `libc` and `r-efi` are not compiled into the browse
 [Data provenance and update procedure](docs/time-zone-data.md) identify the exact source,
 checksums, license audit and matching [machine-readable dataset](public/data/timezones-2026e.tzb).
 Visible credit and the data download appear with the other credits on the How it works page.
+
+## UI components
+
+[Bootstrap 5.3.8](https://github.com/twbs/bootstrap) (Copyright 2011–2025 The Bootstrap Authors)
+and [Popper 2.11.8](https://github.com/floating-ui/floating-ui/tree/v2.x) (Copyright 2019 Federico Zivolo)
+ship under the MIT license. Bootstrap supplies styles, Dropdown and Modal; Popper supplies
+positioning. Both packages and their dependency trees were audited before installation; Popper
+has no runtime dependencies. They are bundled locally, with legal comments retained in the
+minified assets. No CDN, external font, icon service or runtime third-party request is needed.
+
+[Full notices and licenses](public/licenses/bootstrap-notices.txt) are embedded in the offline
+How it works guide, alongside visible credit for both projects.

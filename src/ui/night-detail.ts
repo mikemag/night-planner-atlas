@@ -276,7 +276,7 @@ export function prepareNightDetail(
   const name = document.createElement('div');
   name.append(title, zone);
   const close = document.createElement('button');
-  close.className = 'icon-btn';
+  close.className = 'btn btn-outline-secondary icon-btn';
   close.id = id === 'lunationsDetail' ? 'lunationsCollapse' : 'calendarCollapse';
   close.setAttribute('aria-label', 'Collapse night');
   close.textContent = '×';

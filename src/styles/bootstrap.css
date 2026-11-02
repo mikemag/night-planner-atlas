@@ -1,0 +1,114 @@
+/* Bootstrap uses Atlas's palette; its component geometry and interaction states stay shared. */
+:root {
+  --bs-body-bg: var(--raised);
+  --bs-body-color: var(--ink);
+  --bs-secondary-color: var(--ink-2);
+  --bs-tertiary-bg: var(--panel);
+  --bs-border-color: var(--hair-2);
+  --bs-emphasis-color: var(--ink);
+  --bs-link-color: var(--accent);
+  --bs-link-hover-color: var(--accent);
+  --bs-danger-text-emphasis: var(--error);
+}
+.btn-outline-secondary {
+  --bs-btn-color: var(--ink-2);
+  --bs-btn-border-color: var(--ink-3);
+  --bs-btn-hover-bg: var(--ink-2);
+  --bs-btn-hover-border-color: var(--ink-2);
+  --bs-btn-hover-color: var(--raised);
+  --bs-btn-active-bg: var(--ink-2);
+  --bs-btn-active-border-color: var(--ink-2);
+  --bs-btn-active-color: var(--raised);
+  --bs-btn-disabled-color: var(--ink-3);
+  --bs-btn-disabled-border-color: var(--hair-2);
+}
+.btn-primary {
+  --bs-btn-bg: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-color: var(--panel);
+  --bs-btn-hover-bg: color-mix(in srgb, var(--accent), var(--ink) 12%);
+  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-hover-color: var(--panel);
+  --bs-btn-active-bg: var(--bs-btn-hover-bg);
+  --bs-btn-active-border-color: var(--bs-btn-hover-bg);
+  --bs-btn-active-color: var(--panel);
+  --bs-btn-disabled-bg: var(--accent);
+  --bs-btn-disabled-border-color: var(--accent);
+  --bs-btn-disabled-color: var(--panel);
+}
+.btn-outline-danger {
+  --bs-btn-color: var(--error);
+  --bs-btn-border-color: var(--error);
+  --bs-btn-hover-bg: var(--error);
+  --bs-btn-hover-border-color: var(--error);
+  --bs-btn-hover-color: var(--raised);
+  --bs-btn-active-bg: var(--error);
+  --bs-btn-active-border-color: var(--error);
+  --bs-btn-active-color: var(--raised);
+}
+.btn:focus-visible,
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.form-control.is-invalid,
+.form-control.is-invalid:focus {
+  border-color: var(--error);
+  box-shadow: 0 0 0 0.15rem color-mix(in srgb, var(--error) 20%, transparent);
+}
+.form-check-input:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+.form-text,
+.dropdown-header {
+  color: var(--ink-2);
+}
+.field-error:not([hidden]) {
+  display: block;
+}
+.dropdown-menu {
+  --bs-dropdown-bg: var(--raised);
+  --bs-dropdown-color: var(--ink);
+  --bs-dropdown-border-color: var(--hair-2);
+  --bs-dropdown-link-color: var(--ink);
+  --bs-dropdown-link-hover-color: var(--ink);
+  --bs-dropdown-link-hover-bg: var(--chip);
+  --bs-dropdown-link-active-color: var(--ink);
+  --bs-dropdown-link-active-bg: var(--chip);
+  --bs-dropdown-link-disabled-color: var(--ink-3);
+  --bs-dropdown-divider-bg: var(--hair);
+  box-shadow: var(--shadow);
+}
+.topbar .btn,
+.stage-head .btn {
+  --bs-btn-font-size: 0.75rem;
+  --bs-btn-padding-y: 0.25rem;
+  --bs-btn-padding-x: 0.5rem;
+}
+.topbar .form-label {
+  margin: 0;
+}
+.seg .btn.active {
+  --bs-btn-active-bg: var(--chip);
+  --bs-btn-active-border-color: var(--ink-3);
+  --bs-btn-active-color: var(--ink);
+}
+#viewSeg .btn.active {
+  --bs-btn-active-bg: var(--accent);
+  --bs-btn-active-border-color: var(--accent);
+  --bs-btn-active-color: var(--panel);
+}
+.modal-footer {
+  gap: 0.5rem;
+}
+.modal-footer > * {
+  margin: 0;
+}
+@media (max-width: 575px) {
+  .modal-footer .btn {
+    flex: 1 1 auto;
+  }
+}

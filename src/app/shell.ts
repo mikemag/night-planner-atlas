@@ -307,11 +307,13 @@ function viewControls(): void {
   box.textContent = '';
   const seg = <K extends ViewOption>(key: K, opts: Array<[AppState[K], string]>) => {
     const s = document.createElement('span');
-    s.className = 'seg small';
+    s.className = 'seg small btn-group btn-group-sm';
     s.setAttribute('role', 'group');
     s.setAttribute('aria-label', 'Period');
     for (const [val, label] of opts) {
       const b = document.createElement('button');
+      b.className = 'btn btn-outline-secondary';
+      b.classList.toggle('active', S[key] === val);
       b.textContent = label;
       b.dataset.val = val;
       b.dataset.option = key;
@@ -588,6 +590,7 @@ export function syncSettingsControls(): void {
   for (const x of el('focusSeg').children) {
     const focus = Number((x as HTMLElement).dataset.val);
     x.setAttribute('aria-pressed', String(focus === activeFocus()));
+    x.classList.toggle('active', focus === activeFocus());
     if (focus === 0) {
       const label = S.view === 'lunations' ? 'Full cycle' : 'Off';
       if (x.textContent !== label) x.textContent = label;
@@ -597,8 +600,10 @@ export function syncSettingsControls(): void {
   el<HTMLSelectElement>('crescentSel').value = String(S.crescent);
   el('moonSettingsSummary').textContent =
     `Moonlight: edge ${S.moonAlt}° · ${S.crescent ? `ignore under ${Math.round(S.crescent * 100)}% lit` : 'strict'}`;
-  for (const b of el('viewSeg').children)
+  for (const b of el('viewSeg').children) {
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === S.view));
+    b.classList.toggle('active', (b as HTMLElement).dataset.view === S.view);
+  }
   el('guideBtn').setAttribute('aria-pressed', String(S.view === 'notes'));
 }
 

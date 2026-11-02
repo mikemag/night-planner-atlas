@@ -1,3 +1,4 @@
+import Modal from 'bootstrap/js/dist/modal';
 import { personal, EditConflict, type PersonalData, type SaveResult } from '../app/personal-data';
 import { siteRecord, type Favorite } from '../app/site-book';
 import { applySite } from '../app/shell';
@@ -10,7 +11,8 @@ import { bindSiteZone } from './site-zone';
 /** Pick saved sites directly; management edits stay in a draft until Save & use. */
 export function initSiteEditor(): void {
   const picker = el<HTMLSelectElement>('siteSel');
-  const dialog = el<HTMLDialogElement>('sitePop');
+  const dialog = el('sitePop');
+  const modal = new Modal(dialog);
   const form = el<HTMLFormElement>('siteForm');
   const favorites = el<HTMLSelectElement>('siteFavorite');
   const name = el<HTMLInputElement>('siteName');
@@ -96,12 +98,14 @@ export function initSiteEditor(): void {
     error.textContent = '';
     error.hidden = true;
     field.removeAttribute('aria-invalid');
+    field.classList.remove('is-invalid');
   };
   const fail = (field: HTMLInputElement, message: string) => {
     const error = errors.get(field)!;
     error.textContent = message;
     error.hidden = false;
     field.setAttribute('aria-invalid', 'true');
+    field.classList.add('is-invalid');
   };
   const preview = () => {
     const output = el('siteCoordinates');
@@ -154,8 +158,7 @@ export function initSiteEditor(): void {
     opener = source;
     refreshPicker();
     fill(S.site, activeFavorite()?.id ?? null);
-    dialog.showModal();
-    favorites.focus();
+    modal.show();
   };
   picker.addEventListener('change', async () => {
     if (picker.value === 'manage') {
@@ -181,10 +184,13 @@ export function initSiteEditor(): void {
   showResult();
   refreshPicker();
   for (const id of ['siteCancel', 'siteClose'])
-    el(id).addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => {
+    el(id).addEventListener('click', () => modal.hide());
+  dialog.addEventListener('shown.bs.modal', () => favorites.focus());
+  dialog.addEventListener('hide.bs.modal', () => {
     lookup.cancel();
     cancelSave();
+  });
+  dialog.addEventListener('hidden.bs.modal', () => {
     opener.focus({ preventScroll: true });
   });
   favorites.addEventListener('change', () => {
@@ -275,7 +281,7 @@ export function initSiteEditor(): void {
       try {
         const inferred = await lookup.inferNow();
         // Editing, closing or changing favorites cancels this save, even during lookup.
-        if (attempt !== saveAttempt || !dialog.open) return;
+        if (attempt !== saveAttempt || !dialog.classList.contains('show')) return;
         if (!inferred) {
           fail(zone, status.textContent!);
           zone.focus();
@@ -312,7 +318,7 @@ export function initSiteEditor(): void {
     save.disabled = false;
     picker.disabled = false;
     if (result.conflict) return;
-    dialog.close();
+    modal.hide();
     applySite(site);
   });
 }

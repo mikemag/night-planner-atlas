@@ -23,12 +23,15 @@
     "check": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
+    "@popperjs/core": "2.11.8",
     "astronomy-engine": "^2.1.19",
+    "bootstrap": "5.3.8",
     "tzf-wasm": "2.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",
+    "@types/bootstrap": "5.2.11",
     "@types/node": "^24.13.6",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",

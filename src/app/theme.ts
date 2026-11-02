@@ -10,6 +10,16 @@ export function loadTheme(): Theme {
 export function applyTheme(theme: Theme): void {
   if (theme === 'system') delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = theme;
+  syncColorScheme();
+}
+
+/** Bootstrap follows the same requested palette, including System and warm Observing. */
+export function syncColorScheme(): void {
+  const theme = document.documentElement.dataset.theme ?? 'system';
+  document.documentElement.dataset.bsTheme =
+    theme === 'light' || (theme === 'system' && !matchMedia('(prefers-color-scheme: dark)').matches)
+      ? 'light'
+      : 'dark';
 }
 
 export function setTheme(theme: Theme): void {

@@ -57,7 +57,7 @@ for (const width of [1512, 390]) {
     await page.emulateMedia({ colorScheme: 'light' });
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'observing');
     await page.reload();
-    await expect(page.locator('#themeMenuLabel')).toHaveText('Theme · Observing');
+    await expect(page.locator('#themeMenuLabel')).toHaveText('Theme');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'observing');
     await chooseTheme(page, 'system');
     await page.emulateMedia({ colorScheme: 'dark' });
@@ -86,154 +86,97 @@ test('theme switching works when storage is unavailable', async ({ page }) => {
 });
 
 for (const width of [1512, 390, 320]) {
-  test(`Theme shows the current preference and one checkmark at ${width}px`, async ({
+  test(`Theme has a stable label, one checkmark, and dismisses on selection at ${width}px`, async ({
     page,
   }, info) => {
     await page.setViewportSize({ width, height: width > 700 ? 920 : 844 });
-    await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
-    await openAppMenu(page);
-    await expect(page.locator('#themeMenuLabel')).toHaveText('Theme · System');
-    await page.locator('#themeBtn').click();
-    const menu = page.getByRole('menu', { name: 'Theme', exact: true });
-    const system = menu.getByRole('menuitemradio', { name: 'System', exact: true });
-    await expect(menu.getByRole('menuitemradio')).toHaveCount(4);
-    await expect(system).toHaveAttribute('aria-checked', 'true');
-    await expect(menu.getByRole('menuitemradio', { checked: true })).toHaveCount(1);
-    const bounds = await page.evaluate(() => {
-      const outer = document.getElementById('appMenu')!.getBoundingClientRect();
-      const inner = document.getElementById('themeMenu')!.getBoundingClientRect();
-      const trigger = document.getElementById('themeBtn')!.getBoundingClientRect();
-      return {
-        inline:
-          inner.left >= outer.left &&
-          inner.right <= outer.right &&
-          inner.top >= trigger.bottom &&
-          inner.bottom <= outer.bottom,
-        flyout: inner.right <= outer.left || inner.left >= outer.right,
-        fits:
-          inner.left >= 0 &&
-          inner.right <= innerWidth &&
-          inner.top >= 0 &&
-          inner.bottom <= innerHeight,
-      };
-    });
-    expect(bounds.inline).toBe(width <= 700);
-    expect(bounds.flyout).toBe(width > 700);
-    expect(bounds.fits).toBe(true);
-    for (const theme of ['System', 'Dark']) {
-      await menu.getByRole('menuitemradio', { name: theme, exact: true }).click();
-      await expect(page.locator('#themeMenuLabel')).toHaveText(`Theme · ${theme}`);
-      await expect(menu.getByRole('menuitemradio', { checked: true })).toHaveCount(1);
-      await expect(menu.getByRole('menuitemradio', { name: theme, exact: true })).toHaveAttribute(
-        'aria-checked',
-        'true',
-      );
+    for (const theme of ['System', 'Dark', 'Dark', 'Observing', 'Light', 'System']) {
+      await openAppMenu(page);
+      await expect(page.locator('#themeMenuLabel')).toHaveText('Theme');
+      await expect(page.getByRole('menuitemradio')).toHaveCount(4);
+      await expect(page.getByRole('menuitemradio', { checked: true })).toHaveCount(1);
+      await page.getByRole('menuitemradio', { name: theme, exact: true }).click();
+      await expect(page.locator('#appMenu')).toBeHidden();
+      await expect(page.locator('#moreBtn')).toBeFocused();
+      await openAppMenu(page);
+      const current = page.getByRole('menuitemradio', { name: theme, exact: true });
+      await expect(current).toHaveAttribute('aria-checked', 'true');
+      await expect(page.getByRole('menuitemradio', { checked: true })).toHaveCount(1);
+      await expect(current.locator('.theme-check')).toBeVisible();
+      const popup = await page.locator('#appMenu').boundingBox();
+      expect(popup!.x).toBeGreaterThanOrEqual(0);
+      expect(popup!.x + popup!.width).toBeLessThanOrEqual(width);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
-      if (process.env.SCREENSHOTS) {
+      if (process.env.SCREENSHOTS && [1512, 390].includes(width))
         await page.screenshot({
           path: `test-results/screenshots/${info.project.name}-theme-menu-${width}-${theme.toLowerCase()}.png`,
         });
-        const clip = await page.evaluate(() => {
-          const rects = ['moreBtn', 'appMenu', 'themeMenu'].map((id) =>
-            document.getElementById(id)!.getBoundingClientRect(),
-          );
-          const x = Math.max(0, Math.min(...rects.map((r) => r.left)) - 6);
-          const y = Math.max(0, Math.min(...rects.map((r) => r.top)) - 6);
-          return {
-            x,
-            y,
-            width: Math.min(innerWidth, Math.max(...rects.map((r) => r.right)) + 6) - x,
-            height: Math.min(innerHeight, Math.max(...rects.map((r) => r.bottom)) + 6) - y,
-          };
-        });
-        await page.screenshot({
-          path: `test-results/screenshots/${info.project.name}-theme-menu-closeup-${width}-${theme.toLowerCase()}.png`,
-          clip,
-        });
-      }
+      await page.keyboard.press('Escape');
     }
-    await system.click();
     await page.emulateMedia({ colorScheme: 'dark' });
-    await expect(system).toHaveAttribute('aria-checked', 'true');
-    await expect(menu.getByRole('menuitemradio', { name: 'Dark', exact: true })).toHaveAttribute(
+    await expect(page.locator('html')).toHaveAttribute('data-bs-theme', 'dark');
+    await openAppMenu(page);
+    await expect(page.getByRole('menuitemradio', { name: 'System', exact: true })).toHaveAttribute(
       'aria-checked',
-      'false',
+      'true',
     );
-    await expect(page.locator('#themeMenuLabel')).toHaveText('Theme · System');
-    await expect(page.locator('html')).not.toHaveAttribute('data-theme');
+    await page.keyboard.press('Escape');
+    await page.emulateMedia({ colorScheme: 'light' });
+    await expect(page.locator('html')).toHaveAttribute('data-bs-theme', 'light');
   });
 }
 
 for (const width of [1512, 390]) {
-  test(`Theme keyboard navigation and Escape preserve the parent menu at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 920 });
+  test(`Theme uses Bootstrap menu keys and preserves the chart at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     const night = await page.evaluate(() => window.__npa!.S.sel);
-    await openAppMenu(page);
-    const trigger = page.locator('#themeBtn');
-    await trigger.focus();
-    await trigger.press('ArrowRight');
-    const system = page.getByRole('menuitemradio', { name: 'System', exact: true });
+    const more = page.locator('#moreBtn');
+    await more.focus();
+    await more.press('Enter');
+    await expect(page.locator('#shareBtn')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.getByRole('menuitemradio', { name: 'System', exact: true })).toBeFocused();
+    await page.keyboard.press('ArrowDown');
     const light = page.getByRole('menuitemradio', { name: 'Light', exact: true });
-    await expect(system).toBeFocused();
-    await system.press('ArrowDown');
     await expect(light).toBeFocused();
-    await expect(system).toHaveAttribute('aria-checked', 'true');
-    await light.press('Enter');
-    await expect(light).toHaveAttribute('aria-checked', 'true');
-    await light.press('End');
-    await expect(page.getByRole('menuitemradio', { name: 'Observing', exact: true })).toBeFocused();
-    await page.keyboard.press('Escape');
-    await expect(page.locator('#themeMenu')).toBeHidden();
-    await expect(page.locator('#appMenu')).toBeVisible();
-    await expect(trigger).toBeFocused();
-    await trigger.press('ArrowRight');
-    await expect(light).toBeFocused();
-    await light.press('Tab');
-    await expect(page.locator('#themeMenu')).toBeHidden();
-    await expect(page.locator('#guideBtn')).toBeFocused();
+    await expect(page.getByRole('menuitemradio', { name: 'System', exact: true })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#appMenu')).toBeHidden();
+    await expect(more).toBeFocused();
+    await more.press('ArrowDown');
+    await expect(page.locator('#shareBtn')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.locator('#appMenu')).toBeHidden();
-    await expect(page.locator('#moreBtn')).toBeFocused();
+    await expect(more).toBeFocused();
     expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(night);
   });
 }
 
-test('Theme switches between flyout and inline layouts without losing keyboard focus', async ({
-  page,
-}) => {
+test('Theme remains usable across phone resizing and in a short viewport', async ({ page }) => {
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
   await openAppMenu(page);
-  await page.locator('#themeBtn').click();
-  await expect(page.getByRole('menuitemradio', { name: 'System', exact: true })).toBeFocused();
+  const observing = page.getByRole('menuitemradio', { name: 'Observing', exact: true });
+  await observing.focus();
   for (const width of [390, 1512]) {
     await page.setViewportSize({ width, height: 844 });
-    await expect(page.locator('#themeMenu')).toBeHidden();
-    await expect(page.locator('#themeBtn')).toBeFocused();
-    await page.locator('#themeBtn').press('ArrowRight');
-    await expect(page.getByRole('menuitemradio', { name: 'System', exact: true })).toBeFocused();
+    await expect(observing).toBeFocused();
+    await expect(observing).toBeInViewport({ ratio: 1 });
   }
-});
-
-test('keyboard focus reveals Theme choices and parent actions in a short phone popup', async ({
-  page,
-}) => {
   await page.setViewportSize({ width: 390, height: 300 });
-  await page.goto('./');
-  await expect(page.locator('#loading')).toBeHidden();
-  await openAppMenu(page);
-  await page.locator('#themeBtn').press('ArrowRight');
-  await page.keyboard.press('End');
-  const observing = page.getByRole('menuitemradio', { name: 'Observing', exact: true });
+  await page.locator('#shareBtn').focus();
+  for (let step = 0; step < 4; step++) await page.keyboard.press('ArrowDown');
   await expect(observing).toBeFocused();
   await expect(observing).toBeInViewport({ ratio: 1 });
-  await observing.press('Tab');
+  await page.keyboard.press('ArrowDown');
   await expect(page.locator('#guideBtn')).toBeFocused();
   await expect(page.locator('#guideBtn')).toBeInViewport({ ratio: 1 });
+  await page.keyboard.press('Escape');
 });

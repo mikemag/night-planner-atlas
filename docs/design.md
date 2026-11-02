@@ -38,7 +38,7 @@ One encoding everywhere, so a night looks the same in every view and in the sing
   and **tonight and now** are blue.
 - **Time** is the site's local clock time, including daylight saving time. The one-hour jump on a
   clock-change night is real, and the River labels it.
-- Light, Dark and Observing are designed palettes, selected in the Theme submenu with a checkmark
+- Light, Dark and Observing are designed palettes, selected in More’s Theme group with a checkmark
   on the current preference and saved in this browser. OS red-filter setup belongs in How it works.
   System follows the device's light/dark preference. Explicit choices apply before
   the first paint and switching palettes preserves the browsed night and selection.
@@ -277,17 +277,12 @@ New-moon focus crops each cycle to ±N without changing ownership.
   Desktop control faces share a 30 px height and top edge; small labels align with the app title,
   while the site clock occupies its own line below. The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
-  An upper-right **More options (⋯)** button opens a nonmodal native popover with Share plan,
-  a Theme submenu and How it works. The Theme entry includes the current preference, and one
-  checkmark identifies the selected option among System, Light, Dark and Observing. System stays
-  checked while following the device's palette. Desktop opens a flyout, using the left side when
-  the viewport edge leaves insufficient room on the right; phones expand the same choices inline.
-  Choosing a theme preserves the chart and keeps the choices open for preview. Arrow keys move
-  between choices without changing the preference until activation; Escape or Left returns to
-  Theme, and another Escape dismisses the parent popover. Tab leaves the choices within the
-  parent popup, and changing between desktop and phone layouts closes the submenu with visible
-  focus retained. Clicking outside dismisses the popup. Its keys do not navigate the chart, and Share returns focus to More
-  options when closed. How it works opens independently of the view switcher.
+  An upper-right **More options (⋯)** button opens a Bootstrap dropdown containing Share plan,
+  a Theme group and How it works. System, Light, Dark and Observing appear together with a
+  checkmark on the current preference. Choosing a theme dismisses the menu and returns focus
+  to More. The “Theme” heading stays unchanged. Arrow keys navigate items, Escape dismisses
+  the menu, and clicking outside closes it. Menu keys do not navigate the chart. Share returns
+  focus to More when closed; How it works opens independently of the view switcher.
   Range arrows load the same dates a year earlier or later; Tonight loads
   the current range when necessary in every chart view. Tonight uses a neutral button treatment;
   tonight and now are marked in the chart. Browsing months and cycles uses scrolling,
@@ -309,11 +304,11 @@ New-moon focus crops each cycle to ±N without changing ownership.
   moonlight and Usable dark labels. Accepted moonlight appears only with relaxed planning settings.
   Calendar Month/Year already label their duration scale and omit the sky key; Week keeps the sky
   and Moon keys. New-moon annotations label themselves in the charts and have no legend entry.
-  A labeled Legend button opens the full explanations in a nonmodal popover. The same key moves
-  into that popover, preserving its colors, entries and theme treatment. At 1100 px and below,
+  A labeled Legend button opens the full explanations in a Bootstrap dropdown with dialog semantics. The same key moves
+  into that panel, preserving its colors, entries and theme treatment. At 1100 px and below,
   only the button is shown until the key is opened. Escape and Close return focus to Legend;
-  clicking outside dismisses it. Arrow keys scroll the key without navigating the chart. The
-  popover fits the available viewport, including short phones, and does not resize the chart or
+  clicking outside dismisses it. Page Up/Down scroll the key without navigating the chart. The
+  dropdown fits the available viewport, including short phones, and does not resize the chart or
   change the browsed position. Full-size layouts retain the compact key inline when it closes.
 - **Sharing.** A versioned, validated URL fragment carries the first of 14 loaded months, current
   view/zooms/orientation, focus, thresholds, selected evening date and River/Lunations expansion. The site
@@ -420,6 +415,27 @@ weeks, and a public "year at a glance"; Lunations suits choosing between new moo
 The long-term direction is to let each astronomer pick the view and the metrics that suit them.
 
 ## Decisions and alternatives
+
+### Standard UI components
+
+Bootstrap supplies the common buttons, button groups, forms, dropdowns and modals. Its CSS and
+the Dropdown/Modal JavaScript modules are bundled with Vite; Popper positions dropdowns. Atlas
+maps its Light, Dark and Observing palette tokens into Bootstrap variables, while the night
+model, canvas/SVG charts and chart-specific navigation remain independent of the component library.
+This keeps ordinary interaction behavior in a maintained library and preserves the sky encodings.
+
+Theme preferences form one labeled group inside More instead of a nested flyout. Bootstrap has
+no nested dropdown component; flattening four choices avoids maintaining another submenu.
+Exactly one preference has a checkmark. Selecting any option, including the current one,
+applies it, dismisses the menu and returns focus to More. The heading stays “Theme”.
+System remains checked while its effective Bootstrap light/dark mode follows the device.
+
+Site management, sharing and Browser data use scrollable Bootstrap modals. Browser data replaces
+the site modal while open, then returns to the same draft and its opener. Only one modal and
+backdrop exist at a time. Native fields retain the original validation, IANA lookup, conflict
+checks, draft/save boundaries and browser-only persistence.
+
+### View and model choices
 
 Rationale that isn't obvious from the result:
 
