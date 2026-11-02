@@ -466,11 +466,6 @@ input {
     height: 30px;
     font-size: 12px;
   }
-  .topbar .ctl select {
-    min-height: 30px;
-    height: 30px;
-    font-size: 12px;
-  }
 }
 
 @media (max-width: 360px) {
@@ -1394,6 +1389,7 @@ kbd {
   font: inherit;
   font-size: 12px;
   padding: 1px 5px;
+  color: var(--ink);
   background: var(--chip);
   border: 1px solid var(--hair-2);
   border-radius: 4px;

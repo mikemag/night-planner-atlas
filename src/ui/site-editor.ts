@@ -12,7 +12,7 @@ import { bindSiteZone } from './site-zone';
 export function initSiteEditor(): void {
   const picker = el<HTMLSelectElement>('siteSel');
   const dialog = el('sitePop');
-  const modal = new Modal(dialog);
+  const modal = new Modal(dialog, { backdrop: 'static' });
   const form = el<HTMLFormElement>('siteForm');
   const favorites = el<HTMLSelectElement>('siteFavorite');
   const name = el<HTMLInputElement>('siteName');

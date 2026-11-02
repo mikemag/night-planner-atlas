@@ -1,8 +1,29 @@
-import { seedPersonal, readSite } from './storage';
+import { seedPersonal, readPersonal, readSite } from './storage';
 import { expect, test } from '@playwright/test';
 import { DEFAULT_SITES } from '../src/app/default-sites';
 
 for (const width of [1512, 390]) {
+  test(`clicking the site editor backdrop preserves the unsaved draft at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
+    await page.goto('./');
+    await expect(page.locator('#loading')).toBeHidden();
+    const before = await readPersonal(page);
+    await page.locator('#siteSel').selectOption('manage');
+    await page.locator('#siteName').fill('Unsaved draft');
+    await page.locator('#siteElevation').fill('1234');
+    await page.locator('#sitePop').click({ position: { x: 1, y: 1 } });
+    await expect(page.locator('#sitePop')).toBeVisible();
+    await expect(page.locator('#siteName')).toHaveValue('Unsaved draft');
+    await expect(page.locator('#siteElevation')).toHaveValue('1234');
+    expect(await readPersonal(page)).toEqual(before);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#sitePop')).toBeHidden();
+    await expect(page.locator('#siteSel')).toBeFocused();
+    expect(await readPersonal(page)).toEqual(before);
+  });
+
   test(`starter sites switch complete records offline and retain the choice at ${width}px`, async ({
     page,
     context,

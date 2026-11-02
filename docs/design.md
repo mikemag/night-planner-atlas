@@ -424,6 +424,8 @@ the Dropdown/Modal JavaScript modules are bundled with Vite; Popper positions dr
 maps its Light, Dark and Observing palette tokens into Bootstrap variables, while the night
 model, canvas/SVG charts and chart-specific navigation remain independent of the component library.
 This keeps ordinary interaction behavior in a maintained library and preserves the sky encodings.
+Keycaps pair their foreground with their background. Checkbox marks contrast with the accent
+in every palette; forced-colors mode uses the browser's native checkbox rendering.
 
 Theme preferences form one labeled group inside More instead of a nested flyout. Bootstrap has
 no nested dropdown component; flattening four choices avoids maintaining another submenu.
@@ -435,6 +437,7 @@ Site management, sharing and Browser data use scrollable Bootstrap modals. Brows
 the site modal while open, then returns to the same draft and its opener. Only one modal and
 backdrop exist at a time. Native fields retain the original validation, IANA lookup, conflict
 checks, draft/save boundaries and browser-only persistence.
+Clicking the site editor's backdrop leaves the draft open; Cancel, Close and Escape dismiss it.
 
 ### View and model choices
 
