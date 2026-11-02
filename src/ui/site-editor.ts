@@ -47,9 +47,15 @@ export function initSiteEditor(): void {
     book = personal.snapshot();
     const active = activeFavorite();
     picker.replaceChildren();
-    if (!active) picker.appendChild(new Option(siteCaption(S.site), 'current'));
-    for (const site of book.sites)
-      picker.appendChild(new Option(siteCaption(site), `site:${site.id}`));
+    if (!active) picker.appendChild(new Option(S.site.name, 'current'));
+    for (const site of book.sites) {
+      const duplicateName = book.sites.some(
+        (other) => other.id !== site.id && other.name === site.name,
+      );
+      picker.appendChild(
+        new Option(duplicateName ? siteCaption(site) : site.name, `site:${site.id}`),
+      );
+    }
     picker.appendChild(new Option('Manage sites…', 'manage'));
     picker.value = active ? `site:${active.id}` : 'current';
     picker.title = siteCaption(S.site);

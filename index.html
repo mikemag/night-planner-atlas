@@ -26,86 +26,141 @@
   <body>
     <div class="app" id="app">
       <header class="topbar">
-        <div class="brand">
-          <h1>Night Planner Atlas</h1>
-          <div class="site-heading">
-            <span class="site-select">
-              <select class="site-picker" id="siteSel" aria-label="Observing site">
-                <option>Seattle</option>
-              </select>
-            </span>
-            <span class="site-clock" id="siteClock" aria-label="Current time at the site"></span>
+        <div class="header-flow">
+          <div class="brand">
+            <h1>Night Planner Atlas</h1>
+            <div class="site-heading">
+              <span class="site-select">
+                <select class="site-picker" id="siteSel" aria-label="Observing site">
+                  <option>Seattle</option>
+                </select>
+              </span>
+              <span class="site-clock" id="siteClock" aria-label="Current time at the site"
+                ><span id="siteClockTime"></span><span class="sr-only" id="siteClockZone"></span
+              ></span>
+            </div>
+          </div>
+          <div class="seg" id="viewSeg" role="group" aria-label="View">
+            <button data-view="river">River</button>
+            <button data-view="lunations">Lunations</button>
+            <button data-view="calendar">Calendar</button>
+          </div>
+          <div class="controls" id="planningControls">
+            <div class="ctl range-control" id="rangeCtl" role="group" aria-label="Loaded range">
+              <span class="control-label">Range</span>
+              <div class="range-actions">
+                <button class="icon-btn" id="rangePrev" aria-label="Load range one year earlier">
+                  ‹
+                </button>
+                <span id="rangeLabel">—</span>
+                <button class="icon-btn" id="rangeNext" aria-label="Load range one year later">
+                  ›
+                </button>
+                <button class="btn tonight-trigger" id="todayBtn">Tonight</button>
+              </div>
+            </div>
+            <div class="ctl focus-control">
+              <span class="control-label" id="focusLabel">New-moon focus</span>
+              <span class="seg small" id="focusSeg" role="group" aria-labelledby="focusLabel">
+                <button data-val="0">Off</button><button data-val="3">±3</button
+                ><button data-val="5">±5</button><button data-val="7">±7</button
+                ><button data-val="10">±10</button>
+              </span>
+            </div>
+            <details class="moon-settings" id="moonSettings" open>
+              <summary id="moonSettingsSummary" hidden>Moonlight: edge 0° · strict</summary>
+              <div class="moon-fields">
+                <label class="ctl" for="moonAltSel"
+                  ><span class="control-label">Moon’s upper edge above</span>
+                  <select id="moonAltSel">
+                    <option value="0">0° (horizon)</option>
+                    <option value="5">5°</option>
+                    <option value="10">10°</option>
+                    <option value="15">15°</option>
+                  </select>
+                </label>
+                <label class="ctl" for="crescentSel"
+                  ><span class="control-label">Ignore a Moon under</span>
+                  <select id="crescentSel">
+                    <option value="0">Off (strict)</option>
+                    <option value="0.1">10% lit</option>
+                    <option value="0.2">20% lit</option>
+                    <option value="0.3">30% lit</option>
+                  </select>
+                </label>
+              </div>
+            </details>
           </div>
         </div>
-        <label class="ctl theme-control" for="themeSel"
-          >Theme
-          <select
-            id="themeSel"
-            aria-label="Theme"
-            aria-describedby="themeHint"
-            title="Theme descriptions and red-filter setup are in How it works."
-          >
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-            <option value="observing">Observing</option>
-          </select>
-        </label>
-        <span class="sr-only" id="themeHint"
-          >Theme descriptions and OS red-filter setup are in How it works.</span
+        <button
+          class="icon-btn more-trigger"
+          id="moreBtn"
+          popovertarget="appMenu"
+          aria-label="More options"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          title="More options"
         >
-        <div class="seg" id="viewSeg" role="group" aria-label="View">
-          <button data-view="calendar">Calendar</button>
-          <button data-view="river">River</button>
-          <button data-view="lunations">Lunations</button>
-          <button data-view="notes" aria-label="How it works">
-            <span class="view-tab-long">How it works</span
-            ><span class="view-tab-short" aria-hidden="true">Guide</span>
+          <span aria-hidden="true">⋯</span>
+        </button>
+        <div class="app-menu" id="appMenu" popover role="dialog" aria-label="Planner options">
+          <button class="app-menu-action" id="shareBtn" disabled>Share plan…</button>
+          <button
+            class="app-menu-action theme-trigger"
+            id="themeBtn"
+            aria-haspopup="menu"
+            aria-controls="themeMenu"
+            aria-expanded="false"
+            aria-describedby="themeHint"
+          >
+            <span id="themeMenuLabel">Theme · System</span>
+            <span class="theme-chevron" aria-hidden="true">›</span>
           </button>
-        </div>
-        <button class="btn share-trigger" id="shareBtn" disabled>Share</button>
-        <div class="period" id="periodBox">
-          <button class="icon-btn" id="prevBtn" aria-label="Previous month">‹</button>
-          <span class="period-label" id="periodLabel">—</span>
-          <button class="icon-btn" id="nextBtn" aria-label="Next month">›</button>
-          <button class="btn" id="todayBtn">Tonight</button>
+          <div class="theme-submenu" id="themeMenu" popover role="menu" aria-label="Theme">
+            <button
+              class="app-menu-action theme-option"
+              role="menuitemradio"
+              aria-checked="true"
+              data-theme-choice="system"
+              tabindex="-1"
+            >
+              <span class="theme-check" aria-hidden="true">✓</span>System
+            </button>
+            <button
+              class="app-menu-action theme-option"
+              role="menuitemradio"
+              aria-checked="false"
+              data-theme-choice="light"
+              tabindex="-1"
+            >
+              <span class="theme-check" aria-hidden="true">✓</span>Light
+            </button>
+            <button
+              class="app-menu-action theme-option"
+              role="menuitemradio"
+              aria-checked="false"
+              data-theme-choice="dark"
+              tabindex="-1"
+            >
+              <span class="theme-check" aria-hidden="true">✓</span>Dark
+            </button>
+            <button
+              class="app-menu-action theme-option"
+              role="menuitemradio"
+              aria-checked="false"
+              data-theme-choice="observing"
+              tabindex="-1"
+            >
+              <span class="theme-check" aria-hidden="true">✓</span>Observing
+            </button>
+          </div>
+          <span class="sr-only" id="themeHint"
+            >Theme descriptions and OS red-filter setup are in How it works.</span
+          >
+          <hr />
+          <button class="app-menu-action" id="guideBtn">How it works</button>
         </div>
       </header>
-
-      <div class="controls" id="planningControls">
-        <span class="ctl"
-          >New-moon focus
-          <span class="seg small" id="focusSeg">
-            <button data-val="0">Off</button><button data-val="3">±3</button
-            ><button data-val="5">±5</button><button data-val="7">±7</button
-            ><button data-val="10">±10</button>
-          </span>
-        </span>
-        <label class="ctl" for="moonAltSel"
-          >Moon’s upper edge above
-          <select id="moonAltSel">
-            <option value="0">0° (horizon)</option>
-            <option value="5">5°</option>
-            <option value="10">10°</option>
-            <option value="15">15°</option>
-          </select>
-        </label>
-        <label class="ctl" for="crescentSel"
-          >Ignore a moon under
-          <select id="crescentSel">
-            <option value="0">— (strict)</option>
-            <option value="0.1">10% lit</option>
-            <option value="0.2">20% lit</option>
-            <option value="0.3">30% lit</option>
-          </select>
-        </label>
-        <span class="ctl" id="rangeCtl"
-          >Range
-          <button class="icon-btn" id="rangePrev" aria-label="Earlier range">‹</button>
-          <span id="rangeLabel">—</span>
-          <button class="icon-btn" id="rangeNext" aria-label="Later range">›</button>
-        </span>
-      </div>
 
       <p id="siteStorageNotice" class="storage-notice" role="status" hidden></p>
       <aside id="sharedNotice" class="shared-notice" aria-label="Shared plan" hidden>
@@ -122,6 +177,7 @@
           <div class="stage-head">
             <span class="view-title" id="viewTitle">River</span>
             <span id="viewCtl"></span>
+            <span class="view-period" id="periodLabel">—</span>
             <span class="view-sub" id="viewSub"></span>
             <div class="legend" id="legend">
               <span><i class="sw" style="background: var(--sky-day)"></i>Day</span>

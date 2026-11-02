@@ -21,6 +21,7 @@ for (const width of [1512, 390]) {
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     await page.waitForFunction(() => (window.__npa?.nights.length ?? 0) > 0);
+    if (width <= 700) await page.locator('#moonSettingsSummary').click();
     await page.evaluate(() => {
       const app = window.__npa!;
       app.select(

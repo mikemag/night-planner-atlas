@@ -1,3 +1,4 @@
+import { chooseTheme, openGuide } from './header-controls';
 import { expect, test } from '@playwright/test';
 
 for (const width of [1512, 390]) {
@@ -9,13 +10,13 @@ for (const width of [1512, 390]) {
     await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
-    await page.getByRole('button', { name: 'How it works', exact: true }).click();
+    await openGuide(page);
     await expect(page.getByRole('heading', { name: 'How it works', exact: true })).toBeVisible();
     await expect(page.locator('#inspector')).toBeHidden();
     await expect(page.locator('#planningControls')).toBeHidden();
     await expect(page.locator('.guide-table tbody tr')).toHaveCount(4);
     for (const theme of ['light', 'dark', 'observing']) {
-      await page.getByLabel('Theme', { exact: true }).selectOption(theme);
+      await chooseTheme(page, theme);
       const contrast = await page.locator('[data-sky-stage]').evaluateAll((nodes) => {
         const lum = (color: string) => {
           const [r, g, b] = color

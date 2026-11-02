@@ -171,11 +171,6 @@ class LunationsView implements CanvasView {
       scroller.scrollTop = y;
   }
 
-  stepCycle(dir: number): void {
-    const k = Math.max(0, Math.min(this.cycles.length - 1, this.cycleAt(scroller.scrollTop) + dir));
-    scroller.scrollTop = this.ys[k] ?? 0;
-  }
-
   /** Horizontal arrows visit shown dates; vertical arrows preserve the new-moon offset. */
   navigate(key: string): number {
     const { N } = this.geom();

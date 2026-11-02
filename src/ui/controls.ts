@@ -10,14 +10,12 @@ import {
   setThreshold,
   setView,
   shiftRange,
-  stepMonth,
   toggleRiverNight,
   toggleLunationsNight,
   toggleCalendarNight,
   openCalendarMonth,
 } from '../app/shell';
 import { S, data } from '../app/state';
-import { loadTheme, setTheme, type Theme } from '../app/theme';
 import { prepareTimeZones } from '../app/timezones';
 import { cv, size } from '../render/surface';
 import { river } from '../views/river';
@@ -26,8 +24,9 @@ import { el, scroller } from './dom';
 import { initSiteEditor } from './site-editor';
 import { initRiverMinimap } from './river-minimap';
 import { initBrowserData } from './browser-data';
+import { closeAppMenu, initAppMenu } from './app-menu';
 
-const VIEW_KEYS: ViewId[] = ['calendar', 'river', 'lunations', 'notes'];
+const VIEW_KEYS: ViewId[] = ['river', 'lunations', 'calendar', 'notes'];
 
 /** Wire every control, pointer and keyboard event to the shell. */
 export function initControls(): void {
@@ -180,7 +179,7 @@ function initKeyboard(): void {
   window.addEventListener('keydown', (e) => {
     const target = e.target as HTMLElement | null;
     if (
-      document.querySelector('dialog[open]') ||
+      document.querySelector('dialog[open], #appMenu:popover-open') ||
       target?.closest('#riverMinimap') ||
       (e.key !== 'Escape' && target?.closest('#calendarHeaders')) ||
       !data.ready ||
@@ -251,13 +250,33 @@ function initKeyboard(): void {
 }
 
 function initHeader(): void {
-  const theme = el<HTMLSelectElement>('themeSel');
-  theme.value = loadTheme();
-  theme.addEventListener('change', () => setTheme(theme.value as Theme));
+  initAppMenu();
   el('viewSeg').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button');
     if (b?.dataset.view) setView(b.dataset.view as ViewId);
   });
+  el('guideBtn').addEventListener('click', () => {
+    closeAppMenu();
+    setView('notes');
+  });
+  const moonSettings = el<HTMLDetailsElement>('moonSettings');
+  const phone = window.matchMedia('(max-width: 700px)');
+  const layoutMoonSettings = () => {
+    const summary = el('moonSettingsSummary');
+    const focused = moonSettings.contains(document.activeElement);
+    // Keep keyboard focus on a visible control when crossing the phone breakpoint.
+    if (phone.matches) {
+      summary.hidden = false;
+      if (focused) summary.focus({ preventScroll: true });
+      moonSettings.open = false;
+    } else {
+      moonSettings.open = true;
+      if (focused) el('moonAltSel').focus({ preventScroll: true });
+      summary.hidden = true;
+    }
+  };
+  layoutMoonSettings();
+  phone.addEventListener('change', layoutMoonSettings);
   el('focusSeg').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button');
     if (b) setFocus(Number(b.dataset.val));
@@ -268,8 +287,6 @@ function initHeader(): void {
   el<HTMLSelectElement>('crescentSel').addEventListener('change', (e) =>
     setThreshold('crescent', Number((e.target as HTMLSelectElement).value)),
   );
-  el('prevBtn').addEventListener('click', () => stepMonth(-1));
-  el('nextBtn').addEventListener('click', () => stepMonth(1));
   el('todayBtn').addEventListener('click', goTonight);
   el('rangePrev').addEventListener('click', () => shiftRange(-1));
   el('rangeNext').addEventListener('click', () => shiftRange(1));

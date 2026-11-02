@@ -38,8 +38,8 @@ One encoding everywhere, so a night looks the same in every view and in the sing
   and **tonight and now** are blue.
 - **Time** is the site's local clock time, including daylight saving time. The one-hour jump on a
   clock-change night is real, and the River labels it.
-- Light, Dark and Observing are designed palettes, selected by a compact native dropdown with
-  short labels and saved in this browser. OS red-filter setup belongs in How it works.
+- Light, Dark and Observing are designed palettes, selected in the Theme submenu with a checkmark
+  on the current preference and saved in this browser. OS red-filter setup belongs in How it works.
   System follows the device's light/dark preference. Explicit choices apply before
   the first paint and switching palettes preserves the browsed night and selection.
   Observing uses warm neutral lightness steps designed for a separately enabled OS red-only
@@ -155,9 +155,9 @@ to Month. Neutral cells and clear gridlines keep the dates legible in every them
 Friday/Saturday coloring do not appear in Month or Year.
 
 - **Scrolling periods.** Month and Week form continuous vertical sequences across the loaded
-  range. Wheel and touch scrolling browse periods without changing the selected night; the global
-  period label follows the top of the viewport. Native titles scroll with each period. Previous/Next
-  uses the browsed period. Desktop months fit the chart, including six-row months. Phones and
+  range. Wheel and touch scrolling browse periods without changing the selected night; the chart's
+  period label follows the top of the viewport. Native titles scroll with each period.
+  Desktop months fit the chart, including six-row months. Phones and
   short screens retain readable minimum row heights and can scroll the remainder. Resizing and
   planning changes preserve the browsed position.
 - **Month summaries.** Each evening date leads with its usable-dark duration under the current
@@ -194,12 +194,12 @@ Friday/Saturday coloring do not appear in Month or Year.
 - **Year navigation.** Fourteen mini calendars cover the same loaded range as every other view,
   in chronological order, with larger month headings on wide screens, new-moon dates, usable-hour
   totals and daily bars. Each heading includes its year. Switching periods or views reuses the
-  computed nights without changing the range. Previous/Next shifts that range by a year, just like
-  the shared Range controls; Tonight returns to the site's current observing night. Each entire
+  computed nights without changing the range. The shared Range controls shift the loaded range
+  by a year; Tonight returns to the site's current observing night. Each entire
   mini calendar is a keyboard/touch month button. Phones and short windows show fourteen compact
   month choices instead of microscopic day grids.
-  Exceptionally short frames scroll the choices to preserve readable captions and touch targets;
-  the ordinary desktop and phone layouts still show all fourteen together.
+  Desktop fits all fourteen together. Smaller chart frames scroll the choices to preserve readable
+  captions and touch targets, including phones where the shared planning header needs more room.
 - **Shared night expansion.** Selecting a Month or Week date inserts the same horizontal event
   timeline used by River and Lunations after the activated row. Its height is reserved in the
   scrolling sequence, so it covers no dates. Opening it reveals the panel; scrolling can return to
@@ -261,6 +261,43 @@ New-moon focus crops each cycle to ±N without changing ownership.
 
 ### Shared pieces
 
+- **Header.** The observing site is the primary heading, with a quiet app title above and its
+  current local date, time, zone abbreviation and UTC offset below. The full IANA zone remains
+  available to assistive technology, on clock hover and in the site manager. The picker uses
+  site names; coordinates and elevation stay in the manager and the picker's hover description.
+  Identical favorite names retain coordinate descriptions to distinguish them.
+  River, Lunations and Calendar form one view switcher in that order; River remains the
+  first-visit default, while saved choices and shared links retain their view.
+  The active view has an accent-tinted fill, an inset border and a stronger bottom edge so it
+  remains distinct in Light, Dark and Observing without changing control size. Secondary zoom
+  and focus selectors retain their quieter neutral treatment.
+  On wide displays, site, views, loaded Range and Tonight, New-moon focus and the two Moon
+  thresholds share one horizontal band. Related controls stay together and wrap as groups when
+  space runs out. The site block has a bounded width so it cannot push every other control away.
+  Desktop control faces share a 30 px height and top edge; small labels align with the app title,
+  while the site clock occupies its own line below. The view tabs and More button align with the
+  input faces rather than the vertical center of their labeled groups.
+  An upper-right **More options (⋯)** button opens a nonmodal native popover with Share plan,
+  a Theme submenu and How it works. The Theme entry includes the current preference, and one
+  checkmark identifies the selected option among System, Light, Dark and Observing. System stays
+  checked while following the device's palette. Desktop opens a flyout, using the left side when
+  the viewport edge leaves insufficient room on the right; phones expand the same choices inline.
+  Choosing a theme preserves the chart and keeps the choices open for preview. Arrow keys move
+  between choices without changing the preference until activation; Escape or Left returns to
+  Theme, and another Escape dismisses the parent popover. Tab leaves the choices within the
+  parent popup, and changing between desktop and phone layouts closes the submenu with visible
+  focus retained. Clicking outside dismisses the popup. Its keys do not navigate the chart, and Share returns focus to More
+  options when closed. How it works opens independently of the view switcher.
+  Range arrows load the same dates a year earlier or later; Tonight loads
+  the current range when necessary in every chart view. Tonight uses a neutral button treatment;
+  tonight and now are marked in the chart. Browsing months and cycles uses scrolling,
+  with the browsed period and view-specific Year/Month/Week controls inside the chart header.
+  On phones, the header stacks in the same order across all views, with More options beside the site.
+  Site, views, Range, Tonight and focus stay visible. Only the Moon thresholds fold into a
+  keyboard-operable disclosure that always summarizes their current values. Desktop exposes
+  both thresholds inline. Resizing preserves keyboard access to the threshold controls; changing
+  views preserves the disclosure's state. Header controls use larger touch targets and fit at
+  320 px without horizontal page scrolling. How it works hides the planning band.
 - **Sharing.** A versioned, validated URL fragment carries the first of 14 loaded months, current
   view/zooms/orientation, focus, thresholds, selected evening date and River/Lunations expansion. The site
   record is omitted by default; the Share dialog explains that recipients use their own site and
@@ -341,7 +378,8 @@ New-moon focus crops each cycle to ±N without changing ownership.
   | Quito, Astronomical Observatory       |   2,823 m | [UNESCO–IAU Portal to the Heritage of Astronomy](https://web.astronomicalheritage.net/index.php/show-entity?identity=113&idsubentity=1), also the source for its coordinates                        |
   | Svalbard, Kjell Henriksen Observatory |     520 m | [KHO's practical information](https://kho.unis.no/Information.html), also the source for its coordinates                                                                                            |
 
-- **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 switch views, Esc
+- **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 open River, Lunations,
+  Calendar and How it works respectively, Esc
   collapses an expanded River/Lunations night or Calendar expansion. Enter/Space toggles the selected
   River Month, Calendar Month/Week or Lunations night when the chart has focus. Lunations uses Up/Down for cycles and
   Left/Right for displayed nights. The chart and minimap retain a visible focus outline.

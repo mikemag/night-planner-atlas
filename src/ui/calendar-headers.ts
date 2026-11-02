@@ -79,7 +79,7 @@ export interface CalendarPeriodHeading {
   h: number;
 }
 
-/** Period titles scroll with the dates; only the small global period control stays fixed. */
+/** Period titles scroll with the dates; the chart header retains the browsed period label. */
 export function prepareCalendarPeriods(
   r: NightRange,
   headings: CalendarPeriodHeading[],

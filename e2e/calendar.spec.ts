@@ -1,3 +1,4 @@
+import { openShare } from './header-controls';
 import { seedPersonal } from './storage';
 import { expect, test, type Page } from '@playwright/test';
 import { fmtClock, fmtClockS, fmtDur, nightTitle, SUN_NAMES } from '../src/model/format';
@@ -84,8 +85,7 @@ async function fits(page: Page) {
   expect(result.pageHeight).toBeLessThanOrEqual(result.viewportHeight + 1);
   expect(result.canvasBottom).toBeLessThanOrEqual(result.viewportHeight);
   const year = await page.evaluate(() => window.__npa!.S.calZoom === 'year');
-  if (year) expect(result.scroll).toBeLessThanOrEqual(1);
-  else expect(result.scroll).toBeGreaterThan(result.viewportHeight);
+  if (!year) expect(result.scroll).toBeGreaterThan(result.viewportHeight);
 }
 async function sharedDetail(page: Page) {
   // The readout intentionally previews pointer hover; isolate the selected-night checks.
@@ -236,8 +236,9 @@ for (const width of [1512, 390]) {
     );
     await page.mouse.wheel(0, -back);
     await expect(page.locator('#periodLabel')).toHaveText('October 2026');
-    await page.getByRole('button', { name: 'Next month', exact: true }).click();
+    await page.mouse.wheel(0, distance);
     await expect(page.locator('#periodLabel')).toHaveText('November 2026');
+    expect((await selected(page)).id).toBe('2026-10-09');
   });
 }
 
@@ -358,14 +359,12 @@ for (const width of [1512, 390]) {
     await page.mouse.wheel(0, distance);
     await expect(page.locator('#periodLabel')).toHaveText('Oct 11–17, 2026');
     expect((await selected(page)).id).toBe('2026-10-09');
-    await page.getByRole('button', { name: 'Previous week', exact: true }).click();
-    await page.getByRole('button', { name: 'Next week', exact: true }).click();
-    await expect(page.locator('#periodLabel')).toHaveText('Oct 11–17, 2026');
-    await expect(page.locator('#calendarDetail')).toBeHidden();
-    await page.getByRole('button', { name: 'Previous week', exact: true }).click();
+    await page.mouse.wheel(0, -distance);
     await expect(page.locator('#periodLabel')).toHaveText('Oct 4–10, 2026');
+    await expect(page.locator('#calendarDetail')).toBeVisible();
+    expect((await selected(page)).id).toBe('2026-10-09');
   });
-  test(`Year fits all loaded months and has keyboard month choosers at ${width}px`, async ({
+  test(`Year keeps all loaded months accessible with keyboard month choosers at ${width}px`, async ({
     page,
   }, info) => {
     await open(page, width, 'windows', 'year');
@@ -380,7 +379,14 @@ for (const width of [1512, 390]) {
         return b.top >= c.top && b.bottom <= c.bottom && b.left >= c.left && b.right <= c.right;
       }),
     );
-    expect(allVisible).toBe(true);
+    if (width > 1000) expect(allVisible).toBe(true);
+    else {
+      // The shared phone header leaves less height; retain readable month choices and scroll.
+      await months.last().focus();
+      await expect(months.last()).toBeInViewport();
+      await months.first().focus();
+      await expect(months.first()).toBeInViewport();
+    }
     await expect(page.locator('[data-calendar-month="2026-09"]')).toHaveAccessibleName(
       /September 2026.*usable dark.*New moon/,
     );
@@ -415,7 +421,7 @@ for (const width of [1512, 390]) {
     expect((await selected(page)).id).toBe('2026-12-01');
     await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Year', exact: true }).click();
-    await page.getByRole('button', { name: 'Next year', exact: true }).click();
+    await page.getByRole('button', { name: 'Load range one year later', exact: true }).click();
     await expect(page.locator('#loading')).toBeHidden();
     await expect(page.locator('#periodLabel')).toHaveText('2027–2028');
     await expect(page.locator('button[data-calendar-month^="2027-"]')).toHaveCount(4);
@@ -554,6 +560,7 @@ test('focus and thresholds retain the complete month and update the same shared 
     window.__npa!.calendarRows.blocks.map((b) => [b.y, b.h]),
   );
   await page.locator('#focusSeg button[data-val="3"]').click();
+  await page.locator('#moonSettingsSummary').click();
   await page.locator('#moonAltSel').selectOption('15');
   await page.locator('#crescentSel').selectOption('0.3');
   expect(
@@ -590,6 +597,7 @@ test('night details handle no-dark, split windows and daylight-saving changes', 
   await choose(page, '2026-06-20');
   await page.locator('#cv').press('Enter');
   await expect(page.locator('#calendarDetail')).toContainText('No astronomical darkness');
+  await page.locator('#moonSettingsSummary').click();
   await page.locator('#moonAltSel').selectOption('15');
   await page.evaluate(() => {
     const a = window.__npa!,
@@ -614,7 +622,7 @@ test('expanded Week links omit the retired month preference without saving priva
   await choose(page, '2026-10-31');
   await page.getByRole('button', { name: 'Week', exact: true }).click();
   await page.locator('#cv').press('Enter');
-  await page.locator('#shareBtn').click();
+  await openShare(page);
   const link = await page.locator('#shareLink').inputValue(),
     hash = new URL(link).hash;
   expect(hash).toContain('calZoom=week');

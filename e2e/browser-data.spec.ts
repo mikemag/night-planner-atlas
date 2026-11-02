@@ -1,3 +1,4 @@
+import { chooseTheme } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { freshPersonalData } from '../src/app/personal-data';
@@ -128,7 +129,7 @@ test('a newer stored schema is checked again before every write', async ({ page 
     localStorage.setItem('npa:personal', raw);
     return raw;
   });
-  await page.getByLabel('Theme', { exact: true }).selectOption('dark');
+  await chooseTheme(page, 'dark');
   await expect(page.locator('#siteStorageNotice')).toContainText('left unchanged');
   expect(await page.evaluate(() => localStorage.getItem('npa:personal'))).toBe(raw);
 });

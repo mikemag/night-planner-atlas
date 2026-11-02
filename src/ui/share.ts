@@ -6,6 +6,7 @@ import { S, activeFocus, data } from '../app/state';
 import { nightTitle, pad2 } from '../model/format';
 import { siteRecord } from '../app/site-book';
 import { applyTheme, loadTheme } from '../app/theme';
+import { closeAppMenu } from './app-menu';
 import { el } from './dom';
 
 const preferenceKeys = [
@@ -36,7 +37,6 @@ export function useSavedPlan(keepSite = false): void {
   history.replaceState(null, '', location.pathname + location.search);
   el('sharedNotice').hidden = true;
   applyTheme(loadTheme());
-  el<HTMLSelectElement>('themeSel').value = loadTheme();
   syncSettingsControls();
   siteLabel();
   restart();
@@ -158,6 +158,7 @@ export function initSharing(): void {
     }
   };
   el('shareBtn').addEventListener('click', () => {
+    closeAppMenu();
     if (!data.ready || !data.range) return;
     include.checked = false;
     const night = data.range.nights[S.sel];
@@ -186,7 +187,7 @@ export function initSharing(): void {
   include.addEventListener('change', update);
   for (const id of ['shareClose', 'shareCancel'])
     el(id).addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => el('shareBtn').focus({ preventScroll: true }));
+  dialog.addEventListener('close', () => el('moreBtn').focus({ preventScroll: true }));
   el('shareForm').addEventListener('submit', (event) => {
     event.preventDefault();
     void navigator.clipboard

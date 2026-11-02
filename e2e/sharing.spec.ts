@@ -1,3 +1,4 @@
+import { openShare } from './header-controls';
 import { seedPersonal, readPersonal, readSite, readPreference } from './storage';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
@@ -62,7 +63,7 @@ test('a site-free link restores dates and controls later while preserving recipi
   await page.locator('#moonAltSel').selectOption('10');
   await page.locator('#crescentSel').selectOption('0.2');
   await page.locator('#focusSeg button[data-val="3"]').click();
-  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await openShare(page);
   await expect(page.getByLabel('Include this site', { exact: true })).not.toBeChecked();
   const link = await page.getByLabel('Share link', { exact: true }).inputValue();
   const payload = Object.fromEntries(new URLSearchParams(new URL(link).hash.slice(1)));
@@ -141,13 +142,13 @@ test('including a site requires a preview and saving it never replaces existing 
   await page.locator('#siteApply').click();
   await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden();
-  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await openShare(page);
   await page.getByLabel('Include this site', { exact: true }).check();
   await expect(page.locator('#shareSiteFields')).toContainText('Private meadow');
   await expect(page.locator('#shareSiteFields')).toContainText('47.123');
   await expect(page.locator('#shareSiteFields')).toContainText('1234');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await openShare(page);
   await expect(page.getByLabel('Include this site', { exact: true })).not.toBeChecked();
   await page.getByLabel('Include this site', { exact: true }).check();
   if (process.env.SCREENSHOTS)
@@ -213,7 +214,7 @@ test('bad links preserve saved data and clipboard failure gives a manual copy pa
   );
   await openAuthor(page);
   await page.context().setOffline(true);
-  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  await openShare(page);
   await page.getByRole('button', { name: 'Copy link', exact: true }).click();
   await expect(page.locator('#shareStatus')).toContainText('link is selected');
   await expect(page.locator('#shareLink')).toBeFocused();
@@ -230,7 +231,7 @@ test('bad links preserve saved data and clipboard failure gives a manual copy pa
   await page.getByRole('button', { name: 'Copy link', exact: true }).click();
   await expect(page.locator('#shareStatus')).toHaveText('Link copied.');
   await page.keyboard.press('Escape');
-  await expect(page.locator('#shareBtn')).toBeFocused();
+  await expect(page.locator('#moreBtn')).toBeFocused();
   const link = await page.locator('#shareLink').inputValue();
   const url = new URL(link);
   const next = new URLSearchParams(url.hash.slice(1));

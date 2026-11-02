@@ -1,3 +1,4 @@
+import { chooseTheme } from './header-controls';
 import { expect, test } from '@playwright/test';
 
 test('River keyboard tasks include visible focus, minimap browsing and contained dialog keys', async ({
@@ -50,10 +51,10 @@ for (const width of [320, 390]) {
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     for (const theme of ['light', 'dark', 'observing']) {
-      await page.getByLabel('Theme', { exact: true }).selectOption(theme);
+      await chooseTheme(page, theme);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
       const targets = await page
-        .locator('#focusSeg button, #themeSel, #siteSel')
+        .locator('#focusSeg button, #moreBtn, #siteSel')
         .evaluateAll((nodes) =>
           nodes.map((el) => {
             const r = el.getBoundingClientRect();

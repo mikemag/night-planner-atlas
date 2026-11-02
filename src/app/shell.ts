@@ -254,7 +254,7 @@ export function openCalendarMonth(key: string, i?: number): void {
 
 export function goTonight(): void {
   const r = data.range;
-  if (S.view === 'calendar' && (!r || !data.ready || r.tonightIdx < 0)) {
+  if (!r || !data.ready || r.tonightIdx < 0) {
     S.rangeStart = null;
     S.rangeShift = 0;
     S.pendingNight = tonightId(Date.now(), new TimeZone(S.site.tz));
@@ -262,8 +262,7 @@ export function goTonight(): void {
     restart();
     return;
   }
-  if (!r) return;
-  const i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
+  const i = r.tonightIdx;
   select(i, true, true);
   if (canvasView() === river)
     scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.heights().base);
@@ -280,19 +279,14 @@ function currentMonthIndex(): number {
   return r.months.findIndex((mo) => mo.y === n.y && mo.m === n.m);
 }
 
-/** The header's month label follows the scroll position. */
+/** The chart's period label follows the scroll position. */
 function updatePeriod(): void {
   const r = data.range;
   if (!data.ready || !r) return;
   if (S.view === 'calendar') {
     el('periodLabel').textContent = calendar.label();
-    const period = S.calZoom === 'year' ? 'year' : S.calZoom === 'week' ? 'week' : 'month';
-    el('prevBtn').setAttribute('aria-label', `Previous ${period}`);
-    el('nextBtn').setAttribute('aria-label', `Next ${period}`);
     return;
   }
-  el('prevBtn').setAttribute('aria-label', 'Previous month');
-  el('nextBtn').setAttribute('aria-label', 'Next month');
   if (S.view === 'lunations') {
     const n = r.nights[lunations.topNight()];
     el('periodLabel').textContent = n ? `${MON3[n.m - 1]} ${n.y}` : '—';
@@ -300,35 +294,6 @@ function updatePeriod(): void {
   }
   const mo = r.months[currentMonthIndex()];
   el('periodLabel').textContent = mo ? `${MONL[mo.m - 1]} ${mo.y}` : '—';
-}
-
-/** Step the view a month (a lunation in Lunations) back or forward. */
-export function stepMonth(dir: number): void {
-  const r = data.range;
-  if (!data.ready || !r) return;
-  if (S.view === 'lunations') {
-    lunations.stepCycle(dir);
-    return;
-  }
-  if (S.view === 'calendar') {
-    const mo = calendar.month();
-    S.calendarExpanded = false;
-    if (S.calZoom === 'year') {
-      shiftRange(dir);
-    } else if (S.calZoom === 'week') {
-      select(Math.max(0, Math.min(r.nights.length - 1, calendar.topNight() + dir * 7)), true, true);
-    } else {
-      const k = Math.max(0, Math.min(r.months.length - 1, r.months.indexOf(mo) + dir));
-      select(r.months[k].idx[0], true, true);
-    }
-    return;
-  }
-  const k = Math.max(0, Math.min(r.months.length - 1, currentMonthIndex() + dir));
-  const i = r.months[k].idx[0];
-  const v = canvasView();
-  if (v === river) scroller.scrollTop = river.ys[i];
-  else v?.scrollTo(i, true);
-  draw();
 }
 
 // ---------- views and options
@@ -441,8 +406,6 @@ export function setView(view: ViewId): void {
   S.view = view;
   S.hover = null;
   S.riverReadoutSelected = false;
-  for (const b of el('viewSeg').children)
-    b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === view));
   const v = canvasView(view);
   const inline = view !== 'notes';
   el('riverMinimap').hidden = view !== 'river';
@@ -497,7 +460,6 @@ export function setView(view: ViewId): void {
     view === 'calendar' ? 'Moonlight' : 'Moon above horizon (brighter = fuller)';
   el('acceptedMoonLegendText').textContent =
     view === 'calendar' ? 'Accepted moonlight' : 'Moonlit, accepted by settings';
-  el('periodBox').hidden = view === 'notes';
   el('planningControls').hidden = view === 'notes';
   el('viewTitle').textContent = VIEW_INFO[view][0];
   el('viewSub').textContent = VIEW_INFO[view][1];
@@ -541,6 +503,7 @@ export function setThreshold(key: 'moonAlt' | 'crescent', value: number): void {
   const anchor = S.view === 'calendar' && data.ready ? calendar.anchor() : null;
   S[key] = value;
   remember(key, value);
+  syncSettingsControls();
   if (data.ready && data.range) {
     deriveRange(data.range, thresholds(), lunWindow(activeFocus()));
     updateWeekends();
@@ -658,8 +621,11 @@ export function syncSettingsControls(): void {
   }
   el<HTMLSelectElement>('moonAltSel').value = String(S.moonAlt);
   el<HTMLSelectElement>('crescentSel').value = String(S.crescent);
+  el('moonSettingsSummary').textContent =
+    `Moonlight: edge ${S.moonAlt}° · ${S.crescent ? `ignore under ${Math.round(S.crescent * 100)}% lit` : 'strict'}`;
   for (const b of el('viewSeg').children)
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === S.view));
+  el('guideBtn').setAttribute('aria-pressed', String(S.view === 'notes'));
 }
 
 export function boot(): void {

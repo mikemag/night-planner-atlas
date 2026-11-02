@@ -1,3 +1,4 @@
+import { openShare } from './header-controls';
 import { seedPersonal, readPreference } from './storage';
 import { expect, test, type Page } from '@playwright/test';
 import { fmtClock, fmtDur, nightTitle } from '../src/model/format';
@@ -102,7 +103,7 @@ test('Full cycle covers every night once, restores formerly missing dates, and i
   expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(missing.center);
 
   // An explicit Full cycle link keeps the whole cycle even on a fresh phone presentation.
-  await page.locator('#shareBtn').click();
+  await openShare(page);
   const link = await page.locator('#shareLink').inputValue();
   await page.locator('#shareCancel').click();
   await page.setViewportSize({ width: 390, height: 844 });
@@ -249,7 +250,7 @@ test('phone defaults stay local to Lunations, survive sharing, and preserve the 
   );
   await page.locator('#viewSeg').getByRole('button', { name: 'Lunations', exact: true }).click();
   await page.locator('#cv').press('Enter');
-  await page.locator('#shareBtn').click();
+  await openShare(page);
   const link = await page.locator('#shareLink').inputValue();
   expect(new URLSearchParams(new URL(link).hash.slice(1)).get('focus')).toBe('3');
   expect(new URLSearchParams(new URL(link).hash.slice(1)).get('expanded')).toBe('1');
@@ -412,6 +413,7 @@ test('no-dark and split-window nights retain useful inline explanations', async 
   await page.locator('#cv').press('Enter');
   await expect(page.locator('#lunationsDetail')).toContainText('No astronomical darkness');
   await expect(page.locator('#riverReadout')).toContainText('No true dark');
+  await page.locator('#moonSettingsSummary').click();
   await page.locator('#moonAltSel').selectOption('15');
   await page.evaluate(() => {
     const a = window.__npa!;

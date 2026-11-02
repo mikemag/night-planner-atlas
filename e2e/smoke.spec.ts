@@ -1,4 +1,5 @@
 import { seedPersonal } from './storage';
+import { openGuide } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import path from 'node:path';
 
@@ -47,7 +48,8 @@ const insDate = (page: Page) => page.locator('#riverSelection');
 for (const view of VIEWS) {
   test(`${view.tab} view renders`, async ({ page }, info) => {
     const errors = await open(page);
-    await page.locator('#viewSeg').getByRole('button', { name: view.tab, exact: true }).click();
+    if (view.id === 'notes') await openGuide(page);
+    else await page.getByRole('button', { name: view.tab, exact: true }).click();
     await expect(page.locator('#viewTitle')).toHaveText(view.tab);
     if (view.id === 'notes') {
       await expect(page.getByRole('heading', { name: 'How it works' })).toBeVisible();
@@ -97,7 +99,8 @@ test('a new site recomputes every night', async ({ page }) => {
   await page.locator('#siteLocation').fill('55.95, -3.19');
   await page.locator('#siteTz').fill('Europe/London');
   await page.locator('#siteApply').click();
-  await expect(page.locator('#siteSel option:checked')).toContainText('Edinburgh · 55.95°N 3.19°W');
+  await expect(page.locator('#siteSel option:checked')).toHaveText('Edinburgh');
+  await expect(page.locator('#siteSel')).toHaveAttribute('title', /55.95°N 3.19°W/);
   await expect(page.locator('#riverSelection')).toContainText('Wed Sep 23 → Thu Sep 24');
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(errors).toEqual([]);
@@ -149,7 +152,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
   await page.locator('#siteApply').click();
   await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
-  await expect(page.locator('#siteSel option:checked')).toContainText('2000 m');
+  await expect(page.locator('#siteSel')).toHaveAttribute('title', /2000 m/);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   const after = await page.evaluate(() => {
     const n = window.__npa!.nights.find((n) => n.id === '2026-10-03')!;
@@ -191,7 +194,7 @@ test('elevation validates range, accepts below sea level, and can be cleared', a
   await page.locator('#siteApply').click();
   await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
-  await expect(page.locator('#siteSel option:checked')).toContainText('-400 m');
+  await expect(page.locator('#siteSel')).toHaveAttribute('title', /-400 m/);
   await page.locator('#siteSel').selectOption('manage');
   await page.locator('#siteElevation').fill('');
   await page.locator('#siteApply').click();

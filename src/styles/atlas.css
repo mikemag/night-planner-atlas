@@ -112,13 +112,6 @@
   --moon-accepted-edge: #dbc4ad;
   --shadow: 0 2px 20px rgba(0, 0, 0, 0.45);
 }
-.theme-control {
-  font-size: 12px;
-  color: var(--ink-2);
-}
-.theme-control select {
-  width: 7.5em;
-}
 :root[data-theme='observing'] .seg button[aria-pressed='true'] {
   box-shadow: inset 0 0 0 1px var(--ink-3);
 }
@@ -179,37 +172,47 @@ input {
   padding-block: 12px;
 }
 .topbar {
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  align-items: start;
+  gap: 12px;
+  min-width: 0;
+}
+.header-flow {
   display: flex;
-  align-items: center;
-  gap: 12px 20px;
   flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 20px;
+  min-width: 0;
 }
 .brand {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px 10px;
+  flex: 0 0 260px;
+  max-width: 100%;
+  display: grid;
+  gap: 5px;
   min-width: 0;
-  margin-right: auto;
 }
 .brand h1 {
   margin: 0;
-  font-size: 17px;
-  font-weight: 680;
-  letter-spacing: -0.012em;
-  white-space: nowrap;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--ink-2);
 }
 .site-picker {
+  height: 30px;
   min-width: 0;
-  max-width: min(100%, 420px);
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   border: 0;
   background: none;
   padding: 2px 4px;
   border-radius: 5px;
-  color: var(--ink-3);
-  font-size: 12px;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 650;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -247,19 +250,116 @@ input {
   padding-inline-end: 30px;
 }
 .site-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
   min-width: 0;
   max-width: 100%;
 }
 .site-clock {
   display: block;
-  max-width: 350px;
-  min-height: 30px;
-  font-size: 10.5px;
-  line-height: 15px;
+  max-width: 100%;
+  min-height: 17px;
+  font-size: 12px;
+  line-height: 17px;
   font-variant-numeric: tabular-nums;
   color: var(--ink-2);
   overflow-wrap: anywhere;
   padding-inline: 4px;
+}
+#viewSeg {
+  flex: none;
+  flex-wrap: nowrap;
+  height: 30px;
+  margin-top: 21px;
+}
+.icon-btn.more-trigger {
+  grid-column: 2;
+  grid-row: 1;
+  width: 32px;
+  height: 30px;
+  margin-top: 21px;
+  font-size: 24px;
+  color: var(--ink-2);
+  background: transparent;
+}
+.more-trigger[aria-expanded='true'] {
+  background: var(--chip);
+  color: var(--ink);
+}
+.app-menu,
+.theme-submenu {
+  box-sizing: border-box;
+  position: fixed;
+  inset: auto;
+  max-width: calc(100vw - 16px);
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--hair-2);
+  border-radius: 10px;
+  background: var(--raised);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.app-menu {
+  width: 240px;
+}
+.app-menu-action {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.app-menu-action:hover,
+.app-menu-action[aria-pressed='true'] {
+  background: var(--chip);
+}
+.app-menu-action:disabled {
+  color: var(--ink-3);
+  cursor: default;
+}
+.theme-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.theme-chevron {
+  font-size: 18px;
+  line-height: 1;
+}
+.theme-submenu {
+  width: 180px;
+}
+.theme-option {
+  display: grid;
+  grid-template-columns: 1.1em minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+.theme-check {
+  visibility: hidden;
+}
+.theme-option[aria-checked='true'] .theme-check {
+  visibility: visible;
+}
+@media (min-width: 701px) {
+  .theme-trigger[data-side='left'] .theme-chevron {
+    transform: rotate(180deg);
+  }
+}
+.app-menu hr {
+  margin: 6px 0;
+  border: 0;
+  border-top: 1px solid var(--hair);
 }
 .seg {
   display: inline-flex;
@@ -292,16 +392,26 @@ input {
   color: var(--ink);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14);
 }
-.period {
+#viewSeg button[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--accent) 14%, var(--raised));
+  box-shadow:
+    inset 0 0 0 1px var(--accent),
+    inset 0 -3px 0 var(--accent);
+}
+.range-actions {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.period-label {
-  min-width: 118px;
+#rangeLabel {
+  min-width: 136px;
   text-align: center;
-  font-weight: 620;
+  color: var(--ink);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
+}
+.btn.tonight-trigger {
+  margin-left: 4px;
 }
 .icon-btn,
 .btn {
@@ -335,26 +445,213 @@ input {
   outline-offset: 2px;
 }
 .controls {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 10px 18px;
-  flex-wrap: wrap;
+  display: contents;
   color: var(--ink-2);
   font-size: 12px;
 }
+.range-control,
+.focus-control,
+.moon-settings {
+  flex: none;
+  max-width: 100%;
+}
 .ctl {
   display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
   white-space: nowrap;
+}
+.control-label {
+  font-size: 11px;
+  line-height: 16px;
 }
 .ctl select {
   background: var(--raised);
   border: 1px solid var(--hair-2);
   border-radius: 6px;
-  padding: 2px 4px;
+  min-height: 30px;
+  height: 30px;
+  padding: 4px 8px;
   font-size: 12px;
+}
+.range-actions .icon-btn {
+  width: 30px;
+  height: 30px;
+}
+.tonight-trigger,
+.controls #focusSeg {
+  min-height: 30px;
+}
+#focusSeg {
+  flex-wrap: nowrap;
+}
+#focusSeg button {
+  min-width: 34px;
+}
+#focusSeg button:first-child {
+  min-width: 68px;
+}
+.moon-settings {
+  min-width: 0;
+}
+.moon-settings > summary {
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.moon-fields {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+#moonAltSel,
+#crescentSel {
+  min-width: 112px;
+}
+.view-period {
+  min-width: 8.8em;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .app {
+    padding: 8px;
+    gap: 8px;
+  }
+  .topbar {
+    gap: 8px 12px;
+  }
+  .header-flow {
+    display: contents;
+  }
+  .brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  #viewSeg,
+  .range-control,
+  .focus-control,
+  .moon-settings {
+    grid-column: 1 / -1;
+  }
+  #viewSeg {
+    height: auto;
+    margin-top: 0;
+  }
+  .icon-btn.more-trigger {
+    margin-top: 17px;
+  }
+  #viewSeg button {
+    flex: 1;
+    min-height: 40px;
+  }
+  .range-control,
+  .range-actions {
+    width: 100%;
+  }
+  .range-control {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .range-actions {
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .range-actions .icon-btn {
+    width: 40px;
+  }
+  .btn.tonight-trigger {
+    margin-left: 0;
+  }
+  #rangeLabel {
+    min-width: 0;
+  }
+  .focus-control {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .focus-control > .control-label {
+    max-width: 72px;
+    white-space: normal;
+  }
+  #focusSeg {
+    flex: 1;
+  }
+  #focusSeg button {
+    flex: 1;
+    padding-inline: 6px;
+  }
+  .moon-settings > summary {
+    display: list-item;
+    align-content: center;
+    min-height: 40px;
+    padding-block: 8px;
+    font-size: 12px;
+  }
+  .moon-fields {
+    padding-top: 8px;
+  }
+  .topbar button,
+  .topbar .seg button,
+  .topbar .ctl select {
+    min-height: 40px;
+  }
+  .topbar .ctl select {
+    height: 40px;
+    font-size: 16px;
+  }
+  .theme-submenu {
+    position: static;
+    width: auto;
+    margin: 4px 0 4px 8px;
+    padding: 2px 0 2px 8px;
+    overflow: visible;
+    border: 0;
+    border-left: 1px solid var(--hair-2);
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .theme-chevron {
+    transform: rotate(90deg);
+  }
+  .theme-trigger[aria-expanded='true'] .theme-chevron {
+    transform: rotate(-90deg);
+  }
+}
+
+@media (max-width: 360px) {
+  .range-control,
+  .focus-control {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .focus-control > .control-label {
+    max-width: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+  .icon-btn.more-trigger {
+    width: 44px;
+    margin-top: 21px;
+  }
+  .topbar button,
+  .topbar .seg button,
+  .topbar select,
+  .moon-settings > summary {
+    min-height: 44px;
+  }
+  .range-actions .icon-btn {
+    min-width: 44px;
+  }
 }
 .body {
   flex: 1;
@@ -1301,8 +1598,7 @@ kbd {
   .seg.small button {
     min-width: 32px;
   }
-  .controls select,
-  .theme-control select {
+  .controls select {
     min-height: 32px;
     height: 32px;
   }
@@ -1354,9 +1650,6 @@ kbd {
   }
 }
 
-.share-trigger {
-  min-height: 30px;
-}
 .shared-notice {
   padding: 10px 12px;
   border: 1px solid var(--select);
@@ -1413,13 +1706,9 @@ kbd {
 }
 
 /* Calendar keeps complete periods readable inside a continuous scrolling chart. */
-.view-tab-short {
-  display: none;
-}
 .app.calendar-app {
   height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   min-height: 0;
-  gap: 7px;
 }
 .body.calendar-mode {
   grid-template-columns: minmax(0, 1fr);
@@ -1518,67 +1807,8 @@ kbd {
   outline-offset: -3px;
 }
 @media (max-width: 700px) {
-  .app.calendar-app {
-    padding: 8px;
-    gap: 5px;
-  }
-  .calendar-app .topbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 5px 8px;
-    align-items: center;
-  }
-  .calendar-app .brand {
-    display: block;
-  }
-  .calendar-app .brand h1 {
-    font-size: 15px;
-  }
-  .calendar-app .theme-control {
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 1px;
-    font-size: 11px;
-  }
-  .calendar-app .theme-control select {
-    width: 6.5em;
-    font-size: 11px;
-  }
-  .calendar-app #viewSeg {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-self: start;
-    max-width: calc(100% - 64px);
-  }
-  .calendar-app #viewSeg button {
-    padding-inline: 6px;
-    font-size: 11px;
-  }
-  .calendar-app .view-tab-long {
-    display: none;
-  }
-  .calendar-app .view-tab-short {
-    display: inline;
-  }
   .calendar-period-heading h2 {
     font-size: 16px;
-  }
-  .calendar-app .share-trigger {
-    grid-column: 2;
-    grid-row: 2;
-    justify-self: end;
-  }
-  .calendar-app .period {
-    grid-column: 1 / -1;
-    grid-row: 3;
-  }
-  .calendar-app .period-label {
-    flex: 1;
-    min-width: 0;
-    font-size: 14px;
-  }
-  .calendar-app .site-clock {
-    font-size: 10px;
   }
   .calendar-mode .stage-head {
     padding: 6px 8px;
