@@ -50,9 +50,11 @@ for (const view of VIEWS) {
     const errors = await open(page);
     if (view.id === 'notes') await openGuide(page);
     else await page.getByRole('button', { name: view.tab, exact: true }).click();
-    await expect(page.locator('#viewTitle')).toHaveText(view.tab);
+    if (view.id !== 'notes') await expect(page.locator('#viewTitle')).toHaveText(view.tab);
     if (view.id === 'notes') {
-      await expect(page.getByRole('heading', { name: 'How it works' })).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: 'Find the nights worth the trip' }),
+      ).toBeVisible();
     } else {
       // Resize and view changes can schedule another frame, especially in WebKit.
       await expect.poll(() => canvasColors(page)).toBeGreaterThan(8);

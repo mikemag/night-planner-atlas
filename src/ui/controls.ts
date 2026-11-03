@@ -26,6 +26,7 @@ import { initRiverMinimap } from './river-minimap';
 import { initBrowserData } from './browser-data';
 import { closeAppMenu, initAppMenu } from './app-menu';
 import { initChartLegend } from './chart-legend';
+import { closeDocs, docsOpen, openDocs } from './guide';
 
 const VIEW_KEYS: ViewId[] = ['river', 'lunations', 'calendar', 'notes'];
 
@@ -180,6 +181,20 @@ function initKeyboard(): void {
   const steps: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
   window.addEventListener('keydown', (e) => {
     const target = e.target as HTMLElement | null;
+    if (docsOpen()) {
+      if (
+        !e.altKey &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !document.querySelector('.dropdown-menu.show') &&
+        e.key >= '1' &&
+        e.key <= '3'
+      ) {
+        closeDocs();
+        setView(VIEW_KEYS[+e.key - 1]);
+      }
+      return;
+    }
     if (
       e.defaultPrevented ||
       document.querySelector('.modal.show, .dropdown-menu.show') ||
@@ -261,7 +276,7 @@ function initHeader(): void {
   });
   el('guideBtn').addEventListener('click', () => {
     closeAppMenu();
-    setView('notes');
+    openDocs('calculations');
   });
   const moonSettings = el<HTMLDetailsElement>('moonSettings');
   const phone = window.matchMedia('(max-width: 700px)');

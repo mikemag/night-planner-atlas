@@ -17,8 +17,7 @@ export async function chooseTheme(page: Page, theme: string): Promise<void> {
 }
 
 export async function openGuide(page: Page): Promise<void> {
-  await openAppMenu(page);
-  await page.getByRole('menuitem', { name: 'How it works', exact: true }).click();
+  await page.getByRole('link', { name: 'Docs', exact: true }).click();
 }
 
 export async function openShare(page: Page): Promise<void> {

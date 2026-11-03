@@ -7,7 +7,7 @@ import { C, readColors } from '../render/colors';
 import { ctx, cv, size, sizeSurface } from '../render/surface';
 import { el, scroller } from '../ui/dom';
 import { updateWeekends } from '../ui/weekends';
-import { initGuide, updateGuideColors } from '../ui/guide';
+import { closeDocs, docsOpen, initGuide, openDocs, updateGuideColors } from '../ui/guide';
 import { updateRiverReadout } from '../ui/river-readout';
 import { updateRiverMinimap } from '../ui/river-minimap';
 import { updateChartLegend } from '../ui/chart-legend';
@@ -39,6 +39,7 @@ const remember = (key: string, value: unknown) => {
 
 /** Match the canvas to the scroller, then lay out again. */
 export function resize(): void {
+  if (docsOpen()) return;
   const anchor =
     S.view === 'river' && data.ready && river.hs.length === data.range?.nights.length
       ? river.anchor()
@@ -73,7 +74,7 @@ export function draw(): void {
   raf = requestAnimationFrame(() => {
     raf = 0;
     const v = canvasView();
-    if (!v || !data.ready) return;
+    if (!v || !data.ready || docsOpen()) return;
     ctx.setTransform(size.dpr, 0, 0, size.dpr, 0, 0);
     ctx.fillStyle = C.panel;
     ctx.fillRect(0, 0, size.W, size.H);
@@ -380,6 +381,12 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
 }
 
 export function setView(view: ViewId): void {
+  if (view === 'notes') {
+    if (S.view === 'notes') S.view = 'river';
+    openDocs();
+    return;
+  }
+  if (docsOpen()) closeDocs();
   const keep = S.sel >= 0 ? S.sel : (data.range?.tonightIdx ?? -1);
   if (view === 'calendar' && S.view !== 'calendar') {
     S.calendarMonth = null;
@@ -390,9 +397,8 @@ export function setView(view: ViewId): void {
   S.hover = null;
   S.riverReadoutSelected = false;
   const v = canvasView(view);
-  const inline = view !== 'notes';
   el('riverMinimap').hidden = view !== 'river';
-  cv.setAttribute('aria-describedby', inline ? 'chartHelp riverSelection' : 'chartHelp');
+  cv.setAttribute('aria-describedby', 'chartHelp riverSelection');
   el('chartHelp').textContent =
     view === 'calendar'
       ? 'Each date is the evening of its night. Muted dates belong to neighboring months; unloaded dates cannot be selected. Left and Right select nights; Up and Down move a week. In Month and Week, Enter or Space toggles the night timeline and Escape closes it. In Year, activate a month or press Enter on the selected night to open Month. New-moon labels mark the event’s local calendar date.'
@@ -418,7 +424,6 @@ export function setView(view: ViewId): void {
   el('app').classList.toggle('calendar-app', view === 'calendar');
   el('calendarHeaders').hidden = view !== 'calendar';
   if (view !== 'calendar') el('calendarDetail').hidden = true;
-  el('viewBody').classList.toggle('guide-mode', view === 'notes');
   el('lunationsHeaders').hidden = view !== 'lunations';
   if (view !== 'lunations') el('lunationsDetail').hidden = true;
   el('sizer').style.width = '1px';
@@ -426,7 +431,7 @@ export function setView(view: ViewId): void {
   el('riverWeekends').hidden = view !== 'river';
   el('riverWeekendSlot').appendChild(el('weekendList'));
   if (view !== 'river') el('riverDetail').hidden = true;
-  el('riverReadout').hidden = !inline;
+  el('riverReadout').hidden = false;
   el('riverReadout').setAttribute(
     'aria-label',
     view === 'lunations'
@@ -435,8 +440,6 @@ export function setView(view: ViewId): void {
         ? 'Calendar readout'
         : 'River readout',
   );
-  el('notesView').hidden = view !== 'notes';
-  el('planningControls').hidden = view === 'notes';
   el('viewTitle').textContent = VIEW_TITLES[view];
   viewControls();
   syncSettingsControls();
@@ -556,8 +559,8 @@ export function restart(): void {
       }
       S.sel = i;
       updateWeekends();
-      setView(S.view);
-      const v = canvasView();
+      if (!docsOpen()) setView(S.view);
+      const v = docsOpen() ? null : canvasView();
       if (v) {
         if (v === river) scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.heights().base);
         else v.scrollTo(i, true);
@@ -604,18 +607,26 @@ export function syncSettingsControls(): void {
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === S.view));
     b.classList.toggle('active', (b as HTMLElement).dataset.view === S.view);
   }
-  el('guideBtn').setAttribute('aria-pressed', String(S.view === 'notes'));
 }
 
 export function boot(): void {
+  const oldNotes = S.view === 'notes';
+  if (oldNotes) S.view = 'river';
   readColors();
   siteLabel();
   initSiteClock();
   syncSettingsControls();
-  initGuide();
   exposeTestHooks();
   setView(S.view);
-  restart();
+  initGuide(() => {
+    if (data.range) {
+      const unlaid = canvasView()?.total === 0;
+      resize();
+      if (unlaid && S.sel >= 0) canvasView()?.scrollTo(S.sel, false);
+    } else restart();
+  }, oldNotes);
+  if (!docsOpen()) restart();
+  else el('loading').hidden = true;
 }
 
 export interface TestHooks {

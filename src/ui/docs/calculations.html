@@ -1,0 +1,276 @@
+<header class="guide-intro">
+  <p class="guide-kicker">Night Planner Atlas · Docs</p>
+  <h2 tabindex="-1">How it works</h2>
+  <p class="guide-lead">
+    The same Sun and Moon calculations power every view. Here are the definitions, assumptions and
+    checks behind them.
+  </p>
+</header>
+<section id="twilight">
+  <h3>Twilight and true dark</h3>
+  <p>
+    A night runs from local noon to the next local noon. As the Sun drops below the horizon, the sky
+    passes through civil, nautical and astronomical twilight. <strong>True dark</strong> begins when
+    the Sun’s center is 18° below the horizon.
+  </p>
+  <div
+    class="guide-sky-ramp"
+    role="img"
+    aria-label="Day, civil, nautical and astronomical twilight, then true dark"
+  >
+    <span data-sky-stage="day">Day</span><span data-sky-stage="civil">Civil</span
+    ><span data-sky-stage="naut">Nautical</span><span data-sky-stage="astro">Astronomical</span
+    ><span data-sky-stage="dark">True dark</span>
+  </div>
+  <p>
+    Solar events are found at −0.833° for sunrise/sunset at sea level, and −6°, −12° and −18° for
+    twilight. Elevation adjusts idealized refraction at sunrise and sunset; twilight uses the
+    geometric Sun center.
+  </p>
+</section>
+<section id="moon-windows">
+  <h3>The Moon and usable windows</h3>
+  <p>
+    <strong>Strict moon-free time</strong> is true dark with the Moon’s upper edge below the natural
+    horizon. <strong>Usable dark</strong> applies your planning choices: a higher Moon threshold, or
+    acceptance of a thin crescent, can add moonlit time.
+  </p>
+  <p>
+    The Moon-height choice uses the apparent upper edge at 0°, 5°, 10° or 15°. Ignore a Moon under
+    10%, 20% or 30% lit accepts all true dark when illumination at site-local midnight is below that
+    choice. These controls change windows and totals; new-moon focus changes the presentation.
+  </p>
+  <p>
+    The drawing always shows moonlight above the natural horizon. Ordinary moonlight has a warm grey
+    wash; accepted moonlight has a green wash in Light/Dark and an additional dashed cue in
+    Observing. Truly moon-free time stays black. The wash illustrates illumination, rather than
+    calibrated sky brightness.
+  </p>
+  <p>
+    Separate windows stay separate. Totals add elapsed time from every piece, discarding pieces
+    shorter than one minute. Times and durations are rounded independently for display.
+  </p>
+  <details class="guide-detail">
+    <summary>Why rise/set events and altitude curves use different points</summary>
+    <p>
+      Moonrise is the moment the Moon’s <strong>upper edge</strong> reaches a level horizon as seen
+      from your site. The calculation includes lunar parallax, a radius that changes with distance
+      and atmospheric refraction. The Moon’s center can still be below 0° when its upper edge
+      appears.
+    </p>
+    <figure class="guide-diagram">
+      <svg viewBox="0 0 440 128" role="img" aria-labelledby="moonEdgeTitle moonEdgeDesc">
+        <title id="moonEdgeTitle">The Moon’s upper edge and center are different</title>
+        <desc id="moonEdgeDesc">
+          A schematic Moon disk extends above a horizontal horizon while its center remains below
+          the horizon. Refraction also shifts the apparent position.
+        </desc>
+        <circle cx="78" cy="70" r="27" fill="rgb(var(--moon-rgb))" />
+        <line x1="12" y1="60" x2="420" y2="60" stroke="currentColor" stroke-dasharray="5 4" />
+        <circle cx="78" cy="70" r="3" fill="var(--sky-dark)" />
+        <path d="M 78 43 L 122 27 H 145 M 81 70 L 126 95 H 145" fill="none" stroke="currentColor" />
+        <text x="152" y="31" fill="currentColor" font-size="13">Upper edge above the horizon</text>
+        <text x="152" y="99" fill="currentColor" font-size="13">
+          Center still below the horizon
+        </text>
+        <text x="312" y="53" fill="currentColor" font-size="11">Level horizon</text>
+      </svg>
+      <figcaption>
+        Schematic, not to scale. The center-altitude curve and disk-edge event answer different
+        questions.
+      </figcaption>
+    </figure>
+    <p>
+      River’s pointer altitude shows the
+      <strong>apparent center</strong>, sampled every ten minutes. The samples describe position;
+      event times and usable-window boundaries come from separate refined crossing searches.
+    </p>
+    <p>
+      Natural-horizon Moon events use 34 arcminutes of sea-level refraction. The elevated Moon
+      thresholds use altitude-dependent refraction; elevation scales refraction with air density.
+    </p>
+    <p>
+      Sunrise and sunset use a Sun-center altitude of −0.833° at sea level, representing the
+      conventional visible-disk edge with standard refraction. Twilight uses the geometric Sun
+      center at −6°, −12° and −18°. See the
+      <a href="https://aa.usno.navy.mil/faq/RST_defs">USNO definitions of rise, set and twilight</a
+      >.
+    </p>
+  </details>
+  <details class="guide-detail">
+    <summary>A real night with two windows</summary>
+    <p>
+      At Seattle’s Paramount Park, Monday June 29 → Tuesday June 30, 2026 has true dark from
+      <strong>12:17–2:09 AM</strong> on Tuesday. The nearly full Moon is up throughout, giving no
+      strict moon-free time.
+    </p>
+    <p>
+      With the Moon threshold at 15° and crescent ignoring off, the accepted windows are
+      <strong>12:17–1:21 AM (1h 4m)</strong> and <strong>1:46–2:09 AM (23m)</strong>:
+      <strong>1h 27m</strong> in total. The Moon rises above the chosen threshold in the gap. These
+      are two separate accepted sessions, with moonlight in both.
+    </p>
+  </details>
+</section>
+<section id="horizon">
+  <h3>Elevation and the horizon</h3>
+  <p>
+    Optional elevation accepts −500 to 10,000 metres above sea level; blank means sea level. It
+    adjusts the observer position and idealized atmospheric refraction. The horizon stays level:
+    elevation is not a terrain profile, and no horizon dip or local obstruction is inferred.
+  </p>
+  <p>
+    A Moon-height threshold can stand in for a simple obstruction, but it applies at every azimuth.
+    Check ridges, trees, weather, transparency, light pollution and target visibility separately.
+  </p>
+</section>
+<section id="lunar-cycles">
+  <h3>Lunar cycles and new moons</h3>
+  <p>
+    Exact new-moon instants come from the lunar calculation. Illumination and written phase names
+    describe the Moon at site-local midnight; the “New moon” phase name can therefore appear on
+    several nights around one event.
+  </p>
+  <p>
+    River marks the night associated with the event. Calendar marks its actual site-local civil
+    date. Those can differ because an observing night crosses midnight. Lunations assigns each whole
+    night to the new moon nearest its local midnight, with ties going to the earlier event.
+  </p>
+  <p>
+    Full cycle includes every loaded night exactly once. Empty alignment positions are padding;
+    partial cycles mean some owned nights lie outside the loaded dates. A focused ±N window
+    intentionally shows fewer nights.
+  </p>
+  <p>
+    Lunations totals and Friday–Saturday picks use its displayed owned nights. River’s Dark weekends
+    ahead searches Friday starts within ±7 nights of new moon, from tonight onward, and lists up to
+    seven picks. Both rank by combined usable duration, retaining the earlier Friday on a tie.
+  </p>
+</section>
+<section id="clock-changes">
+  <h3>Clock changes and polar nights</h3>
+  <p>
+    Charts use the site’s local clock time, including daylight saving. Window totals use actual
+    elapsed time through a repeated or skipped hour; a fall-back window can last longer than its
+    clock labels suggest.
+  </p>
+  <p>
+    At high latitudes, a missing sunrise does not imply 24 hours of true dark. Midday twilight can
+    still occur. All solar stages follow their below-threshold intervals, including continuous
+    daylight, continuous darkness and intervals split at local noon. Missing events remain absent;
+    noon boundaries are never invented rise/set events.
+  </p>
+</section>
+<section id="accuracy" aria-labelledby="accuracyTitle">
+  <h3 id="accuracyTitle">Accuracy, with the comparisons attached</h3>
+  <p>
+    The reference suite uses independently published, minute-rounded
+    <a href="https://aa.usno.navy.mil/data/RS_OneYear">USNO annual tables</a> for Seattle, Edinburgh
+    and Sydney. The committed cases were verified on October 16, 2026 and include northern/southern
+    seasons, absent twilight, new/full moons and both directions of a daylight-saving change.
+  </p>
+  <div
+    class="guide-table-wrap"
+    tabindex="0"
+    role="region"
+    aria-label="Measured reference comparisons"
+  >
+    <table class="guide-table">
+      <caption>
+        Measured comparisons for the current model
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Check</th>
+          <th scope="col">Observed difference</th>
+          <th scope="col">What it establishes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">USNO: 52 solar events</th>
+          <td>At most 29.6 seconds</td>
+          <td>
+            Agreement with independent minute-rounded tables; four absent twilight events agree too.
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">USNO: 12 lunar events</th>
+          <td>At most 34 seconds</td>
+          <td>Agreement using the upper-limb convention, with minute rounding.</td>
+        </tr>
+        <tr>
+          <th scope="row">Independent solar model: seven site/date cases</th>
+          <td>Within 30 seconds</td>
+          <td>A separate low-precision solar calculation checks model wiring.</td>
+        </tr>
+        <tr>
+          <th scope="row">Full-year lunar crossing audit</th>
+          <td>Less than one second</td>
+          <td>
+            Numerical crossing checks using the same ephemeris; not an independent lunar model.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    The USNO comparison tests allow 60 seconds for rounding and convention/ephemeris differences.
+    These measured cases are not a universal error bound. Real atmospheric refraction can shift
+    observed rise/set by a minute or more, especially at shallow angles. Terrain and weather remain
+    outside the calculation.
+  </p>
+  <details class="guide-detail">
+    <summary>Search windows, numerical tolerances and reference provenance</summary>
+    <p>
+      Solar events are searched from local noon to the next local noon, including clock changes.
+      Moon events and Moon-up intervals ordinarily use noon +2 h through noon +22 h. Longer
+      below-horizon periods extend that window; when sunrise or sunset is absent, it covers the full
+      noon-to-noon period. Events outside the search window are absent. A clipped interval edge is
+      not reported as a rise or set.
+    </p>
+    <p>
+      Moon crossings are refined at 0°, 5°, 10° and 15°. A ten-minute scan brackets extrema, refined
+      extrema split the altitude curve into monotone arcs, and bisection locates crossings to a 50
+      ms bracket. This preserves grazing event pairs hidden between samples. A tangent touch adds no
+      Moon-up interval.
+    </p>
+    <p>
+      The audit checks all 365 nights of 2026 at Seattle, Edinburgh, Sydney, Kjell Henriksen
+      Observatory and an Antarctic site at 85° south at all four heights, using an independent
+      one-minute scan and crossing refinement of the same underlying ephemeris. Synthetic tests
+      cover two-second grazing pairs that a one-minute scan could miss. These isolate numerical
+      search error rather than testing an independent lunar ephemeris.
+    </p>
+    <p>
+      Elevation checks at −400 m, 2,000 m and 4,500 m compare with Astronomy Engine’s separate
+      level-horizon rise/set search: within one second for the Moon and ten seconds for the Sun.
+      They use the same ephemeris and do not establish independent elevated-site accuracy.
+    </p>
+    <p>
+      The stored USNO fixture retains exact query URLs, decimal reference coordinates, UTC dates and
+      verbatim table cells. Reference dates are Seattle October 3, 9, 25 and 31; Edinburgh June 20;
+      Sydney October 3 and December 21, all in 2026. UTC tables avoid applying a fixed civil offset
+      across DST. The reference fixture is never regenerated from the planner’s own results.
+    </p>
+    <p>
+      Additional polar checks compare Kjell Henriksen’s March, June and December 2026 solar events
+      and continuous-daylight/darkness cases with
+      <a href="https://aa.usno.navy.mil/data/RS_OneYear">USNO annual tables</a>. Polar night still
+      contains midday twilight there. Separate checks cover uninterrupted true dark nearer the
+      poles, split intervals and 23/25-hour clock-change periods.
+    </p>
+    <p>
+      <a id="referenceFixture" download="usno-reference-2026.json">Download the reference fixture</a
+      >. The original public reference queries are listed below; they do not contain your observing
+      site.
+    </p>
+    <ul class="reference-queries" id="referenceQueries"></ul>
+    <p>
+      Calculations use <a href="https://github.com/cosinekitty/astronomy">Astronomy Engine</a>.
+      Further background:
+      <a href="https://aa.usno.navy.mil/faq/RST_defs">USNO event conventions</a> and
+      <a href="https://aa.usno.navy.mil/data/RS_OneYear">the source table service</a>.
+    </p>
+  </details>
+</section>

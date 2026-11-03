@@ -48,10 +48,12 @@ export function initSharing(): void {
   const notice = el('sharedNotice');
   const message = el('sharedNoticeText');
   let included = false;
+  let incomingHash = '';
   const applyIncoming = () => {
     try {
       const plan = readSharedPlan(location.hash);
       if (plan) {
+        incomingHash = location.hash;
         const [y, m] = plan.start.split('-').map(Number);
         Object.assign(S, {
           view: plan.view,
@@ -112,7 +114,7 @@ export function initSharing(): void {
   });
   // Apply same-document incoming links without a reload, including after going offline.
   window.addEventListener('hashchange', () => {
-    if (location.hash.startsWith('#npa=') && applyIncoming()) {
+    if (location.hash.startsWith('#npa=') && location.hash !== incomingHash && applyIncoming()) {
       syncSettingsControls();
       siteLabel();
       restart();

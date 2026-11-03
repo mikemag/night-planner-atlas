@@ -119,77 +119,89 @@
             </details>
           </div>
         </div>
-        <div class="dropdown more-menu">
-          <button
-            class="btn icon-btn more-trigger"
-            id="moreBtn"
-            data-bs-toggle="dropdown"
-            aria-label="More options"
-            aria-haspopup="menu"
-            aria-expanded="false"
-            title="More options"
+        <div class="header-actions">
+          <a
+            class="btn btn-sm btn-outline-secondary docs-trigger"
+            id="docsLink"
+            href="?docs=overview"
+            >Docs</a
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              aria-hidden="true"
-              focusable="false"
+          <div class="dropdown more-menu">
+            <button
+              class="btn icon-btn more-trigger"
+              id="moreBtn"
+              data-bs-toggle="dropdown"
+              aria-label="More options"
+              aria-haspopup="menu"
+              aria-expanded="false"
+              title="More options"
             >
-              <circle cx="5" cy="12" r="1.5" />
-              <circle cx="12" cy="12" r="1.5" />
-              <circle cx="19" cy="12" r="1.5" />
-            </svg>
-          </button>
-          <div
-            class="dropdown-menu dropdown-menu-end app-menu"
-            id="appMenu"
-            role="menu"
-            aria-label="Planner options"
-          >
-            <button class="dropdown-item" id="shareBtn" role="menuitem" disabled>
-              Share plan…
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle cx="5" cy="12" r="1.5" />
+                <circle cx="12" cy="12" r="1.5" />
+                <circle cx="19" cy="12" r="1.5" />
+              </svg>
             </button>
-            <div class="dropdown-divider" role="separator"></div>
-            <div id="themeMenu" role="group" aria-labelledby="themeMenuLabel">
-              <h2 class="dropdown-header" id="themeMenuLabel">Theme</h2>
-              <button
-                class="dropdown-item theme-option"
-                role="menuitemradio"
-                aria-checked="true"
-                data-theme-choice="system"
-              >
-                <span class="theme-check" aria-hidden="true">✓</span>System
+            <div
+              class="dropdown-menu dropdown-menu-end app-menu"
+              id="appMenu"
+              role="menu"
+              aria-label="Planner options"
+            >
+              <button class="dropdown-item" id="shareBtn" role="menuitem" disabled>
+                Share plan…
               </button>
-              <button
-                class="dropdown-item theme-option"
-                role="menuitemradio"
-                aria-checked="false"
-                data-theme-choice="light"
-              >
-                <span class="theme-check" aria-hidden="true">✓</span>Light
-              </button>
-              <button
-                class="dropdown-item theme-option"
-                role="menuitemradio"
-                aria-checked="false"
-                data-theme-choice="dark"
-              >
-                <span class="theme-check" aria-hidden="true">✓</span>Dark
-              </button>
-              <button
-                class="dropdown-item theme-option"
-                role="menuitemradio"
-                aria-checked="false"
-                data-theme-choice="observing"
-              >
-                <span class="theme-check" aria-hidden="true">✓</span>Observing
-              </button>
+              <div class="dropdown-divider" role="separator"></div>
+              <div id="themeMenu" role="group" aria-labelledby="themeMenuLabel">
+                <h2 class="dropdown-header" id="themeMenuLabel">Theme</h2>
+                <button
+                  class="dropdown-item theme-option"
+                  role="menuitemradio"
+                  aria-checked="true"
+                  data-theme-choice="system"
+                >
+                  <span class="theme-check" aria-hidden="true">✓</span>System
+                </button>
+                <button
+                  class="dropdown-item theme-option"
+                  role="menuitemradio"
+                  aria-checked="false"
+                  data-theme-choice="light"
+                >
+                  <span class="theme-check" aria-hidden="true">✓</span>Light
+                </button>
+                <button
+                  class="dropdown-item theme-option"
+                  role="menuitemradio"
+                  aria-checked="false"
+                  data-theme-choice="dark"
+                >
+                  <span class="theme-check" aria-hidden="true">✓</span>Dark
+                </button>
+                <button
+                  class="dropdown-item theme-option"
+                  role="menuitemradio"
+                  aria-checked="false"
+                  data-theme-choice="observing"
+                >
+                  <span class="theme-check" aria-hidden="true">✓</span>Observing
+                </button>
+              </div>
+              <div class="dropdown-divider" role="separator"></div>
+              <button class="dropdown-item" id="guideBtn" role="menuitem">How it works</button>
             </div>
-            <div class="dropdown-divider" role="separator"></div>
-            <button class="dropdown-item" id="guideBtn" role="menuitem">How it works</button>
           </div>
+        </div>
+        <div id="docsIdentity" hidden>
+          <h1>Night Planner Atlas</h1>
+          <a href="./" id="docsBack">← Back to planner</a>
         </div>
       </header>
 
@@ -374,7 +386,6 @@
             aria-label="River readout"
             hidden
           ></div>
-          <div class="doc" id="notesView" role="region" aria-label="How it works" hidden></div>
           <div class="loading" id="loading">
             <div class="loading-inner">
               <span id="loadingText">Computing sun and moon for each night…</span>
@@ -383,6 +394,7 @@
           </div>
         </section>
       </div>
+      <div class="docs-shell" id="notesView" role="region" aria-label="Documentation" hidden></div>
       <details class="weekends-tray" id="riverWeekends" hidden>
         <summary>Dark weekends ahead</summary>
         <div id="riverWeekendSlot">

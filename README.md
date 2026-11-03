@@ -27,8 +27,7 @@ track where it is going.
 All views share one visual language and the same controls: new-moon focus (±N nights), when the
 moon counts as up, and whether to ignore a thin crescent. Expand a night in any view for the same ordered boundary times and separate usable windows.
 River keeps the darkest weekends in a collapsible tray. Calendar uses familiar Month, Week and
-Year grids. Month and Year share green duration bars, and Week labels the boundaries between shaded regions directly. **How it works** explains the calculations, measured accuracy, conventions,
-controls, privacy and credits, with technical detail available on demand.
+Year grids. Month and Year share green duration bars, and Week labels the boundaries between shaded regions directly. **Docs** is visible in the header, with a short overview, FAQ, practical guide, worked night examples, detailed calculations, privacy and credits. The examples compare strict and relaxed Moon settings without changing the open plan.
 
 | Year at a glance (River)                        | Calendar                                           | Lunations                                           |
 | ----------------------------------------------- | -------------------------------------------------- | --------------------------------------------------- |

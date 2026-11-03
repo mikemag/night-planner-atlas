@@ -288,12 +288,12 @@ New-moon focus crops each cycle to ±N without changing ownership.
   the current range when necessary in every chart view. Tonight uses a neutral button treatment;
   tonight and now are marked in the chart. Browsing months and cycles uses scrolling,
   with the browsed period and view-specific Year/Month/Week controls inside the chart header.
-  On phones, the header stacks in the same order across all views, with More options beside the site.
+  On phones, the header stacks in the same order across all views, with Docs and More options beside the site.
   Site, views, Range, Tonight and focus stay visible. Only the Moon thresholds fold into a
   keyboard-operable disclosure that always summarizes their current values. Desktop exposes
   both thresholds inline. Resizing preserves keyboard access to the threshold controls; changing
   views preserves the disclosure's state. Header controls use larger touch targets and fit at
-  320 px without horizontal page scrolling. How it works hides the planning band.
+  320 px without horizontal page scrolling. Docs opens its own reading shell.
 - **Chart toolbar and legend.** The panel header keeps zoom controls and the browsed period;
   the active view is already identified by the shared navigation. Its view heading remains
   available to assistive technology. Explanatory sentences belong in How it works and chart help.
@@ -322,13 +322,25 @@ New-moon focus crops each cycle to ±N without changing ownership.
   Links use readable named fields such as `#npa=1&view=river&start=2026-09`, omitting fixed defaults
   to keep them short; `crescent` is an integer percentage. Earlier encoded JSON links still open.
   Plans remain self-contained, with no link-shortening service or server-stored lookup.
-- **How it works.** One offline page with in-page navigation, practical reading instructions,
-  a worked Seattle night, and expandable calculation/reference detail. Its sky ramp shares chart
-  tokens and contrast-selected ink; an upper-edge/center diagram explains Moon events. Measured
-  comparison results distinguish independent USNO/solar references from same-ephemeris crossing
-  checks. Site workflows, keyboard use, observing-filter setup, limitations, privacy and full
-  offline third-party notices stay with the explanation. The page uses the full width and hides
-  chart-specific controls while it is open.
+- **Docs.** A visible Docs link in the main header opens a reading shell with the app identity,
+  Back to planner and the existing theme menu. The site picker, current clock, view switcher,
+  planning controls and shared-plan notice stay with the planner. Five bundled pages provide an
+  Overview, FAQ, Using the planner, How it works, and Privacy and credits. A persistent desktop
+  hierarchy exposes sections of the current guide; phones use a Contents disclosure. Page and
+  section links use `?docs=…#section`, support reload and browser history, and never carry the
+  observing site. Existing guide section anchors and legacy Notes links remain readable.
+  The planner remains mounted: closing Docs restores the site, temporary shared plan, settings,
+  selection, expansion and browsed position without saving a Docs view preference. Direct Docs
+  visits defer the full range calculation until returning to the planner. Reading and navigating
+  Docs works offline after loading.
+  The practical guide pairs two computed Seattle/Paramount Park nights: September 11, 2026,
+  with one complete moon-free window, and September 6 with a rising crescent. A local example
+  control compares strict, 5° and ignored-under-20% choices without changing personal settings.
+  SVG strips use the same solar intervals, disjoint moonlight bands and palette tokens as the
+  charts. Deliberate example links open a temporary public-starter plan in another tab. Technical
+  chapters retain upper-edge/center conventions, accuracy provenance, polar/DST and split-window
+  explanations. Complete offline code/data notices and the matching boundary dataset stay in
+  Privacy and credits. The sky ramp uses `inkOn` in every palette.
 - **Night details.** All three views share ordered event annotations on the same clock axis,
   with illumination, phase, individual usable-window durations and threshold/clock-change notes.
   Calendar reserves the panel after its selected row; Lunations places it beneath its cycle. River
@@ -392,7 +404,7 @@ New-moon focus crops each cycle to ±N without changing ownership.
   | Svalbard, Kjell Henriksen Observatory |     520 m | [KHO's practical information](https://kho.unis.no/Information.html), also the source for its coordinates                                                                                            |
 
 - **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 open River, Lunations,
-  Calendar and How it works respectively, Esc
+  Calendar and Docs respectively, Esc
   collapses an expanded River/Lunations night or Calendar expansion. Enter/Space toggles the selected
   River Month, Calendar Month/Week or Lunations night when the chart has focus. Lunations uses Up/Down for cycles and
   Left/Right for displayed nights. The chart and minimap retain a visible focus outline.

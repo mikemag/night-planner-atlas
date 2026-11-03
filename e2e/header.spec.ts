@@ -16,16 +16,19 @@ for (const width of [1512, 1100, 800, 390, 320]) {
     await expect(page.locator('#siteClockTime')).toContainText('Oct 28, 3:00 PM PDT');
 
     for (const view of ['river', 'lunations', 'calendar', 'notes']) {
-      const trigger = view === 'notes' ? '#guideBtn' : `#viewSeg button[data-view="${view}"]`;
+      const trigger = view === 'notes' ? '#docsLink' : `#viewSeg button[data-view="${view}"]`;
       if (view === 'notes') await openGuide(page);
       else await page.locator(trigger).click();
-      await expect(page.locator(trigger)).toHaveAttribute('aria-pressed', 'true');
-      for (const id of ['siteSel', 'siteClockTime', 'viewSeg', 'moreBtn'])
-        await expect(page.locator(`#${id}`)).toBeVisible();
+      if (view !== 'notes') {
+        await expect(page.locator(trigger)).toHaveAttribute('aria-pressed', 'true');
+        for (const id of ['siteSel', 'siteClockTime', 'viewSeg', 'moreBtn'])
+          await expect(page.locator(`#${id}`)).toBeVisible();
+      }
       await expect(page.locator('#appMenu')).toBeHidden();
       if (view === 'notes') {
-        await expect(page.locator('#planningControls')).toBeHidden();
-        await expect(page.locator('#viewSeg button[aria-pressed="true"]')).toHaveCount(0);
+        await expect(page.locator('#siteSel, #viewSeg, #planningControls').first()).toBeHidden();
+        await expect(page.locator('#docsBack')).toBeVisible();
+        await expect(page.locator('#docsIdentity')).toBeVisible();
       } else {
         for (const id of ['rangeCtl', 'todayBtn', 'focusSeg'])
           await expect(page.locator(`#${id}`)).toBeVisible();
@@ -80,9 +83,10 @@ for (const width of [1512, 1100, 800, 390, 320]) {
         await page.screenshot({
           path: `test-results/screenshots/${info.project.name}-header-${width}-${view}.png`,
         });
-        await page.locator('#viewSeg').screenshot({
-          path: `test-results/screenshots/${info.project.name}-view-switcher-${width}-${view}.png`,
-        });
+        if (view !== 'notes')
+          await page.locator('#viewSeg').screenshot({
+            path: `test-results/screenshots/${info.project.name}-view-switcher-${width}-${view}.png`,
+          });
       }
     }
   });
@@ -130,11 +134,11 @@ test('view shortcuts follow the switcher and Tonight restores the current range 
   for (const [index, view] of ['river', 'lunations', 'calendar', 'notes'].entries()) {
     await page.locator('#moreBtn').focus();
     await page.keyboard.press(String(index + 1));
-    expect(await page.evaluate(() => window.__npa!.S.view)).toBe(view);
     if (view === 'notes') {
-      await expect(page.locator('#guideBtn')).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('#notesView')).toBeVisible();
       continue;
     }
+    expect(await page.evaluate(() => window.__npa!.S.view)).toBe(view);
     await page.locator('#rangeNext').click();
     await expect(page.locator('#loading')).toBeHidden();
     expect(await page.evaluate(() => window.__npa!.nights.some((n) => n.id === '2026-10-28'))).toBe(

@@ -1252,13 +1252,7 @@ button.lunation-pick:hover {
   white-space: nowrap;
 }
 
-/* A single offline guide, with practical reading first and technical detail on demand. */
-.body.guide-mode {
-  grid-template-columns: minmax(0, 1fr);
-}
-.body.guide-mode .stage-head {
-  display: none;
-}
+/* Shared reading typography and calculation diagrams. */
 .guide-page {
   max-width: 900px;
   margin-inline: auto;
@@ -1674,5 +1668,357 @@ kbd {
 @media (min-width: 1100px) {
   #calendarHeaders:not(.calendar-compact-year) .calendar-month-link strong {
     font-size: 18px;
+  }
+}
+
+/* Documentation is a reading shell around the still-mounted planner. */
+.topbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.header-actions {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 21px;
+}
+.header-actions .more-menu {
+  margin: 0;
+}
+.docs-trigger {
+  height: 30px;
+  align-content: center;
+}
+.docs-open > .topbar .header-flow,
+.docs-open > #viewBody,
+.docs-open > #riverWeekends,
+.docs-open > #sharedNotice,
+.docs-open > #siteStorageNotice,
+.docs-open #docsLink,
+.docs-open #shareBtn,
+.docs-open #shareBtn + .dropdown-divider {
+  display: none;
+}
+.docs-open .topbar {
+  align-items: center;
+  padding: 6px 12px 10px;
+  border-bottom: 1px solid var(--hair);
+}
+.docs-open .header-actions {
+  margin: 0;
+}
+#docsIdentity {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+#docsIdentity h1 {
+  font-size: 17px;
+  font-weight: 650;
+  margin: 0;
+}
+#docsBack {
+  font-size: 13px;
+  text-decoration: none;
+  padding-block: 8px;
+}
+.docs-shell {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 18px;
+  max-width: 1260px;
+  width: 100%;
+  margin-inline: auto;
+}
+.docs-sidebar {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 8px;
+  font-size: 13px;
+}
+.docs-sidebar summary {
+  display: none;
+}
+.docs-sidebar nav {
+  display: grid;
+  gap: 4px;
+}
+.docs-sidebar nav a {
+  color: var(--ink-2);
+  text-decoration: none;
+  padding: 9px 12px;
+  border-radius: 5px;
+}
+.docs-sidebar nav a:hover {
+  background: var(--chip);
+  color: var(--ink);
+}
+.docs-sidebar nav a[aria-current='page'] {
+  color: var(--accent);
+  font-weight: 650;
+  background: var(--chip);
+}
+.docs-subnav {
+  display: grid;
+  margin: 0 0 10px 12px;
+  padding-left: 8px;
+  border-left: 1px solid var(--hair-2);
+  font-size: 12px;
+}
+.docs-subnav a {
+  padding-block: 7px !important;
+}
+.docs-content {
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 32px clamp(20px, 4vw, 58px) 48px;
+  overflow-wrap: anywhere;
+}
+.docs-content .guide-page {
+  max-width: 800px;
+  margin-inline: auto;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.docs-content .guide-page h2 {
+  font-size: clamp(28px, 3.2vw, 38px);
+  line-height: 1.2;
+  outline-offset: 5px;
+}
+.docs-content .guide-page h3 {
+  font-size: 21px;
+  line-height: 1.35;
+}
+.docs-content .guide-page h4 {
+  line-height: 1.4;
+}
+.docs-content :is(section, h4, summary, figure) {
+  scroll-margin-top: 24px;
+}
+.docs-start {
+  list-style: none;
+  counter-reset: steps;
+  display: grid;
+  gap: 20px;
+  padding: 0;
+  margin: 32px 0;
+}
+.docs-start li {
+  counter-increment: steps;
+  position: relative;
+  padding-left: 44px;
+}
+.docs-start li::before {
+  content: counter(steps);
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hair-2);
+  border-radius: 50%;
+  color: var(--accent);
+  font-size: 13px;
+}
+.docs-start :is(strong, span) {
+  display: block;
+}
+.docs-views {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.docs-views a {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 14px;
+  border: 1px solid var(--hair-2);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.docs-views a:hover {
+  background: var(--bg);
+}
+.docs-views strong {
+  font-size: 17px;
+}
+.docs-views small {
+  margin-top: auto;
+  color: var(--accent);
+  line-height: 1.5;
+}
+.docs-next {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-top: 22px;
+  font-size: 14px;
+}
+.docs-footnote {
+  margin-top: 30px !important;
+  font-size: 13px;
+}
+.docs-definitions {
+  display: grid;
+  gap: 14px;
+}
+.docs-definitions dd {
+  margin: 0;
+  color: var(--ink-2);
+}
+.example-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 18px 0 8px;
+}
+.example-options .btn {
+  min-height: 36px;
+}
+[data-night-example] {
+  margin-block: 12px;
+  min-width: 0;
+}
+[data-night-example] svg {
+  display: block;
+  max-width: 100%;
+  font-family: inherit;
+}
+.example-summary {
+  font-size: 13px;
+  color: var(--ink) !important;
+  font-weight: 600;
+  margin-top: -8px !important;
+}
+.example-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+}
+#exampleExplanation {
+  min-height: 5.1em;
+}
+@media (max-width: 800px) {
+  .docs-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .docs-sidebar {
+    flex: none;
+    padding: 0;
+    overflow: visible;
+  }
+  .docs-sidebar summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 44px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border: 1px solid var(--hair-2);
+    border-radius: 7px;
+    font-weight: 600;
+  }
+  #docsCurrentPage {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-2);
+  }
+  .docs-sidebar details[open] {
+    border-bottom: 1px solid var(--hair);
+  }
+  .docs-sidebar nav {
+    max-height: 45dvh;
+    overflow-y: auto;
+    padding-block: 6px;
+  }
+  .docs-sidebar nav a {
+    padding-block: 11px;
+  }
+  .docs-content {
+    padding: 24px 18px 36px;
+  }
+  #docsIdentity {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  #docsIdentity h1 {
+    font-size: 15px;
+  }
+  .docs-open .topbar {
+    padding: 4px 6px;
+  }
+}
+@media (max-width: 600px) {
+  .docs-views {
+    grid-template-columns: 1fr;
+  }
+  .docs-views a {
+    gap: 6px;
+  }
+  .docs-content .guide-page {
+    font-size: 14px;
+  }
+  .docs-content .guide-page h3 {
+    font-size: 19px;
+  }
+}
+@media (pointer: coarse) {
+  .header-actions .docs-trigger {
+    min-height: 44px;
+  }
+}
+
+.docs-content h3 > a {
+  color: inherit;
+  text-decoration: none;
+}
+.docs-content h3 > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.app.docs-open {
+  height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  min-height: 0;
+}
+@media (max-width: 800px) {
+  .docs-sidebar summary::after {
+    content: '⌄';
+    font-size: 16px;
+  }
+  .docs-sidebar details[open] summary::after {
+    content: '⌃';
+  }
+  #docsCurrentPage {
+    margin-left: auto;
+    margin-right: 12px;
+  }
+}
+.example-options .btn {
+  transition: none;
+}
+.example-options .btn.active {
+  --bs-btn-active-bg: var(--chip);
+  --bs-btn-active-color: var(--ink);
+  --bs-btn-active-border-color: var(--ink-3);
+}
+@media (pointer: coarse) {
+  .example-options .btn {
+    min-height: 44px;
   }
 }

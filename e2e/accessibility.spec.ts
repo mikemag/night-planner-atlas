@@ -26,6 +26,7 @@ for (const width of [1512, 390]) {
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     await openGuide(page);
+    await page.getByRole('link', { name: 'See two example nights →', exact: true }).click();
     for (const theme of ['light', 'dark', 'observing']) {
       await chooseTheme(page, theme);
       const keycap = await page
@@ -42,6 +43,7 @@ for (const width of [1512, 390]) {
           path: `test-results/screenshots/${info.project.name}-keycaps-${width}-${theme}.png`,
         });
       }
+      await page.getByRole('link', { name: 'Back to planner' }).click();
       await openShare(page);
       const checkbox = page.getByRole('checkbox', { name: 'Include this site', exact: true });
       await checkbox.check();
@@ -65,6 +67,8 @@ for (const width of [1512, 390]) {
           path: `test-results/screenshots/${info.project.name}-checkbox-${width}-${theme}.png`,
         });
       await page.keyboard.press('Escape');
+      await openGuide(page);
+      await page.getByRole('link', { name: 'See two example nights →', exact: true }).click();
     }
   });
 }

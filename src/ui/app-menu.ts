@@ -15,8 +15,8 @@ export function initAppMenu(): void {
   const menu = el('appMenu');
   new Dropdown(trigger, dropdownOptions);
   trigger.addEventListener('shown.bs.dropdown', () => {
-    menu
-      .querySelector<HTMLElement>('.dropdown-item:not(:disabled)')
+    [...menu.querySelectorAll<HTMLElement>('.dropdown-item:not(:disabled)')]
+      .find((item) => item.getClientRects().length)
       ?.focus({ preventScroll: true });
   });
   trigger.addEventListener('hidden.bs.dropdown', () => {
