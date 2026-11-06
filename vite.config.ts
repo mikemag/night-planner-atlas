@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 
@@ -24,6 +25,33 @@ const computeInputs = new Set(
 export default defineConfig({
   define: { __NPA_COMPUTE_REVISION__: JSON.stringify(computeRevision) },
   plugins: [
+    {
+      name: 'offline-release',
+      apply: 'build',
+      writeBundle({ dir }) {
+        if (!dir) throw new Error('Offline setup needs a build output directory.');
+        const worker = readFileSync(root + 'src/app/offline-worker.js', 'utf8');
+        const assets = readdirSync(join(dir, 'assets'), { recursive: true, withFileTypes: true })
+          .filter((entry) => entry.isFile() && !entry.name.endsWith('.map'))
+          .map((entry) => normalizePath(relative(dir, join(entry.parentPath, entry.name))));
+        const files = ['index.html', 'favicon.svg', ...assets.sort()].map((path) => ({
+          path,
+          integrity:
+            'sha256-' +
+            createHash('sha256')
+              .update(readFileSync(join(dir, path)))
+              .digest('base64'),
+        }));
+        const version = createHash('sha256')
+          .update(JSON.stringify(files))
+          .update(worker)
+          .digest('hex');
+        writeFileSync(
+          join(dir, 'sw.js'),
+          `const release = ${JSON.stringify({ version, files })};\n${worker}`,
+        );
+      },
+    },
     {
       name: 'refresh-compute-fingerprint',
       apply: 'serve',

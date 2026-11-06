@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+// These tests intercept the time-zone worker and WASM requests.
+test.use({ serviceWorkers: 'block' });
+
 for (const width of [1512, 390]) {
   test(`offline zone lookup covers remote sites, boundaries and manual overrides at ${width}px`, async ({
     page,

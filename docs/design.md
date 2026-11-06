@@ -344,8 +344,9 @@ Lunations retains its focus window and opens the night detail even if the date f
   observing site. Existing guide section anchors and legacy Notes links remain readable.
   The planner remains mounted: closing Docs restores the site, temporary shared plan, settings,
   selection, expansion and browsed position without saving a Docs view preference. Direct Docs
-  visits defer the full range calculation until returning to the planner. Reading and navigating
-  Docs works offline after loading.
+  visits defer the full range calculation until returning to the planner. Once More shows
+  **Ready to reopen offline**, the planner and direct Docs links can reopen offline in the same
+  browser. The browser keeps the app files separately from saved sites and preferences.
   The practical guide pairs two computed Seattle/Paramount Park nights: September 11, 2026,
   with one complete moon-free window, and September 6 with a rising crescent. A local example
   control compares strict, 5° and ignored-under-20% choices without changing personal settings.

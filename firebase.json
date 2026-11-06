@@ -12,7 +12,7 @@
         ]
       },
       {
-        "source": "/{,index.html}",
+        "source": "/{,index.html,sw.js}",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       },
       {

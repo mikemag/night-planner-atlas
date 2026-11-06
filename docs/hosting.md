@@ -58,8 +58,8 @@ server. `npm run test:e2e` can replace it when screenshots are unnecessary. Do n
 `dist/` between checks and deployment. The explicit project flag avoids deploying to AllSky
 or another active CLI project. Do not run `firebase init`, which can overwrite the config.
 
-`firebase.json` publishes only `dist/`. HTML at `/` and `/index.html` uses `no-cache`, so
-reloads revalidate against the server. Vite's hashed `/assets/` files use a year of immutable
+`firebase.json` publishes only `dist/`. The HTML at `/` and `/index.html` and the service worker
+at `/sw.js` use `no-cache` so browsers can discover releases. Vite's hashed `/assets/` files use a year of immutable
 caching. The unversioned favicon caches for an hour. No catch-all rewrite is needed: views
 live at `/`, and unknown paths should return 404. Hosting deploys are atomic.
 
@@ -69,7 +69,9 @@ the site, IANA zone, optional elevation and planning controls, reload, and check
 With a browser zone different from the observing site, verify the expanded night's site-local times.
 Inspect network requests: only same-origin static files should load; site edits and view changes
 must not issue requests or change the URL. Disconnect the network after loading and verify
-that views and calculations still work. Check HTML and hashed asset cache response headers.
+that views and calculations still work. Once More shows **Ready to reopen offline**, test a
+reload and a fresh tab with a direct Docs link while offline. Check HTML, worker and hashed
+asset cache response headers.
 
 ## Roll back
 
@@ -109,8 +111,19 @@ Use the same `web.app` bookmark consistently. Private browsing or clearing site 
 remove settings. Coordinates stay in browser storage and calculations; there is no upload.
 The hosting provider still handles ordinary static-file requests and connection metadata.
 
-Once loaded, calculations and view changes work without a network connection. A new offline
-visit or offline reload is not guaranteed: there is no service worker or offline installation.
+Open the planner online and wait for **Ready to reopen offline** in More. The same address
+then works on reload or in a new tab in the same browser while offline. Visit online again if
+the browser clears the app files.
+
+The production build generates a service worker with a versioned list of the HTML, favicon and
+built assets, including the time-zone worker and WASM. Installation verifies the contents before
+publishing the cached copy. Online navigations use Hosting, so they see releases and rollbacks
+normally. A failed navigation to the planner or Docs uses the saved HTML and its matching hashed
+assets. The separately offered boundary dataset download requires a connection.
+
+An updated offline copy becomes active after all tabs using the older copy close. Activation
+removes obsolete app caches for the same scope. Saved sites, preferences and calculated nights
+use separate browser storage. The Vite development server does not register a service worker.
 
 Provider references: [Hosting setup](https://firebase.google.com/docs/hosting/quickstart),
 [configuration](https://firebase.google.com/docs/hosting/full-config),
