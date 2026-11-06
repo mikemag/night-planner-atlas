@@ -292,12 +292,11 @@ Lunations retains its focus window and opens the night detail even if the date f
   while the site clock occupies its own line below. The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
   An upper-right, unboxed **More options (⋯)** button with vertically centered dots opens a
-  Bootstrap dropdown containing Share plan,
-  a Theme group and How it works. System, Light, Dark and Observing appear together with a
-  checkmark on the current preference. Choosing a theme dismisses the menu and returns focus
+  Bootstrap dropdown containing Share plan and a Theme group. System, Light, Dark and Observing
+  appear together with a checkmark on the current preference. Choosing a theme dismisses the menu and returns focus
   to More. The “Theme” heading stays unchanged. Arrow keys navigate items, Escape dismisses
   the menu, and clicking outside closes it. Menu keys do not navigate the chart. Share returns
-  focus to More when closed; How it works opens independently of the view switcher.
+  focus to More when closed.
   Range arrows load the same dates a year earlier or later; Tonight loads
   the current range when necessary in every chart view. Tonight uses a neutral button treatment;
   tonight and now are marked in the chart. Browsing months and cycles uses scrolling,

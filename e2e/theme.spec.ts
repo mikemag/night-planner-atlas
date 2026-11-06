@@ -176,7 +176,6 @@ test('Theme remains usable across phone resizing and in a short viewport', async
   await expect(observing).toBeFocused();
   await expect(observing).toBeInViewport({ ratio: 1 });
   await page.keyboard.press('ArrowDown');
-  await expect(page.locator('#guideBtn')).toBeFocused();
-  await expect(page.locator('#guideBtn')).toBeInViewport({ ratio: 1 });
+  await expect(observing).toBeFocused();
   await page.keyboard.press('Escape');
 });

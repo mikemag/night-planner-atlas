@@ -24,9 +24,9 @@ import { el, scroller } from './dom';
 import { initSiteEditor } from './site-editor';
 import { initRiverMinimap } from './river-minimap';
 import { initBrowserData } from './browser-data';
-import { closeAppMenu, initAppMenu } from './app-menu';
+import { initAppMenu } from './app-menu';
 import { initChartLegend } from './chart-legend';
-import { closeDocs, docsOpen, openDocs } from './guide';
+import { closeDocs, docsOpen } from './guide';
 
 const VIEW_KEYS: ViewId[] = ['river', 'lunations', 'calendar', 'notes', 'weekends'];
 
@@ -272,10 +272,6 @@ function initHeader(): void {
   el('viewSeg').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button');
     if (b?.dataset.view) setView(b.dataset.view as ViewId);
-  });
-  el('guideBtn').addEventListener('click', () => {
-    closeAppMenu();
-    openDocs('calculations');
   });
   const moonSettings = el<HTMLDetailsElement>('moonSettings');
   const phone = window.matchMedia('(max-width: 700px)');
