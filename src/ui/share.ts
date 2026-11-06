@@ -140,7 +140,7 @@ export function initSharing(): void {
       focus: activeFocus(),
       moonAlt: S.moonAlt,
       crescent: S.crescent,
-      night: r.nights[S.sel]?.id ?? null,
+      night: S.view === 'weekends' ? null : (r.nights[S.sel]?.id ?? null),
       expanded:
         S.view === 'lunations'
           ? S.lunationsExpanded
@@ -165,7 +165,7 @@ export function initSharing(): void {
     closeAppMenu();
     if (!data.ready || !data.range) return;
     include.checked = false;
-    const night = data.range.nights[S.sel];
+    const night = S.view === 'weekends' ? null : data.range.nights[S.sel];
     el('shareContext').textContent =
       `${el('viewTitle').textContent} · ${el('rangeLabel').textContent}${night ? ` · ${nightTitle(night)}` : ''}`;
     const preview = el('shareSiteFields');

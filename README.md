@@ -23,11 +23,17 @@ track where it is going.
   each cycle. Full cycle shows every night exactly once, assigned to its nearest new moon, with
   padding keeping new moon centered. Taller night columns run from evening down to morning, with usable-hour bars below;
   select a night for its horizontal timeline. Phones start at ±3 nights, with wider windows available.
+- **Dark Weekends**: compare the best Fri–Sat and Thu–Sun trips for each new moon in the range. Expand
+  a cycle for the gain from adding Thursday and Sunday to the same weekend and the nightly windows.
+  Open a trip's first night in River, Lunations or Calendar.
 
-All views share one visual language and the same controls: new-moon focus (±N nights), when the
-moon counts as up, and whether to ignore a thin crescent. Expand a night in any view for the same ordered boundary times and separate usable windows.
-River keeps the darkest weekends in a collapsible tray. Calendar uses familiar Month, Week and
-Year grids. Month and Year share green duration bars, and Week labels the boundaries between shaded regions directly. **Docs** is visible in the header, with a short overview, FAQ, practical guide, worked night examples, detailed calculations, privacy and credits. The examples compare strict and relaxed Moon settings without changing the open plan.
+All views share one visual language and Moon settings for when the Moon counts as up and whether
+to ignore a thin crescent. The charts also support new-moon focus (±N nights) and share ordered
+boundary times and separate usable windows in expanded nights.
+Calendar uses familiar Month, Week and Year grids. Month and Year share green duration bars, and
+Week labels the boundaries between shaded regions directly. **Docs** is visible in the header,
+with a short overview, FAQ, practical guide, worked night examples, detailed calculations,
+privacy and credits. The examples compare strict and relaxed Moon settings without changing the open plan.
 
 | Year at a glance (River)                        | Calendar                                           | Lunations                                           |
 | ----------------------------------------------- | -------------------------------------------------- | --------------------------------------------------- |

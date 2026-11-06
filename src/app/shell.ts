@@ -6,7 +6,11 @@ import { TimeZone } from '../model/time';
 import { C, readColors } from '../render/colors';
 import { ctx, cv, size, sizeSurface } from '../render/surface';
 import { el, scroller } from '../ui/dom';
-import { updateWeekends } from '../ui/weekends';
+import {
+  initDarkWeekends,
+  scrollToCurrentTripPeriod,
+  updateDarkWeekends,
+} from '../ui/dark-weekends';
 import { closeDocs, docsOpen, initGuide, openDocs, updateGuideColors } from '../ui/guide';
 import { updateRiverReadout } from '../ui/river-readout';
 import { updateRiverMinimap } from '../ui/river-minimap';
@@ -16,7 +20,7 @@ import { calendar } from '../views/calendar';
 import { lunations } from '../views/lunations';
 import { river } from '../views/river';
 import type { CanvasView } from '../views/view';
-import { type ViewId } from './settings';
+import type { ChartViewId, ViewId } from './settings';
 import { savePreferences, type Preferences } from './personal-data';
 import { S, activeFocus, data, type AppState } from './state';
 import { computeCachedRange } from './compute-cached';
@@ -25,7 +29,7 @@ const sizer = el('sizer');
 
 const canvasViews: Partial<Record<ViewId, CanvasView>> = { river, calendar, lunations };
 
-/** The canvas view for `view`, or null for notes. */
+/** The canvas view for `view`, or null for a document view. */
 export function canvasView(view: ViewId = S.view): CanvasView | null {
   return canvasViews[view] ?? null;
 }
@@ -39,7 +43,7 @@ const remember = (key: string, value: unknown) => {
 
 /** Match the canvas to the scroller, then lay out again. */
 export function resize(): void {
-  if (docsOpen()) return;
+  if (docsOpen() || !canvasView()) return;
   const anchor =
     S.view === 'river' && data.ready && river.hs.length === data.range?.nights.length
       ? river.anchor()
@@ -123,7 +127,6 @@ function selectState(i: number): void {
   S.sel = i;
   S.hover = null;
   S.riverReadoutSelected = true;
-  updateWeekends();
 }
 
 /** Select a night, carrying an open Month expansion along with keyboard navigation. */
@@ -249,7 +252,12 @@ export function openCalendarMonth(key: string, i?: number): void {
 
 export function goTonight(): void {
   const r = data.range;
-  if (!r || !data.ready || r.tonightIdx < 0) {
+  let i = r?.tonightIdx ?? -1;
+  if (r && S.view === 'weekends') {
+    const tonight = tonightId(Date.now(), r.tz);
+    i = r.nights.findIndex((n) => n.id === tonight);
+  }
+  if (!data.ready || i < 0) {
     S.rangeStart = null;
     S.rangeShift = 0;
     S.pendingNight = tonightId(Date.now(), new TimeZone(S.site.tz));
@@ -257,7 +265,10 @@ export function goTonight(): void {
     restart();
     return;
   }
-  const i = r.tonightIdx;
+  if (S.view === 'weekends') {
+    updateDarkWeekends();
+    scrollToCurrentTripPeriod();
+  }
   select(i, true, true);
   if (canvasView() === river)
     scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.heights().base);
@@ -297,6 +308,7 @@ const VIEW_TITLES: Record<ViewId, string> = {
   calendar: 'Calendar',
   river: 'River',
   lunations: 'Lunations',
+  weekends: 'Dark Weekends',
   notes: 'How it works',
 };
 
@@ -421,6 +433,9 @@ export function setView(view: ViewId): void {
   el('viewBody').classList.toggle('river-mode', view === 'river');
   el('viewBody').classList.toggle('lunations-mode', view === 'lunations');
   el('viewBody').classList.toggle('calendar-mode', view === 'calendar');
+  el('viewBody').classList.toggle('weekends-mode', view === 'weekends');
+  el('darkWeekends').hidden = view !== 'weekends';
+  el('focusCtl').hidden = view === 'weekends';
   el('app').classList.toggle('calendar-app', view === 'calendar');
   el('calendarHeaders').hidden = view !== 'calendar';
   if (view !== 'calendar') el('calendarDetail').hidden = true;
@@ -428,10 +443,8 @@ export function setView(view: ViewId): void {
   if (view !== 'lunations') el('lunationsDetail').hidden = true;
   el('sizer').style.width = '1px';
   scroller.scrollLeft = 0;
-  el('riverWeekends').hidden = view !== 'river';
-  el('riverWeekendSlot').appendChild(el('weekendList'));
   if (view !== 'river') el('riverDetail').hidden = true;
-  el('riverReadout').hidden = false;
+  el('riverReadout').hidden = !v;
   el('riverReadout').setAttribute(
     'aria-label',
     view === 'lunations'
@@ -444,12 +457,35 @@ export function setView(view: ViewId): void {
   viewControls();
   syncSettingsControls();
   if (!data.ready) return;
+  updateDarkWeekends();
   bestWeekends(data.range!, lunWindow(activeFocus()));
   if (v) {
     resize();
     if (keep >= 0) v.scrollTo(keep, true);
     draw();
   }
+}
+
+/** Start the destination chart on the trip's first night. Year modes have no night detail. */
+function openTripNight(view: ChartViewId, id: string): void {
+  if (!data.ready || !data.range) return;
+  const i = data.range.nights.findIndex((night) => night.id === id);
+  if (i < 0) return;
+  selectState(i);
+  if (view === 'river') {
+    if (S.riverZoom === 'year') S.riverZoom = 'month';
+    S.riverExpanded = true;
+  } else if (view === 'calendar') {
+    if (S.calZoom === 'year') S.calZoom = 'month';
+    S.calendarWeek = null;
+    S.calendarExpanded = true;
+  } else {
+    S.lunationsExpanded = true;
+  }
+  setView(view);
+  S.riverReadoutSelected = true;
+  canvasView()?.scrollTo(i, false);
+  cv.focus({ preventScroll: true });
 }
 
 /** New-moon focus: ±N nights, or 0 for off. */
@@ -484,7 +520,7 @@ export function setThreshold(key: 'moonAlt' | 'crescent', value: number): void {
   syncSettingsControls();
   if (data.ready && data.range) {
     deriveRange(data.range, thresholds(), lunWindow(activeFocus()));
-    updateWeekends();
+    updateDarkWeekends();
     relayout();
     if (anchor) calendar.restoreAnchor(anchor);
   }
@@ -520,6 +556,7 @@ export function restart(): void {
   const selId =
     S.pendingNight ?? (S.sel >= 0 && prev && prev.nights[S.sel] ? prev.nights[S.sel].id : null);
   data.ready = false;
+  el('darkWeekends').inert = true;
   el('loading').hidden = false;
   el<HTMLButtonElement>('shareBtn').disabled = true;
   el('loadingText').textContent = 'Computing sun and moon for each night…';
@@ -542,6 +579,7 @@ export function restart(): void {
       data.range = r;
       S.pendingNight = null;
       data.ready = true;
+      el('darkWeekends').inert = false;
       el<HTMLButtonElement>('shareBtn').disabled = false;
       el('loading').hidden = true;
       const { spec, nights } = r;
@@ -558,7 +596,6 @@ export function restart(): void {
         S.calendarMonth = null;
       }
       S.sel = i;
-      updateWeekends();
       if (!docsOpen()) setView(S.view);
       const v = docsOpen() ? null : canvasView();
       if (v) {
@@ -582,10 +619,7 @@ export function restart(): void {
 export function onTheme(): void {
   readColors();
   updateGuideColors();
-  if (data.ready) {
-    updateWeekends();
-    draw();
-  }
+  if (data.ready) draw();
 }
 
 export function syncSettingsControls(): void {
@@ -615,11 +649,13 @@ export function boot(): void {
   readColors();
   siteLabel();
   initSiteClock();
+  initDarkWeekends(openTripNight);
   syncSettingsControls();
   exposeTestHooks();
   setView(S.view);
   initGuide(() => {
     if (data.range) {
+      updateDarkWeekends();
       const unlaid = canvasView()?.total === 0;
       resize();
       if (unlaid && S.sel >= 0) canvasView()?.scrollTo(S.sel, false);

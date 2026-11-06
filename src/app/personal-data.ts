@@ -8,7 +8,7 @@ export const PERSONAL_KEY = 'npa:personal';
 export const PERSONAL_VERSION = 1;
 export const STARTER_VERSION = 1;
 export const PREFERENCES = {
-  view: ['river', 'calendar', 'lunations', 'notes'],
+  view: ['river', 'calendar', 'lunations', 'weekends', 'notes'],
   focus: [0, 3, 5, 7, 10],
   moonAlt: [0, 5, 10, 15],
   crescent: [0, 0.1, 0.2, 0.3],

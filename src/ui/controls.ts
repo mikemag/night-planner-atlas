@@ -28,7 +28,7 @@ import { closeAppMenu, initAppMenu } from './app-menu';
 import { initChartLegend } from './chart-legend';
 import { closeDocs, docsOpen, openDocs } from './guide';
 
-const VIEW_KEYS: ViewId[] = ['river', 'lunations', 'calendar', 'notes'];
+const VIEW_KEYS: ViewId[] = ['river', 'lunations', 'calendar', 'notes', 'weekends'];
 
 /** Wire every control, pointer and keyboard event to the shell. */
 export function initControls(): void {
@@ -187,8 +187,7 @@ function initKeyboard(): void {
         !e.ctrlKey &&
         !e.metaKey &&
         !document.querySelector('.dropdown-menu.show') &&
-        e.key >= '1' &&
-        e.key <= '3'
+        /^[1235]$/.test(e.key)
       ) {
         closeDocs();
         setView(VIEW_KEYS[+e.key - 1]);
@@ -241,7 +240,7 @@ function initKeyboard(): void {
       );
     } else if (e.key === 't' || e.key === 'T') {
       goTonight();
-    } else if (e.key >= '1' && e.key <= '4') {
+    } else if (/^[1-5]$/.test(e.key)) {
       setView(VIEW_KEYS[+e.key - 1]);
     } else if (e.key === 'Escape') {
       const total =
@@ -309,10 +308,6 @@ function initHeader(): void {
   el('todayBtn').addEventListener('click', goTonight);
   el('rangePrev').addEventListener('click', () => shiftRange(-1));
   el('rangeNext').addEventListener('click', () => shiftRange(1));
-  el('insWeekends').addEventListener('click', (e) => {
-    const b = (e.target as Element).closest<HTMLElement>('button[data-i]');
-    if (b) select(Number(b.dataset.i), true);
-  });
   el('lunationsHeaders').addEventListener('click', (e) => {
     const pick = (e.target as Element).closest<HTMLElement>('button[data-weekend]');
     if (!pick) return;

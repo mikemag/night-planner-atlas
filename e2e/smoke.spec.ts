@@ -67,16 +67,12 @@ for (const view of VIEWS) {
   });
 }
 
-test('keys, the weekend tray and Tonight move the selection', async ({ page }) => {
+test('keys and Tonight move the selection', async ({ page }) => {
   const errors = await open(page);
   await page.keyboard.press('ArrowRight');
   await expect(insDate(page)).toContainText('Thu Sep 24 → Fri Sep 25');
   await page.keyboard.press('ArrowDown');
   await expect(insDate(page)).toContainText('Thu Oct 1 → Fri Oct 2');
-  await page.locator('#riverWeekends > summary').click();
-  await page.locator('#insWeekends button').first().click();
-  await expect(insDate(page)).toContainText('Fri Oct 9 → Sat Oct 10');
-  await expect(page.locator('#riverSelection')).toContainText('9h 24m usable dark');
   await page.getByRole('button', { name: 'Tonight' }).click();
   await expect(insDate(page)).toContainText('Wed Sep 23 → Thu Sep 24');
   expect(errors).toEqual([]);

@@ -134,7 +134,6 @@ for (const width of [1512, 390]) {
     expect(overview.height).toBeLessThanOrEqual(Math.max(546, overview.available) + 1);
     await fits(page);
     await expect(page.locator('#legend')).toBeHidden();
-    await expect(page.locator('#riverWeekends')).toBeHidden();
     await expect(page.locator('#planningControls')).toBeVisible();
     const pixels = await page.evaluate(() => {
       const a = window.__npa!,

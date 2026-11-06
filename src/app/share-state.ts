@@ -37,7 +37,7 @@ function validate(value: unknown): SharedPlan {
     p.v !== 1 ||
     typeof p.start !== 'string' ||
     !/^\d{4}-(0[1-9]|1[0-2])$/.test(p.start) ||
-    !among(p.view, ['river', 'calendar', 'lunations', 'notes'] as const) ||
+    !among(p.view, ['river', 'calendar', 'lunations', 'weekends', 'notes'] as const) ||
     !among(p.riverZoom, ['year', 'month'] as const) ||
     !among(p.calZoom, ['year', 'month', 'week'] as const) ||
     (oldStyle !== undefined && !among(oldStyle, ['hours', 'windows'] as const)) ||

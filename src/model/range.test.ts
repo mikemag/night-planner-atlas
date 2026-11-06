@@ -11,7 +11,6 @@ import {
   nightDates,
   rangeStart,
   tonightId,
-  weekendsAhead,
   type NightRange,
 } from './range';
 import { MS_D, TimeZone } from './time';
@@ -197,18 +196,6 @@ describe('a computed range', () => {
     bestWeekend(sample, L, FULL_CYCLE);
     expect(L.total).toBe(3600e3);
     expect(L.best).toBeNull();
-  });
-
-  it('lists dark weekends from tonight on', () => {
-    const list = weekendsAhead(r);
-    expect(list.length).toBeGreaterThan(0);
-    expect(list.length).toBeLessThanOrEqual(7);
-    for (const w of list) {
-      expect(w.i).toBeGreaterThanOrEqual(r.tonightIdx);
-      expect(r.nights[w.i].dow).toBe(5);
-    }
-    // the first pick is the Oct 9–10 new-moon weekend at the demo site
-    expect(r.nights[list[0].i].id).toBe('2026-10-09');
   });
 
   it('computes the same range in slices as in one go', async () => {

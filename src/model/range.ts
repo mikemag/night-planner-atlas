@@ -311,24 +311,6 @@ export function deriveRange(r: NightRange, th: Thresholds, lunN: number): void {
   for (const mo of r.months) monthStats(r, mo);
 }
 
-/** The best Friday + Saturday within ±7 nights of each new moon, from tonight on (up to 7). */
-export function weekendsAhead(r: NightRange): WeekendPick[] {
-  const { nights } = r;
-  const out: WeekendPick[] = [];
-  const start = Math.max(0, r.tonightIdx);
-  for (const L of r.lunations) {
-    let best: WeekendPick | null = null;
-    for (let k = -7; k <= 7; k++) {
-      const i = L.i + k;
-      if (i < start || i + 1 >= nights.length || nights[i].dow !== 5) continue;
-      const sum = nights[i].mfMs + nights[i + 1].mfMs;
-      if (!best || sum > best.sum) best = { i, sum };
-    }
-    if (best) out.push(best);
-  }
-  return out.slice(0, 7);
-}
-
 export interface ComputeOptions {
   /** Validated, threshold-independent nights restored by the app's optional month cache. */
   cachedNights?: ReadonlyMap<string, Night>;

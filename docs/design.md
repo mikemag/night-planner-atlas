@@ -82,8 +82,7 @@ flattened.
   Callouts are selectable SVG text with an accessible event/time description. Interacting with
   them does not toggle the row. The detail body and callout backings use the chart's panel surface,
   keeping the expansion continuous with its surroundings in both themes.
-  River has no Full detail button or inspector sidebar: its chart uses
-  the full width, with Dark weekends ahead preserved in a collapsible tray below it.
+  River uses the full width for its chart and puts night details directly on the selected row.
 - **Selection and scrolling.** Enter or Space on the chart toggles expansion; Escape collapses.
   Arrow keys retain their night/week steps. An open expansion follows selection, keeping its header
   at the same visible position when possible; closed rows stay closed during keyboard navigation.
@@ -259,6 +258,21 @@ New-moon focus crops each cycle to ±N without changing ownership.
 - _Weak at_ weekday structure: weekdays land in different columns on every row. Full cycle needs
   chart panning on phones; the initial ±3 crop favors new-moon planning there.
 
+### Dark Weekends
+
+A fourth view compares the best Fri–Sat and Thu–Sun trips side by side for every new moon in the
+loaded range. The list opens near tonight when the range contains the current date. It shares the
+site, range and Moon settings, and its results are independent of new-moon focus. Each row shows
+the exact local new moon, cycle coverage and true and usable dark.
+Disclosures show every eligible weekend, the gain from adding Thursday and Sunday on the same
+weekend, and the separate usable windows on each night. An amber badge marks the best dates for
+each trip length, and the summary calls out when the preferred weekend changes. Trip durations
+use green bars, matching usable duration elsewhere. Comparison rows and cards keep a compact
+width on desktop. On phones the cycle heading stacks above the two side-by-side picks.
+Chart buttons on a pick or an expanded weekend open the first night of the chosen trip. River
+and Calendar open Month from Year for the jump without saving a different zoom preference.
+Lunations retains its focus window and opens the night detail even if the date falls outside it.
+
 ### Shared pieces
 
 - **Header.** The observing site is the primary heading, with a quiet app title above and its
@@ -266,7 +280,7 @@ New-moon focus crops each cycle to ±N without changing ownership.
   available to assistive technology, on clock hover and in the site manager. The picker uses
   site names; coordinates and elevation stay in the manager and the picker's hover description.
   Identical favorite names retain coordinate descriptions to distinguish them.
-  River, Lunations and Calendar form one view switcher in that order; River remains the
+  River, Lunations, Calendar and Dark Weekends share one switcher in that order. River remains the
   first-visit default, while saved choices and shared links retain their view.
   The active view has an accent-tinted fill, an inset border and a stronger bottom edge so it
   remains distinct in Light, Dark and Observing without changing control size. Secondary zoom
@@ -341,12 +355,11 @@ New-moon focus crops each cycle to ±N without changing ownership.
   chapters retain upper-edge/center conventions, accuracy provenance, polar/DST and split-window
   explanations. Complete offline code/data notices and the matching boundary dataset stay in
   Privacy and credits. The sky ramp uses `inkOn` in every palette.
-- **Night details.** All three views share ordered event annotations on the same clock axis,
+- **Night details.** All three charts share ordered event annotations on the same clock axis,
   with illumination, phase, individual usable-window durations and threshold/clock-change notes.
   Calendar reserves the panel after its selected row; Lunations places it beneath its cycle. River
   annotates its selected row directly. A fixed readout previews nights without changing selection
-  and lists every separate usable window. River keeps **Dark weekends ahead** in a collapsible
-  tray, using the same Friday/Saturday ranking.
+  and lists every separate usable window.
 - **Planning thresholds.** _Moon’s upper edge above_ (0°–15°) allows for a tree line or hills.
   The Moon counts as up while any part of its refracted disk
   clears that height; Moonrise and Moonset use the upper edge at the natural horizon.
@@ -404,7 +417,7 @@ New-moon focus crops each cycle to ±N without changing ownership.
   | Svalbard, Kjell Henriksen Observatory |     520 m | [KHO's practical information](https://kho.unis.no/Information.html), also the source for its coordinates                                                                                            |
 
 - **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 open River, Lunations,
-  Calendar and Docs respectively, Esc
+  Calendar and Docs respectively, 5 opens Dark Weekends, Esc
   collapses an expanded River/Lunations night or Calendar expansion. Enter/Space toggles the selected
   River Month, Calendar Month/Week or Lunations night when the chart has focus. Lunations uses Up/Down for cycles and
   Left/Right for displayed nights. The chart and minimap retain a visible focus outline.

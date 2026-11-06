@@ -142,9 +142,17 @@ interval and drives all rendering, totals, moonlight and usable-window calculati
 - **Lunation totals** sum it over the displayed owned nights: the full cycle or its ±N crop,
   clipped to the loaded range. Full-cycle totals add up to the total for all loaded nights.
 - **Best weekend** (Lunations) is the Friday and Saturday pair in the displayed owned dates with the most
-  combined moon-free time. **Dark weekends ahead** makes the same pick within ±7 nights of each
-  new moon, from tonight on. A Lunations pair must have both nights in the same cycle and displayed
-  window; pairs spanning an ownership boundary are excluded. Ties retain the earlier Friday.
+  combined moon-free time. A Lunations pair must have both nights in the same cycle and displayed
+  window. Ties retain the earlier Friday.
+- **Dark Weekends view** ranks complete Fri–Sat and Thu–Sun trips independently by summed
+  elapsed usable time under the active Moon settings. A trip belongs to the centered cycle that
+  owns its Friday, and all its nights count, including any outside that cycle. Each preset must
+  fit in the loaded range. An eligible Fri–Sat can still appear when the extended dates are
+  unloaded. Exact ties retain the earlier Friday and zero usable hours never win. The view
+  includes every new moon whose site-local civil date falls in the loaded range. Each cycle's
+  totals and candidates use its loaded dates, including past dates.
+  Compare the two best picks to see whether the dates change. The gain on an individual weekend
+  compares its two presets. All sums and differences precede display rounding.
 - **Moonlight wash** (display only): opacity 0.17 + 0.40 × illumination^0.8, drawn over true dark
   while the Moon’s upper edge is above the natural horizon (0°), independent of planning thresholds.
   The intersection of that moonlight with accepted planning windows uses a green wash in ordinary

@@ -10,12 +10,17 @@ for (const width of [1512, 1100, 800, 390, 320]) {
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     await expect(page.locator('#viewSeg button[aria-pressed="true"]')).toHaveText('River');
-    await expect(page.locator('#viewSeg button')).toHaveText(['River', 'Lunations', 'Calendar']);
+    await expect(page.locator('#viewSeg button')).toHaveText([
+      'River',
+      'Lunations',
+      'Calendar',
+      'Dark Weekends',
+    ]);
     await expect(page.locator('#prevBtn, #nextBtn')).toHaveCount(0);
     await expect(page.locator('#siteSel option:checked')).not.toContainText('°');
     await expect(page.locator('#siteClockTime')).toContainText('Oct 28, 3:00 PM PDT');
 
-    for (const view of ['river', 'lunations', 'calendar', 'notes']) {
+    for (const view of ['river', 'lunations', 'calendar', 'weekends', 'notes']) {
       const trigger = view === 'notes' ? '#docsLink' : `#viewSeg button[data-view="${view}"]`;
       if (view === 'notes') await openGuide(page);
       else await page.locator(trigger).click();
@@ -30,9 +35,15 @@ for (const width of [1512, 1100, 800, 390, 320]) {
         await expect(page.locator('#docsBack')).toBeVisible();
         await expect(page.locator('#docsIdentity')).toBeVisible();
       } else {
-        for (const id of ['rangeCtl', 'todayBtn', 'focusSeg'])
+        for (const id of ['rangeCtl', 'todayBtn'])
           await expect(page.locator(`#${id}`)).toBeVisible();
-        await expect(page.locator('.stage-head #periodLabel')).toBeVisible();
+        if (view === 'weekends') {
+          await expect(page.locator('#focusSeg')).toBeHidden();
+          await expect(page.locator('#darkWeekends')).toBeVisible();
+        } else {
+          await expect(page.locator('#focusSeg')).toBeVisible();
+          await expect(page.locator('.stage-head #periodLabel')).toBeVisible();
+        }
         if (width <= 700) {
           await expect(page.locator('#moonSettingsSummary')).toBeVisible();
           await expect(page.locator('#moonAltSel')).toBeHidden();
@@ -40,7 +51,7 @@ for (const width of [1512, 1100, 800, 390, 320]) {
           await expect(page.locator('#moonSettingsSummary')).toBeHidden();
           await expect(page.locator('#moonAltSel')).toBeVisible();
         }
-        if (width === 1512) {
+        if (width === 1512 && view !== 'weekends') {
           const singleBand = await page.evaluate(() => {
             const site = document.querySelector('.brand')!.getBoundingClientRect();
             return ['viewSeg', 'rangeCtl', 'focusSeg', 'moonSettings'].every((id) => {
@@ -131,7 +142,7 @@ test('view shortcuts follow the switcher and Tonight restores the current range 
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
   const range = await page.locator('#rangeLabel').textContent();
-  for (const [index, view] of ['river', 'lunations', 'calendar', 'notes'].entries()) {
+  for (const [index, view] of ['river', 'lunations', 'calendar', 'notes', 'weekends'].entries()) {
     await page.locator('#moreBtn').focus();
     await page.keyboard.press(String(index + 1));
     if (view === 'notes') {

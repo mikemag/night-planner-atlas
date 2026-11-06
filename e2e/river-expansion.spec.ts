@@ -138,7 +138,6 @@ for (const width of [1512, 390]) {
 
     await expect(detail(page).getByRole('link', { name: 'Full detail' })).toHaveCount(0);
     await expect(page.locator('#inspector')).toBeHidden();
-    await expect(page.locator('#riverWeekends > summary')).toBeVisible();
     await page.locator('#cv').focus();
     await page.keyboard.press('Escape');
     await expect(detail(page)).toBeHidden();

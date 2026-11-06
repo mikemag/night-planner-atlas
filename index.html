@@ -54,6 +54,7 @@
             <button data-view="river" class="btn btn-outline-secondary">River</button>
             <button data-view="lunations" class="btn btn-outline-secondary">Lunations</button>
             <button data-view="calendar" class="btn btn-outline-secondary">Calendar</button>
+            <button data-view="weekends" class="btn btn-outline-secondary">Dark Weekends</button>
           </div>
           <div class="controls" id="planningControls">
             <div class="ctl range-control" id="rangeCtl" role="group" aria-label="Loaded range">
@@ -79,7 +80,7 @@
                 </button>
               </div>
             </div>
-            <div class="ctl focus-control">
+            <div class="ctl focus-control" id="focusCtl">
               <span class="control-label" id="focusLabel">New-moon focus</span>
               <span
                 class="seg small btn-group btn-group-sm"
@@ -386,6 +387,20 @@
             aria-label="River readout"
             hidden
           ></div>
+          <section class="trip-view" id="darkWeekends" aria-labelledby="tripsTitle" hidden>
+            <header class="trip-header">
+              <h2 id="tripsTitle">Dark weekends</h2>
+              <p id="tripsContext"></p>
+            </header>
+            <div class="trip-scroll" id="tripScroll">
+              <div class="trip-key">
+                <span><strong>Ranked by usable dark</strong> with your Moon settings</span>
+                <span>Evening dates · Sunday night ends Monday morning</span>
+              </div>
+              <div id="tripPeriods"></div>
+              <p class="trip-note">Totals and differences are rounded separately to the minute.</p>
+            </div>
+          </section>
           <div class="loading" id="loading">
             <div class="loading-inner">
               <span id="loadingText">Computing sun and moon for each night…</span>
@@ -395,17 +410,6 @@
         </section>
       </div>
       <div class="docs-shell" id="notesView" role="region" aria-label="Documentation" hidden></div>
-      <details class="weekends-tray" id="riverWeekends" hidden>
-        <summary>Dark weekends ahead</summary>
-        <div id="riverWeekendSlot">
-          <div class="wkl" id="weekendList">
-            <div class="wkl-h">
-              Dark weekends ahead <span>Fri + Sat nights, best near each new moon</span>
-            </div>
-            <div id="insWeekends"></div>
-          </div>
-        </div>
-      </details>
     </div>
 
     <div

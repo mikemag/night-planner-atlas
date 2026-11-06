@@ -3,7 +3,8 @@ import { siteRecord } from './site-book';
 import { DEFAULT_SITES } from './default-sites';
 import { currentSite, personal } from './personal-data';
 
-export type ViewId = 'river' | 'calendar' | 'lunations' | 'notes';
+export type ChartViewId = 'river' | 'calendar' | 'lunations';
+export type ViewId = ChartViewId | 'weekends' | 'notes';
 export type RiverZoom = 'year' | 'month';
 export type CalZoom = 'month' | 'week' | 'year';
 export type CalOrient = 'v' | 'h';
