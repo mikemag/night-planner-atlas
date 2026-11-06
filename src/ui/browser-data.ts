@@ -10,14 +10,10 @@ import {
 import { el } from './dom';
 import { useSavedPlan } from './share';
 import { CACHE_BUDGET, nightCache } from '../app/night-cache';
+import { downloadFile } from './download';
 
 function download(contents: string, name: string): void {
-  const url = URL.createObjectURL(new Blob([contents], { type: 'application/json' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = name;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadFile(contents, name, 'application/json');
 }
 
 /** Deliberate, separately labeled controls for personal data; cache controls live alongside. */

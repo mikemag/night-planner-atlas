@@ -159,6 +159,9 @@
               <button class="dropdown-item" id="shareBtn" role="menuitem" disabled>
                 Share plan…
               </button>
+              <button class="dropdown-item" id="calendarExportBtn" role="menuitem" disabled>
+                Export to calendar…
+              </button>
               <div class="dropdown-divider" role="separator"></div>
               <div id="themeMenu" role="group" aria-labelledby="themeMenuLabel">
                 <h2 class="dropdown-header" id="themeMenuLabel">Theme</h2>
@@ -696,6 +699,150 @@
           <div class="modal-footer">
             <button class="btn btn-outline-secondary" id="shareCancel" type="button">Close</button>
             <button class="btn btn-primary" id="shareCopy" type="submit">Copy link</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div
+      class="modal site-dialog"
+      id="calendarExport"
+      tabindex="-1"
+      aria-labelledby="calendarExportTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <form class="modal-content" id="calendarExportForm">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="calendarExportTitle">Export to calendar</h2>
+            <button
+              class="btn-close"
+              type="button"
+              data-bs-dismiss="modal"
+              aria-label="Close calendar export"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div id="calendarExportEditor">
+              <p id="calendarExportSite"></p>
+              <fieldset>
+                <legend class="fs-6">Dates</legend>
+                <div class="calendar-export-dates">
+                  <label class="form-label"
+                    >From<input class="form-control" id="calendarExportFrom" type="date" required
+                  /></label>
+                  <label class="form-label"
+                    >Through<input
+                      class="form-control"
+                      id="calendarExportThrough"
+                      type="date"
+                      required
+                  /></label>
+                </div>
+              </fieldset>
+              <fieldset class="calendar-export-options">
+                <legend class="fs-6">Include</legend>
+                <label class="form-check"
+                  ><input type="checkbox" class="form-check-input" id="calendarExportMoons" /> New
+                  moons <span id="calendarExportMoonsCount" aria-hidden="true"></span
+                ></label>
+                <label class="form-check"
+                  ><input type="checkbox" class="form-check-input" id="calendarExportWeekends" />
+                  Best Fri–Sat weekends
+                  <span id="calendarExportWeekendsCount" aria-hidden="true"></span
+                ></label>
+                <label class="form-check"
+                  ><input type="checkbox" class="form-check-input" id="calendarExportNights" />
+                  Nights with usable dark
+                  <span id="calendarExportNightsCount" aria-hidden="true"></span
+                ></label>
+                <div id="calendarExportThresholdRow" hidden>
+                  <label
+                    >More than
+                    <input
+                      class="form-control"
+                      id="calendarExportThreshold"
+                      type="number"
+                      min="0"
+                      max="1500"
+                      step="1"
+                      value="60"
+                      required
+                      aria-label="Minimum usable dark in minutes"
+                    />
+                    min total</label
+                  >
+                </div>
+                <p id="calendarExportMoonSettings"></p>
+              </fieldset>
+              <div class="calendar-export-preview">
+                <div class="calendar-export-preview-head">
+                  <div>
+                    <strong id="calendarExportCount" role="status"></strong>
+                    <p>All day · Show as free</p>
+                  </div>
+                  <label class="form-label"
+                    >Preview<select
+                      class="form-select"
+                      id="calendarExportExample"
+                      aria-label="Preview an event"
+                    ></select
+                  ></label>
+                </div>
+                <div class="calendar-export-event" id="calendarExportEvent" hidden>
+                  <h3 class="fs-6" id="calendarExportEventTitle"></h3>
+                  <p id="calendarExportEventDates"></p>
+                  <div id="calendarExportHighlights"></div>
+                  <details id="calendarExportDetails">
+                    <summary>More event details</summary>
+                    <div id="calendarExportFacts"></div>
+                  </details>
+                  <p id="calendarExportLinkNote"></p>
+                </div>
+                <p class="field-error" id="calendarExportStatus" role="status"></p>
+              </div>
+              <details id="calendarExportPrivacy">
+                <summary>Site privacy <span id="calendarExportPrivacyLabel"></span></summary>
+                <label class="form-check"
+                  ><input class="form-check-input" type="checkbox" id="calendarExportIncludeSite" />
+                  Include this site in Atlas links</label
+                >
+                <p id="calendarExportSiteFields" hidden></p>
+                <p>
+                  Site-free links use the opener’s site. Importing shares the exported observing
+                  times with the destination calendar.
+                </p>
+              </details>
+            </div>
+            <div id="calendarExportHelp" hidden>
+              <p><strong id="calendarExportFilename"></strong></p>
+              <p>
+                Create or choose a dedicated <strong>Night Planner Atlas</strong> calendar, then
+                import the file there.
+              </p>
+              <dl>
+                <dt>Apple Calendar on Mac</dt>
+                <dd>File → Import</dd>
+                <dt>Google Calendar on a computer</dt>
+                <dd>Settings → Import &amp; export</dd>
+                <dt>Outlook on the web</dt>
+                <dd>Add calendar → Upload from file</dd>
+              </dl>
+              <p>
+                This is a snapshot. For a refresh, replace the previous Atlas events in your
+                dedicated calendar before importing a new file.
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" id="calendarExportBack" hidden>
+              Back to export
+            </button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              Close
+            </button>
+            <button type="submit" class="btn btn-primary" id="calendarExportDownload">
+              Download .ics
+            </button>
           </div>
         </form>
       </div>

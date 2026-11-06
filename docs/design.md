@@ -335,6 +335,17 @@ Lunations retains its focus window and opens the night detail even if the date f
   Links use readable named fields such as `#npa=1&view=river&start=2026-09`, omitting fixed defaults
   to keep them short; `crescent` is an integer percentage. Earlier encoded JSON links still open.
   Plans remain self-contained, with no link-shortening service or server-stored lookup.
+- **Calendar export.** More opens a date and event preview scoped to the loaded range, defaulting
+  to the next 30 observing dates when available. The browser downloads one iCalendar snapshot.
+  New moons use the site's civil date and include the associated observing night's details when
+  it is loaded, even if its evening falls on the preceding date. Observing nights use their
+  evening date and a strict threshold on summed elapsed usable time. Weekend entries use the
+  Dark Weekends Fri–Sat winner and require both dates to fit the export. Entries are all day,
+  request free availability and carry no Atlas alarms. Shared-plan links restore the selected
+  night and Moon settings.
+  Including the site in those links is an explicit choice. Atlas sends no calendar data over
+  the network. The import screen explains how to use a separate destination calendar and
+  replace its events before a repeat import.
 - **Docs.** A visible Docs link in the main header opens a reading shell with the app identity,
   Back to planner and the existing theme menu. The site picker, current clock, view switcher,
   planning controls and shared-plan notice stay with the planner. Five bundled pages provide an

@@ -559,6 +559,7 @@ export function restart(): void {
   el('darkWeekends').inert = true;
   el('loading').hidden = false;
   el<HTMLButtonElement>('shareBtn').disabled = true;
+  el<HTMLButtonElement>('calendarExportBtn').disabled = true;
   el('loadingText').textContent = 'Computing sun and moon for each night…';
   el('loadingBar').style.width = '0%';
   const token = ++computeToken;
@@ -581,6 +582,7 @@ export function restart(): void {
       data.ready = true;
       el('darkWeekends').inert = false;
       el<HTMLButtonElement>('shareBtn').disabled = false;
+      el<HTMLButtonElement>('calendarExportBtn').disabled = false;
       el('loading').hidden = true;
       const { spec, nights } = r;
       const last = nights[nights.length - 1];

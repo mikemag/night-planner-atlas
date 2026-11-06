@@ -1482,6 +1482,92 @@ kbd {
   overflow-wrap: anywhere;
 }
 
+#calendarExportEditor,
+#calendarExportHelp {
+  display: grid;
+  gap: 14px;
+}
+.calendar-export-dates,
+.calendar-export-preview-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 14px;
+}
+.calendar-export-dates .form-label {
+  flex: 1 1 150px;
+  min-width: 0;
+}
+.calendar-export-dates .form-control {
+  min-width: 0;
+}
+.calendar-export-options .form-check {
+  padding-right: 24px;
+  position: relative;
+  min-height: 28px;
+}
+.calendar-export-options .form-check span {
+  position: absolute;
+  inset-inline-end: 0;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+#calendarExportThresholdRow {
+  padding: 4px 0 6px 24px;
+}
+#calendarExportThreshold {
+  display: inline-block;
+  width: 5em;
+}
+.calendar-export-preview {
+  border-top: 1px solid var(--hair);
+  padding-top: 12px;
+}
+.calendar-export-preview-head {
+  justify-content: space-between;
+}
+.calendar-export-event {
+  margin-top: 8px;
+  padding: 12px;
+  border-inline-start: 3px solid var(--select);
+  border-radius: 6px;
+  background: var(--panel);
+  display: grid;
+  gap: 6px;
+}
+.calendar-export-event h3 {
+  margin: 0;
+}
+#calendarExportHighlights p,
+#calendarExportFacts p {
+  white-space: pre-line;
+}
+#calendarExportHighlights p + p,
+#calendarExportFacts p + p {
+  margin-top: 4px;
+}
+#calendarExportStatus:not(:empty),
+#calendarExportPrivacy .form-check,
+#calendarExportSiteFields {
+  margin-top: 6px;
+}
+#calendarExportPrivacyLabel {
+  color: var(--ink-2);
+  font-size: 0.875rem;
+}
+#calendarExportSite,
+#calendarExportSiteFields,
+#calendarExportFilename {
+  overflow-wrap: anywhere;
+}
+#calendarExportHelp dl,
+#calendarExportHelp dd {
+  margin: 0;
+}
+#calendarExportHelp dd + dt {
+  margin-top: 8px;
+}
+
 /* Calendar keeps complete periods readable inside a continuous scrolling chart. */
 .app.calendar-app {
   height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
