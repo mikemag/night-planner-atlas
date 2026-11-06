@@ -7,31 +7,24 @@
 </header>
 <section id="privacy-credits" aria-labelledby="privacyTitle">
   <h3 id="privacyTitle">Your sites and data</h3>
-  <p>
-    Saved sites and preferences are kept in this browser’s local storage. Rebuildable calculations
-    for saved sites are cached in this browser’s IndexedDB storage, including their coordinates.
-    There are no accounts, analytics or remote coordinate lookups. The app loads its static assets
-    from its own origin and calculations keep working after loading when the network is
-    disconnected. Clearing browser site data removes saved favorites and preferences. If storage is
-    unavailable, temporary changes are identified. Open
-    <strong>Manage sites… → Browser data…</strong> to export or import sites and preferences,
-    restore missing starters, or reset preferences while keeping your sites. Exported files include
-    coordinates; keep a copy somewhere you control. Import is reviewed before replacing saved data,
-    and the previous saved copy can be exported for recovery.
-  </p>
-  <p>
-    A shared link normally omits the whole site record. Choosing
-    <strong>Include this site</strong> explicitly adds the reviewed name, coordinates, zone and
-    optional elevation to the URL fragment. Anyone with that link can read them, and the URL can
-    remain in browser history. Opening a link keeps its controls and included site temporary. Saving
-    view settings and saving the site as a favorite are separate deliberate actions. Share links use
-    readable fields after the <code>#</code>, with default settings omitted. The plan is carried in
-    the link itself; there is no link-shortening service. Previously copied links still work.
-  </p>
-  <p>
-    The hosting provider handles ordinary static-file requests and connection metadata. Observing
-    coordinates are not sent with those requests. A new offline visit or reload is not guaranteed.
-  </p>
+  <ul>
+    <li>
+      <strong>In your browser.</strong> Sites and preferences live in local storage. IndexedDB
+      caches calculations for saved sites, including their coordinates. Clearing browser site data
+      removes both.
+    </li>
+    <li>
+      <strong>In links and backups.</strong> Backups contain your saved sites. A link includes the
+      site name, coordinates, zone, and optional elevation when you choose
+      <strong>Include this site</strong>. Anyone with that link can read them.
+    </li>
+    <li>
+      <strong>On the network.</strong> Atlas loads static files from its host, which receives
+      ordinary connection metadata. Site calculations and time-zone lookups run locally. Atlas has
+      no accounts or analytics.
+    </li>
+  </ul>
+  <p><a href="?docs=using#sharing">How to share a plan or back up your sites.</a></p>
   <p>
     Sun and Moon positions:
     <a href="https://github.com/cosinekitty/astronomy">Astronomy Engine 2.1.19</a> by Don Cross, MIT

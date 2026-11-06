@@ -52,9 +52,7 @@ for (const view of VIEWS) {
     else await page.getByRole('button', { name: view.tab, exact: true }).click();
     if (view.id !== 'notes') await expect(page.locator('#viewTitle')).toHaveText(view.tab);
     if (view.id === 'notes') {
-      await expect(
-        page.getByRole('heading', { name: 'Find the nights worth the trip' }),
-      ).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Find good nights' })).toBeVisible();
     } else {
       // Resize and view changes can schedule another frame, especially in WebKit.
       await expect.poll(() => canvasColors(page)).toBeGreaterThan(8);

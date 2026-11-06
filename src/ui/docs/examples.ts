@@ -149,12 +149,9 @@ export function renderExamples(): void {
     });
   }
   document.getElementById('exampleExplanation')!.textContent = {
-    strict:
-      'Strict: the usable window ends at Moonrise. Everything after 1:59 AM contains moonlight.',
-    height:
-      'Moon below 5°: the usable window continues until 2:39 AM. The extra 40 minutes contain low moonlight, shown as accepted time.',
-    crescent:
-      'Ignore under 20% lit: this 18%-lit crescent is accepted throughout true dark. The time after Moonrise contains accepted moonlight.',
+    strict: 'The usable window ends at moonrise.',
+    height: 'The 5° cutoff accepts 40 minutes of low moonlight.',
+    crescent: 'The crescent setting accepts the full 7h 17m of true dark.',
   }[choice];
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-example-setting]')) {
     button.setAttribute('aria-pressed', String(button.dataset.exampleSetting === choice));

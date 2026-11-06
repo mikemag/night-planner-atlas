@@ -1,7 +1,6 @@
 <header class="guide-intro">
   <p class="guide-kicker">Night Planner Atlas · Docs</p>
   <h2 tabindex="-1">Frequently asked questions</h2>
-  <p class="guide-lead">Quick answers, with the details one link away.</p>
 </header>
 <section id="usable-dark">
   <h3>What does “usable dark” mean?</h3>
@@ -13,6 +12,7 @@
 </section>
 <section id="sunset">
   <h3>Why doesn’t the dark window start at sunset?</h3>
+  TODO: this one seems a bit basic.
   <p>
     Twilight continues after sunset. True dark begins when the Sun is 18° below the horizon, at
     astronomical dusk. <a href="?docs=calculations#twilight">Read about twilight.</a>
@@ -21,36 +21,29 @@
 <section id="which-view">
   <h3>Which view should I use?</h3>
   <p>
-    Try River for patterns, Lunations for comparing new-moon periods, and Calendar for choosing
-    particular dates. All three use the same calculations.
+    Whichever one you like best! All three use the same calculations. Try River to see how dark
+    periods shift over the months. Lunations lines all the new moons up, and Calendar is pretty
+    traditional.
     <a href="?docs=using#using-planner">Explore the views.</a>
   </p>
 </section>
 <section id="night-date">
   <h3>Which date does an overnight window belong to?</h3>
   <p>
-    The date of its evening. Friday’s night includes Saturday morning. Before local noon, Tonight
-    still refers to the previous evening.
+    The date which starts the evening. Friday’s night includes Saturday morning. Before local noon,
+    Tonight still refers to the previous evening.
   </p>
 </section>
 <section id="time-zone">
   <h3>Whose time zone am I seeing?</h3>
   <p>
     The observing site’s, including daylight saving time. Your device’s time zone does not change
-    the displayed plan. The header clock shows the site’s current time, even while you browse future
-    nights. <a href="?docs=using#sites-and-time">Sites and time zones.</a>
-  </p>
-</section>
-<section id="focus">
-  <h3>Does new-moon focus change the available darkness?</h3>
-  <p>
-    Focus changes the presentation. The Moon-height and crescent settings change which time counts
-    as usable. Lunations’ summaries cover its displayed nights, so cropping the view also changes
-    the dates included in its total and weekend comparison.
+    the displayed plan. The page shows the site’s current time at the top, even while you browse
+    future nights. <a href="?docs=using#sites-and-time">Sites and time zones.</a>
   </p>
 </section>
 <section id="missing-windows">
-  <h3>Why are there two windows—or no usable time?</h3>
+  <h3>Why are there sometimes two windows, or no usable time?</h3>
   <p>
     Moonlight can interrupt true dark, leaving separate windows. Some nights have no true dark;
     others have the Moon above your chosen threshold throughout it. The total adds every separate
@@ -69,26 +62,25 @@
 <section id="terrain">
   <h3>Does elevation account for hills or trees?</h3>
   <p>
-    Elevation adjusts the observer position and atmospheric calculation. Atlas assumes a level
-    horizon. A Moon-height threshold can stand in for a simple obstruction, but local terrain and
-    trees need separate consideration.
+    No. Elevation adjusts the observer position and atmospheric calculation. We assume a level
+    horizon. A Moon-height threshold doesn't replace a real horizon with hills and trees, so take it
+    with a grain of salt.
     <a href="?docs=calculations#horizon">Elevation and horizon assumptions.</a>
   </p>
 </section>
 <section id="forecast">
   <h3>Does this predict clouds or observing quality?</h3>
-  <p>
-    The calculations cover sunlight, moonlight and the time accepted by your settings. Check clouds,
-    transparency, light pollution, access and your target’s position separately. “Best weekend”
-    means the most computed usable time within the stated search window.
-  </p>
+  <p>Nope! This is just about when the Moon is dark enough to observe.</p>
 </section>
 <section id="accuracy-faq">
   <h3>How accurate are the times?</h3>
   <p>
-    The model is checked against published reference tables. Real atmospheric conditions and your
-    local horizon can shift observed rise/set times. Other apps may use different event definitions
-    or assumptions.
+    The model is computed using
+    <a href="https://github.com/cosinekitty/astronomy">Astronomy Engine</a> and checked against
+    published reference tables from
+    <a href="https://aa.usno.navy.mil/data/RS_OneYear">U.S. Naval Observatory annual tables</a>.
+    Real atmospheric conditions and your local horizon can shift observed rise/set times. Other apps
+    may use different event definitions or assumptions.
     <a href="?docs=calculations#accuracy">See the measured comparisons and limitations.</a>
   </p>
 </section>
@@ -96,13 +88,13 @@
   <h3>Can I use it offline?</h3>
   <p>
     Calculations, view changes and these docs keep working after the app has loaded. A fresh offline
-    visit or reload is not currently guaranteed.
+    visit or reload is not currently guaranteed. TODO: let's fix this and make it work offline.
   </p>
 </section>
 <section id="saved-sites">
   <h3>Where are my saved sites?</h3>
   <p>
-    In this browser on this device. They do not automatically sync. Use
+    In this browser on this device. They do not automatically sync to other devices. Use
     <strong>Manage sites → Browser data</strong> to export a backup or move them to another browser.
     Clearing browser site data removes them.
     <a href="?docs=privacy#privacy-credits">Privacy and browser storage.</a>

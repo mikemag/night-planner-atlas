@@ -11,9 +11,7 @@ for (const width of [1512, 390]) {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto('./?docs=overview');
-    await expect(
-      page.getByRole('heading', { name: 'Find the nights worth the trip' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Find good nights' })).toBeVisible();
     expect(await page.evaluate(() => window.__npa!.nights.length)).toBe(0);
     await expect(page.locator('#siteSel')).toBeHidden();
     await expect(page.locator('#viewSeg')).toBeHidden();
@@ -92,7 +90,7 @@ for (const width of [1512, 390]) {
     await context.setOffline(true);
     await page
       .getByRole('link', {
-        name: 'See the full definitions and split-window example.',
+        name: 'See how Atlas calculates usable windows.',
         exact: true,
       })
       .click();
@@ -107,9 +105,7 @@ for (const width of [1512, 390]) {
     ).toBeVisible();
     if (width === 390) await page.locator('#docsContents > summary').click();
     await page.getByRole('link', { name: 'Accuracy', exact: true }).click();
-    await expect(
-      page.getByRole('heading', { name: 'Accuracy, with the comparisons attached' }),
-    ).toBeInViewport();
+    await expect(page.getByRole('heading', { name: 'Accuracy and limits' })).toBeInViewport();
     await page
       .getByText('Search windows, numerical tolerances and reference provenance', { exact: true })
       .click();
@@ -158,9 +154,7 @@ for (const view of ['river', 'calendar', 'lunations'] as const) {
     await openGuide(page);
     await page.getByRole('link', { name: 'Read the FAQ →', exact: true }).click();
     await page.goBack();
-    await expect(
-      page.getByRole('heading', { name: 'Find the nights worth the trip' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Find good nights' })).toBeVisible();
     await page.goForward();
     await expect(page.getByRole('heading', { name: 'Frequently asked questions' })).toBeVisible();
     await page.getByRole('link', { name: 'Back to planner' }).click();
@@ -260,9 +254,7 @@ for (const width of [390, 320]) {
     await page.getByRole('link', { name: 'How it works', exact: true }).click();
     await page.locator('#docsContents > summary').click();
     await page.getByRole('link', { name: 'Accuracy', exact: true }).click();
-    await expect(
-      page.getByRole('heading', { name: 'Accuracy, with the comparisons attached' }),
-    ).toBeInViewport();
+    await expect(page.getByRole('heading', { name: 'Accuracy and limits' })).toBeInViewport();
     await expect(page.locator('#docsBack')).toBeInViewport();
   });
 }

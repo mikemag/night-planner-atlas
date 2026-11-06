@@ -1,67 +1,48 @@
 <header class="guide-intro">
   <p class="guide-kicker">Night Planner Atlas · Docs</p>
   <h2 tabindex="-1">Using the planner</h2>
-  <p class="guide-lead">
-    Choose your site, compare the nights, and open one for its exact windows.
-  </p>
 </header>
 <section id="reading-night">
   <h3>Read a night</h3>
   <p>
-    Follow the night’s colors from evening to morning. Twilight shades lead into true dark. A
-    Moon-up wash shows where moonlight enters true dark; a green duration bar summarizes your usable
-    time.
+    Select a night to see its twilight, Moon events, and usable windows. Friday’s night includes
+    Saturday morning.
   </p>
   <div
     class="guide-sky-ramp"
     role="img"
-    aria-label="The sky darkens from day through twilight to true dark"
+    aria-label="Day, civil, nautical and astronomical twilight, then true dark"
   >
     <span data-sky-stage="day">Day</span><span data-sky-stage="civil">Civil</span
     ><span data-sky-stage="naut">Nautical</span><span data-sky-stage="astro">Astronomical</span
     ><span data-sky-stage="dark">True dark</span>
   </div>
-  <dl class="docs-definitions">
-    <div>
-      <dt>True dark</dt>
-      <dd>The Sun is at least 18° below the horizon.</dd>
-    </div>
-    <div>
-      <dt>Strict moon-free time</dt>
-      <dd>True dark while the Moon is below the natural horizon.</dd>
-    </div>
-    <div>
-      <dt>Usable dark</dt>
-      <dd>True dark that meets your chosen Moon settings.</dd>
-    </div>
-  </dl>
-  <p>
-    Every night carries <strong>the date of its evening</strong>. Friday’s row includes Saturday
-    morning. All times belong to the observing site, including daylight saving.
-  </p>
+  <ul>
+    <li>
+      <strong>Black</strong> marks moon-free darkness. A gray wash marks moonlight during true dark.
+    </li>
+    <li>
+      <strong>Accepted moonlight</strong> has a green tint in Light and Dark, and a dashed outline
+      in Observing.
+    </li>
+    <li>
+      <strong>Green duration bars</strong> show how much time your settings count as usable. Check
+      the individual windows if you need an uninterrupted session.
+    </li>
+  </ul>
 </section>
 <section id="examples">
   <h3>Two example nights</h3>
-  <p>
-    Both examples use the built-in <strong>Seattle, Paramount Park</strong> site, at 122 m
-    elevation. Times are PDT (UTC−07:00). Each chart uses the same colors and computed windows as
-    the planner.
-  </p>
+  <p>Both nights use <strong>Seattle, Paramount Park</strong> (122 m). Times are PDT.</p>
   <figure class="guide-example" id="simple-example">
     <figcaption>
       <p class="guide-kicker">Example 1 · strict settings</p>
-      <h4>A whole night without moonlight</h4>
+      <h4>Moon-free throughout true dark</h4>
       <p>Friday September 11 → Saturday September 12, 2026</p>
     </figcaption>
     <div data-night-example="simple"></div>
     <p>
-      Sunset at <strong>7:29 PM</strong> starts the transition into darkness. True dark begins at
-      <strong>9:17 PM</strong> and lasts until <strong>4:55 AM</strong> on Saturday; sunrise follows
-      at 6:43 AM.
-    </p>
-    <p>
-      The Moon is below the horizon throughout true dark. The plain black band is one continuous
-      moon-free window: <strong>7h 38m</strong>. With strict settings, all of that time is usable.
+      The Moon stays below the horizon throughout true dark, so the entire black band is usable.
     </p>
     <a class="example-link" data-example-link="simple" target="_blank" rel="noopener"
       >Open this example in the planner ↗</a
@@ -73,6 +54,10 @@
       <h4>The Moon changes the plan</h4>
       <p>Sunday September 6 → Monday September 7, 2026</p>
     </figcaption>
+    <p>
+      The waning crescent rises at 1:59 AM and is 18% lit at local midnight. Try each setting to
+      compare usable time.
+    </p>
     <div class="example-options" role="group" aria-label="Example Moon settings">
       <button
         class="btn btn-sm btn-outline-secondary"
@@ -96,157 +81,87 @@
     </div>
     <div data-night-example="moon"></div>
     <p id="exampleExplanation" role="status"></p>
-    <p>
-      True dark runs from <strong>9:29 PM–4:46 AM (7h 17m)</strong>. The waning crescent is about
-      <strong>18% lit at local midnight</strong> and rises at <strong>1:59 AM</strong>.
-    </p>
-    <div class="guide-table-wrap" tabindex="0" role="region" aria-label="Example planning choices">
-      <table class="guide-table">
-        <thead>
-          <tr>
-            <th scope="col">Planning choice</th>
-            <th scope="col">Usable window</th>
-            <th scope="col">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">Strict</th>
-            <td>9:29 PM–1:59 AM</td>
-            <td>4h 30m</td>
-          </tr>
-          <tr>
-            <th scope="row">Moon below 5°</th>
-            <td>9:29 PM–2:39 AM</td>
-            <td>5h 10m</td>
-          </tr>
-          <tr>
-            <th scope="row">Ignore under 20% lit</th>
-            <td>9:29 PM–4:46 AM</td>
-            <td>7h 17m</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p>
-      The relaxed choices are separate alternatives. Their extra time contains moonlight, shown as
-      accepted moonlight in the chart. Your own plan and settings stay unchanged while you compare
-      them here.
-    </p>
     <a class="example-link" data-example-link="moon" target="_blank" rel="noopener"
       >Open this example in the planner ↗</a
     >
   </figure>
 </section>
-<section id="planning-choices">
-  <h3>Choose what counts as usable</h3>
-  <p>
-    Start with <strong>Moon’s upper edge above 0°</strong> and
-    <strong>Ignore a Moon under: Off (strict)</strong> for moon-free darkness. A higher Moon
-    threshold accepts time while the Moon remains below that height. Ignoring a crescent accepts all
-    true dark when the midnight illumination is below your chosen percentage.
-  </p>
-  <p>
-    Both settings change totals, windows and weekend picks in every view. The drawing still shows
-    moonlight above the natural horizon, with accepted time distinguished from strict moon-free
-    time.
-    <a href="?docs=calculations#moon-windows">See the full definitions and split-window example.</a>
-  </p>
-</section>
 <section id="using-planner" aria-labelledby="usingTitle">
-  <h3 id="usingTitle">River, Lunations and Calendar</h3>
+  <h3 id="usingTitle">The three views</h3>
   <h4 id="river">River</h4>
   <p>
-    River stacks one row per night with clock time across. Year shows the shape of the loaded range;
-    Month gives readable nightly windows. Tap a Month row or press Enter/Space on the chart to
-    expand it. Boundary callouts show Sun/twilight events, Moon events and any additional
-    usable-window boundaries. Tap again or press Escape to collapse. The fixed strip below the chart
-    previews the pointed-at night; tapping or using the keyboard supplies details without hover.
-  </p>
-  <p>
-    <strong>New-moon focus</strong> opens the nights within ±N of new moon and compresses the
-    context. Year stays compact. The exact New Moon label identifies one event-associated night,
-    while the written phase name can describe several nights. The label’s local date/time can differ
-    from the row’s evening date.
-  </p>
-  <p>
-    The desktop minimap navigates the range without changing selection. Tab to Browse River dates
-    for keyboard browsing with arrow keys, Page Up/Down and Home/End.
-    <strong>Dark weekends ahead</strong> lists the Friday–Saturday pair with the most combined
-    usable time within seven nights of each upcoming new moon.
-  </p>
-  <h4 id="calendar">Calendar</h4>
-  <p>
-    <strong>Month</strong> shows usable hours, the time window and an inset vertical green duration
-    bar on each date. Split windows remain separate in the night detail. Muted neighboring dates
-    preserve week context; arrow keys navigate real dates in their own month. Scroll up or down to
-    browse months without changing the selected night.
-  </p>
-  <p>
-    <strong>Week</strong> fits seven nights on one sunset-to-sunrise clock, with evening at the top,
-    morning below, and time-only labels at shaded boundaries, including where moonlight enters or
-    leaves true dark. A connector appears only when a label moves away from its boundary to avoid
-    crowding. Scroll through weeks as well. Selecting a date inserts the same horizontal event
-    timeline as River after its row, reserving space so it covers no dates.
-  </p>
-  <p>
-    <strong>Year</strong> shows the same 14 loaded months, with new-moon dates and daily duration
-    bars; switching views reuses the computed nights. Activate a month to open it. Calendar's
-    new-moon markers use the event's civil date at the site, which can differ from River's evening
-    date. The same planning controls appear in Calendar, River and Lunations.
+    <strong>Year</strong> shows seasonal patterns. In <strong>Month</strong>, time runs left to
+    right and each row opens for details. Check <strong>Dark weekends ahead</strong> for upcoming
+    Friday–Saturday picks.
   </p>
   <h4 id="lunations">Lunations</h4>
   <p>
-    Lunations aligns cycles around new moon to compare seasonal windows and weekends. Evening runs
-    down to morning on a shared clock scale; green bars beneath each cycle show usable hours on a
-    shared duration scale. Select a night to expand its horizontal timeline with exact event times.
-    Each cycle's total explains which evening dates it includes.
+    Compare nights aligned around new moon. Time runs from evening at the top to morning at the
+    bottom. Use <strong>Full cycle</strong> for all nights or <strong>±N</strong> for a closer look.
+    Totals and weekend picks cover the nights shown.
+  </p>
+  <h4 id="calendar">Calendar</h4>
+  <p>
+    <strong>Month</strong> shows each date’s hours and windows. <strong>Week</strong> puts seven
+    nights on one clock. <strong>Year</strong> lets you jump to a month.
+  </p>
+</section>
+<section id="planning-choices">
+  <h3>Planning settings</h3>
+  <ul>
+    <li>
+      For <strong>strict moon-free time</strong>, keep the Moon threshold at 0° and crescent
+      ignoring off for moon-free time.
+    </li>
+    <li>Raise the <strong>Moon height threshold</strong> to accept time while the Moon is low.</li>
+    <li>
+      The <strong>crescent setting</strong> accepts all true dark when the Moon is below your chosen
+      illumination at local midnight.
+    </li>
+    <li>
+      <strong>New-moon focus</strong> highlights nights near new moon. The usable windows for each
+      night stay the same.
+    </li>
+  </ul>
+  <p><a href="?docs=calculations#moon-windows">See how Atlas calculates usable windows.</a></p>
+</section>
+<section id="sites-and-time" aria-labelledby="sitesTitle">
+  <h3 id="sitesTitle">Sites and time</h3>
+  <p>
+    Use <strong>Manage sites</strong> to add decimal coordinates or paste a full Google Maps link
+    with coordinates. Check the suggested time zone, especially near a boundary. Elevation is
+    optional.
   </p>
   <p>
-    Each chart’s toolbar keeps its zoom controls and browsed dates together. On narrower screens,
-    open <strong>Legend</strong> for the chart colors and their meanings; wider screens also show a
-    compact key inline. New moons are labeled directly in the charts.
+    Times use the observing site’s clock, including daylight saving. The header clock shows the
+    current time there as you browse future nights.
   </p>
-  <p>
-    <strong>Full cycle</strong> shows every loaded night exactly once. Each night belongs to the new
-    moon nearest its site-local midnight; an exact tie goes to the earlier new moon. All rows keep
-    new moon centered, with empty edge positions where a night belongs to the adjacent cycle. These
-    are padding, while a partial cycle means some of its dates lie outside the loaded range. Focused
-    ±N windows intentionally show fewer nights.
-  </p>
-  <p>
-    Lunations starts at <strong>±3 on phones</strong> unless you have chosen a focus window or
-    opened a shared plan. Wider windows pan together inside the chart while the clock rail stays in
-    place. Left/Right visit displayed nights and Up/Down move between cycles at the same new-moon
-    offset. Resizing keeps your selection; a selected night outside the displayed window can still
-    be expanded.
-  </p>
-  <h4 id="sharing">Sharing and browser data</h4>
-  <p>
-    <strong>Share</strong> copies a link to the loaded dates, view, zoom, focus, planning thresholds
-    and selected night. Site inclusion is off by default, so a recipient uses their own site and may
-    see different results. Themes remain a personal preference.
-  </p>
-  <p>
-    Open <strong>More → Share plan</strong> to copy a link. Including the site is off by default;
-    review the site fields before choosing to include them. Opening someone else’s link keeps its
-    settings and included site temporary until you deliberately save them.
-  </p>
-  <p>
-    For backups or a move to another browser, open <strong>Manage sites → Browser data</strong>.
-    Export sites and preferences to a local file, then review an import before replacing saved data.
-    The previous saved copy can be exported for recovery. You can reset preferences while keeping
-    sites, restore missing starter sites, or clear rebuildable calculations separately.
-  </p>
-  <h4 id="keyboard">Keyboard shortcuts</h4>
+</section>
+<section id="sharing">
+  <h3>Sharing and browser data</h3>
+  <ul>
+    <li>
+      <strong>More → Share plan</strong> copies a link. Choose <strong>Include this site</strong> if
+      the recipient should use your location. Shared plans stay temporary until you save their
+      settings or site.
+    </li>
+    <li>
+      <strong>Manage sites → Browser data</strong> exports or imports sites and preferences for
+      backups or moving between browsers.
+    </li>
+  </ul>
+  <p><a href="?docs=privacy#privacy-credits">Read about site details in links and backups.</a></p>
+</section>
+<section id="keyboard">
+  <h3>Keyboard and observing mode</h3>
   <dl class="guide-shortcuts">
     <div>
       <dt><kbd>←</kbd> <kbd>→</kbd></dt>
-      <dd>Previous / next night (displayed nights in Lunations)</dd>
+      <dd>Previous or next displayed night</dd>
     </div>
     <div>
       <dt><kbd>↑</kbd> <kbd>↓</kbd></dt>
-      <dd>Move a week; in Lunations, move a lunar cycle</dd>
+      <dd>Move a week, or a lunar cycle in Lunations</dd>
     </div>
     <div>
       <dt><kbd>T</kbd></dt>
@@ -269,95 +184,12 @@
     </div>
   </dl>
   <details class="guide-detail">
-    <summary id="observing-mode">Theme choices and OS red-filter setup</summary>
+    <summary id="observing-mode">Set up Observing mode with a red filter</summary>
     <p>
-      The Theme group in More offers System, Light, Dark and Observing. Your choice stays in this
-      browser. System follows the device’s appearance; explicit Light and Dark override it.
-      Observing uses warm neutral levels and extra boundary cues designed to remain distinct through
-      a red-only accessibility filter.
-    </p>
-    <p>
-      <strong>Enable the device filter separately.</strong> On Mac, open System Settings →
-      Accessibility → Display → Color Filters, choose Color Tint and set a red tint. On iPhone, open
-      Settings → Accessibility → Display &amp; Text Size → Color Filters; choose a color tint and
-      adjust its hue/intensity toward red. See Apple’s
-      <a href="https://support.apple.com/guide/mac-help/mchl11ddd4b3/mac"
-        >Mac filter instructions</a
-      >
-      and
-      <a href="https://support.apple.com/guide/iphone/iph3e2e1fb0/ios">iPhone filter instructions</a
-      >.
-    </p>
-    <p>
-      The planner cannot control OS filters or guarantee dark adaptation. Display brightness, other
-      apps and notifications still affect what reaches your eyes.
-    </p>
-  </details>
-</section>
-
-<section id="sites-and-time" aria-labelledby="sitesTitle">
-  <h3 id="sitesTitle">The site sets the clock</h3>
-  <p>
-    Every chart time uses <strong>the observing site’s IANA time zone</strong>, including daylight
-    saving time. Your device’s zone does not change the plan. The clock beside the location shows
-    the site’s current date, time, UTC offset and zone; selecting a future night does not change
-    that clock.
-  </p>
-  <p>
-    All three views use site-local clock time and mark clock-change nights in their shared night
-    details. A repeated or skipped hour is real; duration totals add actual elapsed time.
-  </p>
-  <p>
-    A fresh browser starts at Seattle’s Paramount Park, with Edinburgh’s Royal Observatory, Sydney’s
-    Linden Observatory, Chile’s Vera C. Rubin Observatory, Quito’s Astronomical Observatory and
-    Svalbard’s Kjell Henriksen Observatory also available. Compare them to see northern and southern
-    seasons, near-equatorial nights and polar extremes. Your existing saved records and selection
-    are kept when the app updates. These six starters are added once to existing saved lists; you
-    can edit or remove them afterward.
-  </p>
-  <p>
-    Choose a saved site in the location dropdown to switch immediately. Choose
-    <strong>Manage sites…</strong> to add or edit favorites. Paste decimal
-    <strong>latitude, longitude</strong> or a supported full Google Maps search link, check the
-    coordinates shown for a pasted link, name the site and confirm its time zone. Elevation is
-    optional. Save &amp; use applies the complete record; Cancel or Escape leaves the current site
-    alone. Duplicate makes a separate favorite; removal asks for confirmation.
-  </p>
-  <p>
-    Leave the time zone blank to find it from the coordinates when saving. You can enter an IANA
-    zone to override it. If several zones cover the point, choose one from the suggestions. Errors
-    appear beside the field that needs attention.
-  </p>
-  <p>
-    Maps links are input text, parsed locally. Short links, named-place-only links and camera
-    positions cannot establish the intended point. For a reliable copy in desktop Google Maps,
-    right-click the point and click its coordinate line. On a phone, hold an unlabeled point to drop
-    a pin; coordinates appear in Android’s search box or the iPhone pin’s place details.
-    <a href="https://support.google.com/maps/answer/18539">Google’s coordinate instructions</a>
-    show the steps. Paste those coordinates into the location field; short links and the map’s
-    center do not identify a reliable observing point. Latitudes from −90° to +90° are supported.
-    Polar charts show the full noon-to-noon period when the Sun does not rise or set. A missing
-    sunrise does not mean uninterrupted true dark: midday twilight can still occur. Darkness
-    throughout the whole period counts its actual elapsed time, including clock changes.
-  </p>
-  <details class="guide-detail">
-    <summary>Automatic zones, elevation and what is not modeled</summary>
-    <p>
-      Time zones are inferred locally from bundled geographic boundaries. Simplified borders can be
-      imperfect, and geographic data and your browser’s civil-time rules have different update
-      schedules. Check the visible zone, particularly near borders or disputed areas; manual
-      overrides are supported. Multiple zone results require you to choose.
-    </p>
-    <p>
-      Elevation accepts −500 to 10,000 metres above sea level. Blank means sea level. It adjusts the
-      observer’s position and idealized refraction using a standard atmosphere. The assumed horizon
-      stays level: elevation is not a terrain profile or a height above nearby obstructions, and no
-      horizon dip is inferred.
-    </p>
-    <p>
-      No local terrain, clouds, atmospheric transparency, light pollution or target visibility is
-      predicted. Real temperature, pressure and near-horizon refraction can move observed rise/set
-      times.
+      Choose <strong>More → Theme → Observing</strong> and enable your device’s red color filter.
+      Apple has setup instructions for
+      <a href="https://support.apple.com/guide/mac-help/mchl11ddd4b3/mac">Mac</a> and
+      <a href="https://support.apple.com/guide/iphone/iph3e2e1fb0/ios">iPhone</a>.
     </p>
   </details>
 </section>
