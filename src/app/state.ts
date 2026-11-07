@@ -1,13 +1,13 @@
-import type { NightRange } from '../model/range';
+import type { NightRange, RangeSpec } from '../model/range';
 import type { Hit } from '../views/view';
 import { hasFocusPreference, loadSettings, type Settings } from './settings';
 import type { ComputeStats } from './compute-cached';
 
 export interface UiState {
-  /** Years to shift the loaded range from the default. */
+  /** Years to shift the rolling range from the default. */
   rangeShift: number;
-  /** Absolute first month from a shared plan; rangeShift still moves by years. */
-  rangeStart: { y: number; m: number } | null;
+  /** A calendar year or the fixed span from a shared plan. Null follows the site-local month. */
+  fixedRange: RangeSpec | null;
   /** Initial selected evening date from a link, consumed only after its range finishes. */
   pendingNight: string | null;
   /** Worked-example previews keep their controls separate from saved preferences. */
@@ -38,7 +38,7 @@ export type AppState = Settings & UiState;
 export const S: AppState = {
   ...loadSettings(),
   rangeShift: 0,
-  rangeStart: null,
+  fixedRange: null,
   pendingNight: null,
   sharedSettings: false,
   sel: -1,

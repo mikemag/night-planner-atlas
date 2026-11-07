@@ -1,10 +1,4 @@
-import {
-  computeRange,
-  rangeStart,
-  RANGE_MONTHS,
-  type ComputeOptions,
-  type NightRange,
-} from '../model/range';
+import { computeRange, type ComputeOptions, type NightRange, type RangeSpec } from '../model/range';
 import { TimeZone } from '../model/time';
 import type { Night, Site, Thresholds } from '../model/night';
 import { monthKey, packMonth, rangeMonths, siteKey, unpackMonth } from './night-cache-format';
@@ -19,18 +13,17 @@ export interface ComputeStats {
 /** Reuse complete months, compute misses in the usual slices, and publish one complete range. */
 export async function computeCachedRange(
   site: Site,
-  shift: number,
+  spec: RangeSpec,
   th: Thresholds,
   lunN: number,
   now: number,
-  opts: ComputeOptions & { onStats?: (stats: ComputeStats) => void } = {},
+  opts: Omit<ComputeOptions, 'spec' | 'cachedNights'> & {
+    onStats?: (stats: ComputeStats) => void;
+  } = {},
 ): Promise<NightRange | null> {
   const started = performance.now(),
     input = { ...site },
     tz = new TimeZone(site.tz);
-  const spec = opts.startMonth
-    ? { ...opts.startMonth, count: RANGE_MONTHS }
-    : rangeStart(now, tz, shift);
   const months = rangeMonths(spec),
     identity = siteKey(input),
     profile = personal.snapshot();
@@ -54,7 +47,11 @@ export async function computeCachedRange(
       sliceStart = performance.now();
     }
   }
-  const range = await computeRange(input, shift, th, lunN, now, { ...opts, cachedNights: cached });
+  const range = await computeRange(input, 0, th, lunN, now, {
+    ...opts,
+    spec,
+    cachedNights: cached,
+  });
   if (!range || opts.isCancelled?.()) return null;
   opts.onStats?.({
     cachedNights: cached.size,

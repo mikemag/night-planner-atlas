@@ -77,6 +77,11 @@ export interface NightRange {
 }
 
 export const RANGE_MONTHS = 14;
+export const CALENDAR_MONTHS = 12;
+export const MIN_CALENDAR_YEAR = 1900;
+export const MAX_CALENDAR_YEAR = 2100;
+export const MIN_RANGE_YEAR = 100;
+export const MAX_RANGE_YEAR = 9997;
 
 /** The loaded range starts the month before the current one, shifted by whole years. */
 export function rangeStart(now: number, tz: TimeZone, shift: number): RangeSpec {
@@ -314,8 +319,8 @@ export function deriveRange(r: NightRange, th: Thresholds, lunN: number): void {
 export interface ComputeOptions {
   /** Validated, threshold-independent nights restored by the app's optional month cache. */
   cachedNights?: ReadonlyMap<string, Night>;
-  /** An explicit first month, e.g. a shared plan; otherwise use the current site-local date. */
-  startMonth?: Pick<RangeSpec, 'y' | 'm'>;
+  /** An explicit range, e.g. a shared plan or calendar year. */
+  spec?: RangeSpec;
   /** Called after each slice with the number of nights done and the total. */
   onProgress?: (done: number, total: number) => void;
   /** Checked before each slice; returning true abandons the computation. */
@@ -324,10 +329,10 @@ export interface ComputeOptions {
   sliceMs?: number;
 }
 
-function setup(site: Site, shift: number, now: number, startMonth?: Pick<RangeSpec, 'y' | 'm'>) {
+function setup(site: Site, shift: number, now: number, explicit?: RangeSpec) {
   const tz = new TimeZone(site.tz);
   const observer = new Observer(site.lat, site.lon, site.elevation ?? 0);
-  const spec = startMonth ? { ...startMonth, count: RANGE_MONTHS } : rangeStart(now, tz, shift);
+  const spec = explicit ?? rangeStart(now, tz, shift);
   return { tz, observer, spec, list: nightDates(spec) };
 }
 
@@ -343,7 +348,7 @@ export async function computeRange(
   now: number,
   opts: ComputeOptions = {},
 ): Promise<NightRange | null> {
-  const { tz, observer, spec, list } = setup(site, shift, now, opts.startMonth);
+  const { tz, observer, spec, list } = setup(site, shift, now, opts.spec);
   const slice = opts.sliceMs ?? 24;
   const nights: Night[] = [];
   let k = 0;

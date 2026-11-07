@@ -1,9 +1,12 @@
+import Dropdown from 'bootstrap/js/dist/dropdown';
 import type { ViewId } from '../app/settings';
 import {
   canvasView,
+  chooseRange,
   draw,
   goTonight,
   onTheme,
+  rangePickerYear,
   resize,
   select,
   setFocus,
@@ -17,6 +20,7 @@ import {
 } from '../app/shell';
 import { S, data } from '../app/state';
 import { prepareTimeZones } from '../app/timezones';
+import { MAX_CALENDAR_YEAR, MIN_CALENDAR_YEAR } from '../model/range';
 import { cv, size } from '../render/surface';
 import { river } from '../views/river';
 import { lunations } from '../views/lunations';
@@ -27,6 +31,7 @@ import { initBrowserData } from './browser-data';
 import { initAppMenu } from './app-menu';
 import { initChartLegend } from './chart-legend';
 import { closeDocs, docsOpen } from './guide';
+import { dropdownOptions } from './dropdown';
 
 const VIEW_KEYS: ViewId[] = ['river', 'lunations', 'calendar', 'notes', 'weekends'];
 
@@ -269,6 +274,7 @@ function initKeyboard(): void {
 
 function initHeader(): void {
   initAppMenu();
+  initRangePicker();
   el('viewSeg').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button');
     if (b?.dataset.view) setView(b.dataset.view as ViewId);
@@ -325,5 +331,35 @@ function initHeader(): void {
     if (!(e.target as Element).closest('#lunationsCollapse')) return;
     cv.focus({ preventScroll: true });
     toggleLunationsNight();
+  });
+}
+
+function initRangePicker(): void {
+  const trigger = el('rangePicker');
+  const menu = el('rangeMenu');
+  const around = el('rangeAround');
+  const year = el<HTMLInputElement>('rangeYear');
+  year.min = String(MIN_CALENDAR_YEAR);
+  year.max = String(MAX_CALENDAR_YEAR);
+  const dropdown = new Dropdown(trigger, { ...dropdownOptions, autoClose: 'outside' });
+  trigger.addEventListener('shown.bs.dropdown', () => {
+    year.value = String(
+      Math.max(MIN_CALENDAR_YEAR, Math.min(MAX_CALENDAR_YEAR, rangePickerYear())),
+    );
+    around.focus({ preventScroll: true });
+  });
+  trigger.addEventListener('hidden.bs.dropdown', () => {
+    if (menu.contains(document.activeElement)) trigger.focus({ preventScroll: true });
+  });
+  around.addEventListener('click', () => {
+    dropdown.hide();
+    trigger.focus({ preventScroll: true });
+    chooseRange();
+  });
+  el('rangeYearForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    dropdown.hide();
+    trigger.focus({ preventScroll: true });
+    chooseRange(year.valueAsNumber);
   });
 }

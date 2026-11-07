@@ -186,7 +186,7 @@ class RiverView implements CanvasView {
         );
       }
       if (n.d === 1) {
-        ctx.fillStyle = C.panel;
+        ctx.fillStyle = n.m === 1 && i > 0 && S.riverZoom === 'year' ? C.ink2 : C.panel;
         ctx.fillRect(0, y - 1, W - this.MINI, 1);
         if (barH < 11 && !contextRow)
           text(`${MON3[n.m - 1]}${n.m === 1 ? ' ' + n.y : ''}`, 8, y + 6, 10.5, C.ink, 'left', 700);

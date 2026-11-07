@@ -1,12 +1,24 @@
 import type { Site } from '../model/night';
+import { pad2 } from '../model/format';
+import {
+  CALENDAR_MONTHS,
+  MAX_CALENDAR_YEAR,
+  MAX_RANGE_YEAR,
+  MIN_CALENDAR_YEAR,
+  MIN_RANGE_YEAR,
+  RANGE_MONTHS,
+  type RangeSpec,
+} from '../model/range';
 import { isSite } from '../model/site-input';
 import type { Settings } from './settings';
 import { siteRecord } from './site-book';
 
 export interface SharedPlan extends Omit<Settings, 'site'> {
   v: 1;
-  /** First of the 14 loaded months, independent of when the link is opened. */
+  /** First loaded month, independent of when the link is opened. */
   start: string;
+  /** Absent for the original 14-month plan links. */
+  range?: 'year';
   night: string | null;
   expanded: boolean;
   site?: Site;
@@ -19,6 +31,13 @@ export interface SiteInvitation {
   site: Site;
 }
 export type SharedLink = SharedPlan | SiteInvitation;
+
+export function shareRange(spec: RangeSpec): Pick<SharedPlan, 'start' | 'range'> {
+  return {
+    start: `${String(spec.y).padStart(4, '0')}-${pad2(spec.m)}`,
+    ...(spec.count === CALENDAR_MONTHS ? { range: 'year' } : {}),
+  };
+}
 
 const PREFIX = '#npa=';
 // These defaults belong to this link version, independent of personal/app defaults.
@@ -59,7 +78,12 @@ function validate(value: unknown): SharedPlan {
   )
     throw new Error(INVALID);
   const [year, month] = p.start.split('-').map(Number);
-  if (year < 100 || year > 9997) throw new Error(INVALID);
+  if (year < MIN_RANGE_YEAR || year > MAX_RANGE_YEAR) throw new Error(INVALID);
+  if (
+    p.range !== undefined &&
+    (p.range !== 'year' || month !== 1 || year < MIN_CALENDAR_YEAR || year > MAX_CALENDAR_YEAR)
+  )
+    throw new Error(INVALID);
   if (p.night !== null) {
     if (!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(p.night)) throw new Error(INVALID);
     const [y, m, d] = p.night.split('-').map(Number);
@@ -70,7 +94,7 @@ function validate(value: unknown): SharedPlan {
       day.getUTCMonth() !== m - 1 ||
       day.getUTCDate() !== d ||
       offset < 0 ||
-      offset >= 14
+      offset >= (p.range === 'year' ? CALENDAR_MONTHS : RANGE_MONTHS)
     )
       throw new Error(INVALID);
   }
@@ -87,6 +111,7 @@ function validate(value: unknown): SharedPlan {
   return {
     v: 1,
     start: p.start,
+    ...(p.range === 'year' ? { range: 'year' } : {}),
     view: p.view,
     riverZoom: p.riverZoom,
     calZoom: p.calZoom,
@@ -134,6 +159,7 @@ export function readSharedLink(hash: string): SharedLink | null {
       return validate({
         v: 1,
         start: params.get('start'),
+        ...(params.has('range') ? { range: params.get('range') } : {}),
         view: params.get('view') ?? DEFAULTS.view,
         riverZoom: params.get('riverZoom') ?? DEFAULTS.riverZoom,
         calZoom: params.get('calZoom') ?? DEFAULTS.calZoom,
@@ -179,6 +205,7 @@ export function createSiteLink(base: string, site: Site): string {
 export function createShareLink(base: string, plan: SharedPlan): string {
   const clean = validate(plan);
   const params = new URLSearchParams({ npa: '1', view: clean.view, start: clean.start });
+  if (clean.range) params.set('range', clean.range);
   if (clean.night) params.set('night', clean.night);
   for (const key of ['riverZoom', 'calZoom', 'calOrient', 'focus', 'moonAlt'] as const)
     if (clean[key] !== DEFAULTS[key]) params.set(key, String(clean[key]));

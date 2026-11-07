@@ -1,7 +1,20 @@
 import { MON3, MONL, fmtDur, nightTitle } from '../model/format';
 import { windowsText } from '../model/describe';
 import type { Site } from '../model/night';
-import { bestWeekends, deriveRange, lunWindow, tonightId, type NightRange } from '../model/range';
+import {
+  bestWeekends,
+  CALENDAR_MONTHS,
+  deriveRange,
+  lunWindow,
+  MAX_CALENDAR_YEAR,
+  MAX_RANGE_YEAR,
+  MIN_CALENDAR_YEAR,
+  MIN_RANGE_YEAR,
+  rangeStart,
+  tonightId,
+  type NightRange,
+  type RangeSpec,
+} from '../model/range';
 import { TimeZone } from '../model/time';
 import { C, readColors } from '../render/colors';
 import { ctx, cv, size, sizeSurface } from '../render/surface';
@@ -252,19 +265,24 @@ export function openCalendarMonth(key: string, i?: number): void {
 
 export function goTonight(): void {
   const r = data.range;
-  let i = r?.tonightIdx ?? -1;
-  if (r && S.view === 'weekends') {
-    const tonight = tonightId(Date.now(), r.tz);
-    i = r.nights.findIndex((n) => n.id === tonight);
-  }
-  if (!data.ready || i < 0) {
-    S.rangeStart = null;
-    S.rangeShift = 0;
-    S.pendingNight = tonightId(Date.now(), new TimeZone(S.site.tz));
+  const now = Date.now();
+  const tz = data.ready && r ? r.tz : new TimeZone(S.site.tz);
+  const tonight = tonightId(now, tz);
+  const i = data.ready && r ? r.nights.findIndex((n) => n.id === tonight) : -1;
+  if (!r || i < 0) {
+    const spec = requestedRange(now, tz);
+    const [y, m] = tonight.split('-').map(Number);
+    const offset = (y - spec.y) * 12 + m - spec.m;
+    if (offset < 0 || offset >= spec.count) {
+      S.fixedRange = null;
+      S.rangeShift = 0;
+    }
+    S.pendingNight = tonight;
     S.calendarMonth = null;
     restart();
     return;
   }
+  r.tonightIdx = i;
   if (S.view === 'weekends') {
     updateDarkWeekends();
     scrollToCurrentTripPeriod();
@@ -296,6 +314,10 @@ function updatePeriod(): void {
   if (S.view === 'lunations') {
     const n = r.nights[lunations.topNight()];
     el('periodLabel').textContent = n ? `${MON3[n.m - 1]} ${n.y}` : '—';
+    return;
+  }
+  if (S.view === 'river' && S.riverZoom === 'year' && r.spec.count === CALENDAR_MONTHS) {
+    el('periodLabel').textContent = String(r.spec.y);
     return;
   }
   const mo = r.months[currentMonthIndex()];
@@ -526,9 +548,40 @@ export function setThreshold(key: 'moonAlt' | 'crescent', value: number): void {
   }
 }
 
-/** Load the range a year earlier or later. */
+function requestedRange(now: number, tz: TimeZone): RangeSpec {
+  return S.fixedRange ?? rangeStart(now, tz, S.rangeShift);
+}
+
+function canShiftRange(spec: RangeSpec, dir: number): boolean {
+  const calendarYear = spec.count === CALENDAR_MONTHS;
+  const year = spec.y + dir;
+  return (
+    year >= (calendarYear ? MIN_CALENDAR_YEAR : MIN_RANGE_YEAR) &&
+    year <= (calendarYear ? MAX_CALENDAR_YEAR : MAX_RANGE_YEAR)
+  );
+}
+
+/** Suggest the selected night's year when moving from a rolling span. */
+export function rangePickerYear(): number {
+  if (S.fixedRange?.count === CALENDAR_MONTHS) return S.fixedRange.y;
+  const now = Date.now();
+  const tz = new TimeZone(S.site.tz);
+  return (data.ready && data.range?.nights[S.sel]?.y) || tz.wallParts(now).y;
+}
+
+/** Choose the current rolling span or a fixed January–December year. */
+export function chooseRange(year?: number): void {
+  S.fixedRange = year === undefined ? null : { y: year, m: 1, count: CALENDAR_MONTHS };
+  S.rangeShift = 0;
+  restart();
+}
+
+/** Load the same span a year earlier or later. */
 export function shiftRange(dir: number): void {
-  S.rangeShift += dir;
+  const spec = requestedRange(Date.now(), new TimeZone(S.site.tz));
+  if (!canShiftRange(spec, dir)) return;
+  if (S.fixedRange) S.fixedRange = { ...spec, y: spec.y + dir };
+  else S.rangeShift += dir;
   restart();
 }
 
@@ -555,16 +608,19 @@ export function restart(): void {
   const prev = data.range;
   const selId =
     S.pendingNight ?? (S.sel >= 0 && prev && prev.nights[S.sel] ? prev.nights[S.sel].id : null);
+  const now = Date.now();
+  const spec = requestedRange(now, new TimeZone(S.site.tz));
   data.ready = false;
   el('darkWeekends').inert = true;
   el('loading').hidden = false;
   el<HTMLButtonElement>('shareBtn').disabled = true;
   el<HTMLButtonElement>('calendarExportBtn').disabled = true;
+  el<HTMLButtonElement>('rangePrev').disabled = !canShiftRange(spec, -1);
+  el<HTMLButtonElement>('rangeNext').disabled = !canShiftRange(spec, 1);
   el('loadingText').textContent = 'Computing sun and moon for each night…';
   el('loadingBar').style.width = '0%';
   const token = ++computeToken;
-  computeCachedRange(S.site, S.rangeShift, thresholds(), lunWindow(activeFocus()), Date.now(), {
-    startMonth: S.rangeStart ? { y: S.rangeStart.y + S.rangeShift, m: S.rangeStart.m } : undefined,
+  computeCachedRange(S.site, spec, thresholds(), lunWindow(activeFocus()), now, {
     isCancelled: () => token !== computeToken,
     onStats: (stats) => {
       if (token === computeToken) data.computation = stats;
@@ -587,7 +643,9 @@ export function restart(): void {
       const { spec, nights } = r;
       const last = nights[nights.length - 1];
       el('rangeLabel').textContent =
-        `${MON3[spec.m - 1]} ${spec.y} – ${MON3[last.m - 1]} ${last.y}`;
+        spec.count === CALENDAR_MONTHS
+          ? `Jan – Dec ${spec.y}`
+          : `${MON3[spec.m - 1]} ${spec.y} – ${MON3[last.m - 1]} ${last.y}`;
       let i = selId ? nights.findIndex((n) => n.id === selId) : -1;
       if (i < 0) i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
       if (!selId || nights[i].id !== selId) {

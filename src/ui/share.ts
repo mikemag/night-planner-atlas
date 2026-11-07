@@ -3,13 +3,15 @@ import {
   createShareLink,
   createSiteLink,
   readSharedLink,
+  shareRange,
   type SharedPlan,
 } from '../app/share-state';
 import { hasFocusPreference, loadSettings } from '../app/settings';
 import { EditConflict, personal } from '../app/personal-data';
 import { restart, siteLabel, syncSettingsControls } from '../app/shell';
 import { S, activeFocus, data } from '../app/state';
-import { nightTitle, pad2 } from '../model/format';
+import { nightTitle } from '../model/format';
+import { CALENDAR_MONTHS, RANGE_MONTHS } from '../model/range';
 import {
   keepSharedSite,
   findSharedSite,
@@ -38,7 +40,7 @@ export function useSavedPlan(keepSite = false): void {
   Object.assign(S, loadSettings(), {
     ...(keepSite ? { site: S.site } : {}),
     sharedSettings: false,
-    rangeStart: null,
+    fixedRange: null,
     rangeShift: 0,
     pendingNight: null,
     riverExpanded: false,
@@ -168,7 +170,7 @@ export async function initSharing(): Promise<void> {
           view: settings.view === 'notes' ? 'river' : settings.view,
           site: saved.site,
           sharedSettings: false,
-          rangeStart: null,
+          fixedRange: null,
           rangeShift: 0,
           pendingNight: null,
           riverExpanded: false,
@@ -215,7 +217,7 @@ export async function initSharing(): Promise<void> {
         calZoom: plan.calZoom,
         riverZoom: plan.riverZoom,
         site,
-        rangeStart: { y, m },
+        fixedRange: { y, m, count: plan.range === 'year' ? CALENDAR_MONTHS : RANGE_MONTHS },
         rangeShift: 0,
         pendingNight: plan.night,
         riverExpanded: plan.view === 'river' && plan.expanded,
@@ -273,7 +275,7 @@ export async function initSharing(): Promise<void> {
         if (!data.ready || !r) return;
         const plan: SharedPlan = {
           v: 1,
-          start: `${r.spec.y}-${pad2(r.spec.m)}`,
+          ...shareRange(r.spec),
           view: S.view,
           riverZoom: S.riverZoom,
           calZoom: S.calZoom,

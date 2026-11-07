@@ -1,7 +1,7 @@
 import { S, atlas } from '../app/state';
 import { MON3, MONL, WD1, WD3, fmtClockS, fmtDur, fmtHrs, pad2 } from '../model/format';
 import type { Night } from '../model/night';
-import { needsFullDay, type Axis, type Month } from '../model/range';
+import { CALENDAR_MONTHS, needsFullDay, type Axis, type Month } from '../model/range';
 import { MS_H } from '../model/time';
 import { C, inkOn } from '../render/colors';
 import { drawDurationBar, usableHoursScale } from '../render/duration';
@@ -100,9 +100,13 @@ class CalendarView implements CanvasView {
     return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(), dow: d.getUTCDay() };
   }
   weekLabel(start: number): string {
-    const a = this.dateAt(start),
-      b = this.dateAt(start + 6);
-    return `${MON3[a.m - 1]} ${a.d}–${a.m === b.m ? '' : MON3[b.m - 1] + ' '}${b.d}, ${b.y}`;
+    const { nights } = atlas(),
+      a = nights[Math.max(0, start)],
+      b = nights[Math.min(start + 6, nights.length - 1)],
+      first = `${MON3[a.m - 1]} ${a.d}`;
+    if (a === b) return `${first}, ${a.y}`;
+    if (a.y !== b.y) return `${first}, ${a.y} – ${MON3[b.m - 1]} ${b.d}, ${b.y}`;
+    return `${first}–${a.m === b.m ? '' : MON3[b.m - 1] + ' '}${b.d}, ${b.y}`;
   }
   active(): Period | undefined {
     return this.periods.find((p) => p.y + p.h > scroller.scrollTop + 1) ?? this.periods.at(-1);
@@ -274,11 +278,13 @@ class CalendarView implements CanvasView {
   }
   layoutYear(): void {
     const r = atlas(),
-      cols = size.W >= 1000 ? 5 : size.W >= 650 ? 3 : 2,
+      calendarYear = r.spec.count === CALENDAR_MONTHS,
+      cols = size.W >= (calendarYear ? 900 : 1000) ? (calendarYear ? 4 : 5) : size.W >= 650 ? 3 : 2,
       rows = Math.ceil(r.months.length / cols),
       gap = size.W < 650 ? 6 : 16,
       w = (size.W - this.PAD * 2 - gap * (cols - 1)) / cols,
-      total = Math.max(size.H, this.FOOT + this.PAD * 2 + gap * (rows - 1) + rows * 48),
+      minCard = calendarYear ? 74 : 48,
+      total = Math.max(size.H, this.FOOT + this.PAD * 2 + gap * (rows - 1) + rows * minCard),
       h = (total - this.FOOT - this.PAD * 2 - gap * (rows - 1)) / rows,
       head = size.W >= 1100 ? 46 : 38;
     this.yr = {
@@ -539,19 +545,18 @@ class CalendarView implements CanvasView {
     for (let d = 0; d < 7; d++) {
       const i = b.wk[d],
         n = r.nights[i],
-        date = this.dateAt(b.start + d),
         x = x0 + d * cw;
       text(WD3[d], x + cw / 2, b.y + 9 - st, 11, C.ink2, 'center');
-      text(
-        date.d === 1 ? `${MON3[date.m - 1]} 1` : String(date.d),
-        x + cw / 2,
-        b.y + 25 - st,
-        12,
-        i >= 0 && i === r.tonightIdx ? C.now : C.ink,
-        'center',
-        600,
-      );
       if (n) {
+        text(
+          n.d === 1 ? `${MON3[n.m - 1]} 1` : String(n.d),
+          x + cw / 2,
+          b.y + 25 - st,
+          12,
+          i === r.tonightIdx ? C.now : C.ink,
+          'center',
+          600,
+        );
         const full = n.mfMs ? fmtDur(n.mfMs) : '0h';
         text(
           tw(full, 12, 600) <= cw - 6 ? full : `${fmtHrs(n.mfMs)}h`,

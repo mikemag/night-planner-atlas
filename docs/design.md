@@ -59,8 +59,9 @@ One row per night, stacked by date. Clock time runs left to right on a fixed axi
 range's earliest sunset to its latest sunrise. A row is the single-night chart's phase shading,
 flattened.
 
-- **Year and Month.** Year fits the loaded range on one screen, at about 2 px per night, and
-  stays compact when selecting nights. Month uses 20 px rows on desktop and 32 px rows on phones
+- **Year and Month.** Year fits one row per loaded night on one screen and marks January
+  transitions. A calendar year starts at January 1 and ends at December 31. Year stays compact
+  when selecting nights. Month uses 20 px rows on desktop and 32 px rows on phones
   for easier tapping. Window times appear wherever both fit, with quieter weekday labels.
   Short windows retain their duration in the right gutter; exact times are available on expansion.
   Week zoom has been replaced by individual night expansion. Saved Week preferences open Month.
@@ -190,15 +191,12 @@ Friday/Saturday coloring do not appear in Month or Year.
   receive leaders back to their exact boundaries. There are no green interval boundary lines.
   Dense or short weeks can grow enough to keep event labels separate; named events remain in the
   shared night expansion.
-- **Year navigation.** Fourteen mini calendars cover the same loaded range as every other view,
-  in chronological order, with larger month headings on wide screens, new-moon dates, usable-hour
-  totals and daily bars. Each heading includes its year. Switching periods or views reuses the
-  computed nights without changing the range. The shared Range controls shift the loaded range
-  by a year; Tonight returns to the site's current observing night. Each entire
-  mini calendar is a keyboard/touch month button. Phones and short windows show fourteen compact
-  month choices instead of microscopic day grids.
-  Desktop fits all fourteen together. Smaller chart frames scroll the choices to preserve readable
-  captions and touch targets, including phones where the shared planning header needs more room.
+- **Year navigation.** Chronological mini calendars cover the shared range. Around now shows
+  fourteen months with a year in each heading. Calendar year shows January through December
+  in four columns on desktop and two on phones, with the year in the chart header. Month
+  choices include usable-hour totals, new-moon dates and daily bars where space allows.
+  Each mini calendar is a keyboard and touch button that opens Month. Smaller chart frames
+  scroll compact choices to preserve readable captions and touch targets.
 - **Shared night expansion.** Selecting a Month or Week date inserts the same horizontal event
   timeline used by River and Lunations after the activated row. Its height is reserved in the
   scrolling sequence, so it covers no dates. Opening it reveals the panel; scrolling can return to
@@ -292,14 +290,18 @@ Lunations retains its focus window and opens the night detail even if the date f
   while the site clock occupies its own line below. The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
   An upper-right, unboxed **More options (⋯)** button with vertically centered dots opens a
-  Bootstrap dropdown containing Share plan and a Theme group. System, Light, Dark and Observing
+  Bootstrap dropdown with sharing, calendar export and theme controls. System, Light, Dark and Observing
   appear together with a checkmark on the current preference. Choosing a theme dismisses the menu and returns focus
   to More. The “Theme” heading stays unchanged. Arrow keys navigate items, Escape dismisses
   the menu, and clicking outside closes it. Menu keys do not navigate the chart. Share returns
   focus to More when closed.
-  Range arrows load the same dates a year earlier or later; Tonight loads
-  the current range when necessary in every chart view. Tonight uses a neutral button treatment;
-  tonight and now are marked in the chart. Browsing months and cycles uses scrolling,
+  The Range date button opens a picker. Around now loads fourteen months starting with the
+  previous month at the site. Calendar year takes a year from 1900 through 2100 and loads
+  January through December on Show year. The arrows move either span by a year. A range change
+  keeps the selected night if present, otherwise it selects tonight or the first night. Tonight jumps to the site's
+  current observing night and restores Around now if the selected span excludes it.
+  Tonight uses a neutral button treatment, and tonight and now are marked in the chart.
+  Browsing months and cycles uses scrolling,
   with the browsed period and view-specific Year/Month/Week controls inside the chart header.
   On phones, the header stacks in the same order across all views, with Docs and More options beside the site.
   Site, views, Range, Tonight and focus stay visible. Only the Moon thresholds fold into a
@@ -325,17 +327,19 @@ Lunations retains its focus window and opens the night detail even if the date f
   dropdown fits the available viewport, including short phones, and does not resize the chart or
   change the browsed position. Full-size layouts retain the compact key inline when it closes.
 - **Sharing.** More offers Share site and Share plan. A site invitation uses a validated
-  `#npa=2` fragment containing just the site. It opens around today with the recipient's own
+  `#npa=2` fragment containing just the site. It opens in Around now with the recipient's own
   settings, automatically saves a new favorite, and offers Undo in a dismissible twelve-second
   notice. Focus or pointer hover keeps the notice available. Successful invitations leave an
   ordinary URL so reload cannot repeat an addition after Undo. Existing locations are reused
   within 0.00001° coordinate rounding, preserving the saved name and metadata. Undo removes
   only the unchanged addition and restores saved activation only if that favorite is still active.
   It preserves subsequent edits and selections, including work in another tab.
-  Plan links retain the first of 14 loaded months, view/zooms/orientation, focus, thresholds,
-  selected evening date and expansion in the existing `#npa=1` format. Their settings become
-  ordinary saved preferences. A site is omitted by default; explicit inclusion previews its
-  name, coordinates, zone and optional elevation and explains copied-link/history exposure.
+  Plan links retain the loaded date span, view/zooms/orientation, focus, thresholds, selected
+  evening date and expansion in the `#npa=1` format. The `start` field fixes the first loaded
+  month. Calendar year plans add `range=year` and start in January. The original fourteen-month
+  links use `start` alone to set the dates. Plan settings become ordinary saved preferences.
+  A site is omitted by default. Explicit inclusion previews its name, coordinates, zone and
+  optional elevation and explains who can read those details in links and browser history.
   A new plan site is used immediately with Save site and Dismiss. Dismiss keeps the plan open.
   Matching locations create no duplicate or save offer. If the link has different zone/elevation
   details, those apply to the open plan while the existing favorite retains its saved values.
@@ -350,8 +354,8 @@ Lunations retains its focus window and opens the night detail even if the date f
   it is loaded, even if its evening falls on the preceding date. Observing nights use their
   evening date and a strict threshold on summed elapsed usable time. Weekend entries use the
   Dark Weekends Fri–Sat winner and require both dates to fit the export. Entries are all day,
-  request free availability and carry no Atlas alarms. Shared-plan links restore the selected
-  night and Moon settings.
+  request free availability and carry no Atlas alarms. Shared-plan links restore the loaded
+  range, selected night and Moon settings.
   Including the site in those links is an explicit choice. Atlas sends no calendar data over
   the network. The import screen explains how to use a separate destination calendar and
   replace its events before a repeat import.

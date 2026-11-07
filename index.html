@@ -70,7 +70,41 @@
                 >
                   ‹
                 </button>
-                <span id="rangeLabel">—</span>
+                <div class="dropdown range-picker">
+                  <span id="rangePickerName" class="sr-only">Choose range</span>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary dropdown-toggle range-picker-toggle"
+                    id="rangePicker"
+                    data-bs-toggle="dropdown"
+                    aria-labelledby="rangePickerName rangeLabel"
+                    aria-controls="rangeMenu"
+                    aria-expanded="false"
+                  >
+                    <span id="rangeLabel">—</span>
+                  </button>
+                  <div id="rangeMenu" class="dropdown-menu range-menu">
+                    <button type="button" class="dropdown-item" id="rangeAround">
+                      <strong>Around now</strong>
+                      <span class="form-text">14 months from the previous month</span>
+                    </button>
+                    <form id="rangeYearForm">
+                      <label for="rangeYear" class="form-label">Calendar year</label>
+                      <span class="form-text" id="rangeYearHelp">January through December</span>
+                      <div class="range-year-actions">
+                        <input
+                          class="form-control form-control-sm"
+                          type="number"
+                          inputmode="numeric"
+                          id="rangeYear"
+                          aria-describedby="rangeYearHelp"
+                          required
+                        />
+                        <button type="submit" class="btn btn-primary">Show year</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
                 <button
                   class="icon-btn btn btn-outline-secondary"
                   id="rangeNext"

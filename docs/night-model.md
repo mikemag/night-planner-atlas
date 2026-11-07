@@ -31,11 +31,12 @@ corrections), and `range.ts`
 - A night is labeled by the local date of its evening (`YYYY-MM-DD`) and runs from local noon to
   the next local noon.
 - "Tonight" is today's date after local noon, and yesterday's before it.
-- The default loaded range is 14 whole months starting with the month before the current one. The Range
-  control shifts it by a year. A shared plan can fix the first month explicitly so its loaded
-  dates remain reproducible when opened later; the Range control still shifts those dates by years.
-  Calendar Year summarizes these same 14 months. Switching periods or views never changes the
-  range or recomputes positions; its Previous/Next controls shift the shared range by a year.
+- **Around now** loads 14 whole months starting with the month before the current one at the
+  site. **Calendar year** loads the chosen January through December, including February 29 in
+  a leap year. December 31 is an evening date and its night ends at local noon on January 1.
+  The range arrows shift the same span by a year. Shared plans can fix either span so the dates
+  remain reproducible. All views, summaries and exports use the loaded span. Neighboring lunar
+  events establish cycle boundaries without adding nights to the span.
 
 ## Sun events
 

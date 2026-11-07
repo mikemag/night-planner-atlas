@@ -27,6 +27,11 @@ track where it is going.
   a cycle for the gain from adding Thursday and Sunday to the same weekend and the nightly windows.
   Open a trip's first night in River, Lunations or Calendar.
 
+The **Range** date button sets the dates for all four views. **Around now** shows 14 months
+starting with the previous month at the site. **Calendar year** shows January through December
+of the chosen year. The arrows shift the range by a year. **Tonight** jumps to the current
+observing night and returns to Around now if that night is outside the range.
+
 All views share one visual language and Moon settings for when the Moon counts as up and whether
 to ignore a thin crescent. The charts also support new-moon focus (±N nights) and share ordered
 boundary times and separate usable windows in expanded nights.
@@ -53,12 +58,17 @@ npm run dev
 ```
 
 `npm run dev` serves the site at <http://localhost:5173/> with hot reload. `npm run build` writes
-the deployable static site to `dist/`, and `npm run preview` serves that build. Sun and moon
-positions and site time zones are computed in the browser. Saved sites stay in browser storage;
-Share site creates a reusable invitation that saves a new location with Undo. Share plan captures dates and settings, with an optional site. Named local favorites keep complete site records. Paste coordinates or a supported full Google
-Maps search link; a bundled offline lookup infers the editable IANA zone. The header shows the
-site’s current local clock, UTC offset and zone. System, Light, Dark and Observing themes are saved
-locally; Observing is designed for a separately enabled OS red filter.
+the deployable static site to `dist/`, and `npm run preview` serves that build.
+
+Sun and moon positions and site time zones are computed in the browser. Named favorites stay in
+browser storage. Paste coordinates or a supported full Google Maps search link to infer an editable
+IANA zone with the bundled offline lookup. The header shows the site’s current local clock, UTC
+offset and zone. System, Light, Dark and Observing themes are saved locally. Observing is designed
+for a separately enabled OS red filter.
+
+**Share site** opens the location in Around now with the recipient’s settings. It reuses a saved
+site or saves a new one with Undo. **Share plan** preserves the selected dates, view and Moon
+settings, with the option to include the site.
 
 You can enter an optional elevation above sea level; blank uses sea level.
 Elevation adjusts the observer position and idealized refraction, with a level horizon and no

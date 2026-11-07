@@ -1,11 +1,11 @@
-import { fmtDur, MON3, nightTitle, pad2, SUN_NAMES, WD3 } from '../model/format';
+import { fmtDur, MON3, nightTitle, SUN_NAMES, WD3 } from '../model/format';
 import { phaseName } from '../model/describe';
 import { SUN_EVENTS, type Interval, type Night, type Thresholds } from '../model/night';
 import type { NightRange } from '../model/range';
 import { MS_M } from '../model/time';
 import { darkWeekendPeriods } from '../model/trips';
 import { COMPUTE_REVISION } from './night-cache-format';
-import { createShareLink } from './share-state';
+import { createShareLink, shareRange } from './share-state';
 import type { AllDayEvent } from './ical';
 
 export const calendarKinds = ['moons', 'weekends', 'nights'] as const;
@@ -190,7 +190,7 @@ export function makeCalendarRecords(
       const night = event.kind === 'moons' ? (event.night?.id ?? event.start) : event.start;
       const url = createShareLink(base, {
         v: 1,
-        start: `${String(range.spec.y).padStart(4, '0')}-${pad2(range.spec.m)}`,
+        ...shareRange(range.spec),
         night,
         view: 'calendar',
         riverZoom: 'month',
