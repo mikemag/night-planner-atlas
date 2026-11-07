@@ -31,6 +31,7 @@ test('development caches sites across refreshes and safely invalidates model and
   page,
 }) => {
   test.setTimeout(90_000);
+  const loading = page.locator('#loading');
   // Exercise real file watching/HMR in an isolated copy, never editing a developer's checkout.
   const fixture = await realpath(await mkdtemp(join(tmpdir(), 'npa-dev-cache-')));
   let server: ViteDevServer | undefined;
@@ -38,6 +39,7 @@ test('development caches sites across refreshes and safely invalidates model and
     for (const path of [
       'src',
       'public',
+      'LICENSE',
       'index.html',
       'package.json',
       'package-lock.json',
@@ -52,12 +54,19 @@ test('development caches sites across refreshes and safely invalidates model and
       configFile: join(fixture, 'vite.config.ts'),
       cacheDir: join(fixture, '.vite'),
       logLevel: 'error',
-      server: { host: '127.0.0.1', port: 0, fs: { allow: [fixture, process.cwd()] } },
+      server: {
+        host: '127.0.0.1',
+        port: 0,
+        fs: { allow: [fixture, process.cwd()] },
+        // Poll from the initial snapshot so delayed native events from copying files cannot
+        // restart Vite during the first navigation.
+        watch: { usePolling: true },
+      },
     });
     await server.listen();
     await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
     await page.goto(server.resolvedUrls!.local[0]);
-    await expect(page.locator('#loading')).toBeHidden();
+    await expect(loading).toHaveAttribute('hidden', '');
     expect(await page.evaluate(() => window.__npa!.computation!.computedNights)).toBe(426);
     await expect.poll(async () => (await cacheEntries(page)).months).toBe(14);
     const originalGeneration = (await cacheEntries(page)).generations[0];
@@ -70,13 +79,13 @@ test('development caches sites across refreshes and safely invalidates model and
       )
       .toBe(7);
     await page.locator('#siteSel').selectOption('site:edinburgh-royal-observatory');
-    await expect(page.locator('#loading')).toBeHidden();
+    await expect(loading).toHaveAttribute('hidden', '');
     await expect.poll(async () => (await cacheEntries(page)).months).toBe(28);
     await page.locator('#siteSel').selectOption('site:seattle-paramount-park');
-    await expect(page.locator('#loading')).toBeHidden();
+    await expect(loading).toHaveAttribute('hidden', '');
     expect(await page.evaluate(() => window.__npa!.computation!.computedNights)).toBe(0);
     await page.reload();
-    await expect(page.locator('#loading')).toBeHidden();
+    await expect(loading).toHaveAttribute('hidden', '');
     expect(await page.evaluate(() => window.__npa!.computation!.computedNights)).toBe(0);
     const saved = await page.evaluate(() => localStorage.getItem('npa:personal'));
 
@@ -84,7 +93,7 @@ test('development caches sites across refreshes and safely invalidates model and
       const reloaded = page.waitForEvent('domcontentloaded');
       await appendFile(join(fixture, path), '\n// Dev cache regression fixture edit.\n');
       await reloaded;
-      await expect(page.locator('#loading')).toBeHidden();
+      await expect(loading).toHaveAttribute('hidden', '');
       expect(await page.evaluate(() => localStorage.getItem('npa:personal'))).toBe(saved);
     }
     await edit('src/ui/controls.ts');
@@ -95,19 +104,19 @@ test('development caches sites across refreshes and safely invalidates model and
     expect(await page.evaluate(() => window.__npa!.computation!.computedNights)).toBe(426);
     await expect.poll(async () => (await cacheEntries(page)).generations.length).toBe(2);
     await page.reload();
-    await expect(page.locator('#loading')).toBeHidden();
+    await expect(loading).toHaveAttribute('hidden', '');
     expect(await page.evaluate(() => window.__npa!.computation!.computedNights)).toBe(0);
 
     await edit('src/app/night-cache-format.ts');
     expect(await page.evaluate(() => window.__npa!.computation!.computedNights)).toBe(426);
     await expect.poll(async () => (await cacheEntries(page)).generations.length).toBe(3);
     await page.reload();
-    await expect(page.locator('#loading')).toBeHidden();
+    await expect(loading).toHaveAttribute('hidden', '');
     expect(await page.evaluate(() => window.__npa!.computation!.computedNights)).toBe(0);
     // Test-only model edits are outside the calculation fingerprint.
     await appendFile(join(fixture, 'src/model/night.test.ts'), '\n// Test fixture only.\n');
     await page.reload();
-    await expect(page.locator('#loading')).toBeHidden();
+    await expect(loading).toHaveAttribute('hidden', '');
     expect(await page.evaluate(() => window.__npa!.computation!.computedNights)).toBe(0);
     expect((await cacheEntries(page)).generations).toHaveLength(3);
   } finally {

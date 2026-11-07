@@ -105,6 +105,7 @@ test('Full cycle covers every night once, restores formerly missing dates, and i
   // An explicit Full cycle link keeps the whole cycle even on a fresh phone presentation.
   await openShare(page);
   const link = await page.locator('#shareLink').inputValue();
+  expect(await readPreference(page, 'focus')).toBeNull();
   await page.locator('#shareCancel').click();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(link);
@@ -115,7 +116,7 @@ test('Full cycle covers every night once, restores formerly missing dates, and i
   );
   expect((await selected(page)).geometry.N).toBe(15);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
-  expect(await readPreference(page, 'focus')).toBeNull();
+  expect(await readPreference(page, 'focus')).toBe(0);
 });
 
 for (const width of [1512, 390]) {
@@ -254,6 +255,7 @@ test('phone defaults stay local to Lunations, survive sharing, and preserve the 
   const link = await page.locator('#shareLink').inputValue();
   expect(new URLSearchParams(new URL(link).hash.slice(1)).get('focus')).toBe('3');
   expect(new URLSearchParams(new URL(link).hash.slice(1)).get('expanded')).toBe('1');
+  expect(await readPreference(page, 'focus')).toBeNull();
   await page.locator('#shareCancel').click();
   await page.setViewportSize({ width: 1512, height: 920 });
   await page.goto(link);
@@ -263,7 +265,7 @@ test('phone defaults stay local to Lunations, survive sharing, and preserve the 
     'true',
   );
   await expect(page.locator('#lunationsDetail')).toBeVisible();
-  expect(await readPreference(page, 'focus')).toBeNull();
+  expect(await readPreference(page, 'focus')).toBe(3);
 });
 
 test('resizing retains an open night even outside the automatic phone window', async ({ page }) => {
