@@ -1,27 +1,29 @@
 <header class="guide-intro">
   <p class="guide-kicker">Night Planner Atlas · Docs</p>
   <h2 tabindex="-1">Privacy and credits</h2>
-  <p class="guide-lead">
-    Your observing sites stay in your browser. Sharing them is a deliberate choice.
-  </p>
+  <p class="guide-lead">Atlas has no accounts, analytics, trackers, or cookies.</p>
 </header>
 <section id="privacy-credits" aria-labelledby="privacyTitle">
   <h3 id="privacyTitle">Your sites and data</h3>
   <ul>
     <li>
-      <strong>In your browser.</strong> Sites and preferences live in local storage. IndexedDB
-      caches calculations for saved sites, including their coordinates. Clearing browser site data
-      removes both.
+      <strong>In your browser.</strong> Atlas keeps saved sites, preferences, cached calculations,
+      and offline app files in this browser. Calculations and time-zone lookups run on your device.
     </li>
     <li>
-      <strong>In links and backups.</strong> Backups contain your saved sites. A link includes the
-      site name, coordinates, zone, and optional elevation when you choose
-      <strong>Include this site</strong>. Anyone with that link can read them.
+      <strong>Clearing your data.</strong> To erase Atlas data stored in this browser, close your
+      Atlas tabs and clear this site’s data in your browser settings. To clear just the
+      calculations, choose <strong>Manage sites → Browser data → Clear computed cache</strong>.
     </li>
     <li>
-      <strong>On the network.</strong> Atlas loads static files from its host, which receives
-      ordinary connection metadata. Site calculations and time-zone lookups run locally. Atlas has
-      no accounts or analytics.
+      <strong>In links and downloads.</strong> Backups contain your saved sites. Shared plan links
+      and links in calendar exports include the site name, coordinates, time zone, and any elevation
+      only if you choose to include the site. Anyone with a copy can read those details.
+    </li>
+    <li>
+      <strong>When you load Atlas online.</strong> Firebase Hosting serves the app over HTTPS and
+      may retain your IP address for a few months.
+      <a href="https://firebase.google.com/support/privacy">Firebase privacy and security</a>.
     </li>
   </ul>
   <p><a href="?docs=using#sharing">How to share a plan or back up your sites.</a></p>
