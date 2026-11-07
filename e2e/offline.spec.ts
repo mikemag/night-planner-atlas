@@ -82,4 +82,10 @@ test('reopens the planner and direct Docs links offline after online setup', asy
   await fresh.reload();
   await expect(fresh).toHaveURL(docs.href);
   await expect(fresh.getByRole('heading', { name: 'Can I use it offline?' })).toBeVisible();
+  await fresh.goto(new URL('index.html?docs=licenses#code-license', url).href);
+  await fresh.reload();
+  await fresh.getByText('Read the full AGPL-3.0 license offline', { exact: true }).click();
+  await expect(fresh.locator('#codeLicenseText')).toContainText(
+    'GNU AFFERO GENERAL PUBLIC LICENSE',
+  );
 });

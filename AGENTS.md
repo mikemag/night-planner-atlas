@@ -65,6 +65,9 @@ will become public.
 
 ## Dependencies and credits
 
+- The project's code is AGPL-3.0-only, original content is CC BY-SA 4.0, and calculated numerical
+  results are CC0 1.0. See README.md for scope and third-party exceptions. Mike approved this
+  project licensing choice in #15.
 - Prefer permissive licenses such as MIT, BSD and Apache-2.0. Copyleft or unknown licenses need
   Mike's approval.
 - Credit third-party code that ships in the site in `THIRD_PARTY_NOTICES.md` and in the site's

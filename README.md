@@ -33,7 +33,7 @@ boundary times and separate usable windows in expanded nights.
 Calendar uses familiar Month, Week and Year grids. Month and Year share green duration bars, and
 Week labels the boundaries between shaded regions directly. **Docs** is visible in the header,
 with a short overview, FAQ, practical guide, worked night examples, detailed calculations,
-privacy and credits. The examples compare strict and relaxed Moon settings without changing the open plan.
+privacy, and a separate Licenses and credits page. The examples compare strict and relaxed Moon settings without changing the open plan.
 
 | Year at a glance (River)                        | Calendar                                           | Lunations                                           |
 | ----------------------------------------------- | -------------------------------------------------- | --------------------------------------------------- |
@@ -116,4 +116,28 @@ OpenStreetMap contributors via timezone-boundary-builder and tzf-dist (ODbL 1.0)
 
 ## License
 
-Not yet licensed: all rights reserved while the project is private.
+Copyright © 2026 Mike Magruder.
+
+| Material                                                                                                        | Terms                                                                                                |
+| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Original application code, HTML/CSS structure, build scripts, configuration and tests                           | [GNU AGPL version 3 only](LICENSE), SPDX `AGPL-3.0-only`                                             |
+| Original documentation, explanatory text and illustrations, including the prose and artwork embedded in the app | [CC BY-SA 4.0](public/licenses/cc-by-sa-4.0.txt)                                                     |
+| Calculated numerical results, including values shown in charts and exports                                      | [CC0 1.0](public/licenses/cc0-1.0.txt), to the extent the project holds copyright or database rights |
+
+Credit Mike Magruder and Night Planner Atlas when reusing the original content. Keep attribution,
+link to the license, indicate changes, and use the same or a compatible license for shared
+adaptations. Code examples use the code license. The CC0 dedication covers calculated values;
+the surrounding original text and illustrations use the content license. User-entered sites
+and personal data are outside these project grants.
+
+Third-party code, data, reference material and license texts retain their own terms and notices.
+In particular, the bundled time-zone boundary dataset remains ODbL 1.0. See
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+The app’s Docs navigation includes **Licenses and credits**, with the scope of each grant,
+full terms readable offline, and third-party attribution.
+
+When distributing a licensed build, provide recipients with the matching corresponding source,
+including the files and build instructions needed to modify and rebuild it. The repository is
+private during the preview, so public access to the matching source must be arranged before
+publishing the licensed build. The [running instructions](#running-it) describe the build.

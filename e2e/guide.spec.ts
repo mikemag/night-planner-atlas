@@ -112,7 +112,34 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#referenceQueries a')).toHaveCount(15);
     await expect(page.locator('#referenceFixture')).toHaveAttribute('href', /^blob:/);
     if (width === 390) await page.locator('#docsContents > summary').click();
-    await page.getByRole('link', { name: 'Privacy and credits', exact: true }).click();
+    await page.getByRole('link', { name: 'Licenses and credits', exact: true }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Licenses and credits', exact: true }),
+    ).toBeVisible();
+    for (const [summary, id, text] of [
+      [
+        'Read the full AGPL-3.0 license offline',
+        'codeLicenseText',
+        'GNU AFFERO GENERAL PUBLIC LICENSE',
+      ],
+      [
+        'Read the full CC BY-SA 4.0 license offline',
+        'contentLicenseText',
+        'Attribution-ShareAlike 4.0 International',
+      ],
+      ['Read the full CC0 dedication offline', 'resultsLicenseText', 'CC0 1.0 Universal'],
+    ]) {
+      await page.getByText(summary, { exact: true }).click();
+      await expect(page.locator('#' + id)).toBeVisible();
+      await expect(page.locator('#' + id)).toContainText(text);
+      await page.getByText(summary, { exact: true }).click();
+    }
+    await page
+      .getByRole('link', { name: 'Third-party credits and notices →', exact: true })
+      .click();
+    await expect(
+      page.getByRole('heading', { name: 'Third-party credits', exact: true }),
+    ).toBeInViewport();
     await page
       .getByText('Read the time-zone code and ODbL data notices offline', { exact: true })
       .click();
@@ -189,6 +216,10 @@ test('direct section links reload and old guide links still work without computi
     await page.reload();
     await expect(page.locator('#notesView')).toBeVisible();
   }
+  await page.goto('./?docs=privacy#timezoneNotices');
+  await expect(page.locator('#timezoneNotices')).toBeVisible();
+  await expect(page.locator('#docsCurrentPage')).toHaveText('Licenses and credits');
+  expect(await page.evaluate(() => window.__npa!.nights.length)).toBe(0);
   await page.getByRole('link', { name: 'Back to planner' }).click();
   await expect(page.locator('#loading')).toBeHidden();
   expect(await page.evaluate(() => window.__npa!.nights.length)).toBeGreaterThan(400);

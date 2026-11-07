@@ -2,6 +2,7 @@
   "name": "night-planner-atlas",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "Plan dark-sky nights by month and year with twilight, astronomical darkness, moonlight and usable dark for any site.",
   "type": "module",
   "engines": {

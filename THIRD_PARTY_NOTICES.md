@@ -1,13 +1,15 @@
 # Third-party notices
 
-Night Planner Atlas includes the following third-party software.
+Night Planner Atlas includes the following third-party software and data. These components
+retain their own terms and notices. The project's AGPL-3.0-only code, CC BY-SA 4.0 content and
+CC0 calculated-results grants apply as described in [README.md](README.md#license).
 
 | Project                                                      | Copyright                         | Version | License | Location                                            |
 | ------------------------------------------------------------ | --------------------------------- | ------- | ------- | --------------------------------------------------- |
 | [Astronomy Engine](https://github.com/cosinekitty/astronomy) | Copyright (c) 2019-2023 Don Cross | 2.1.19  | MIT     | npm `astronomy-engine`, bundled into `dist/assets/` |
 
 The minified bundle keeps the library's MIT license header (see `vite.config.ts`), and the npm
-package's source carries the same notice. The site credits Astronomy Engine on its How it works page, with an offline-readable copy of
+package's source carries the same notice. The site credits Astronomy Engine on its Licenses and credits page, with an offline-readable copy of
 the [MIT license](public/licenses/astronomy-engine.txt).
 
 ## Offline time-zone lookup
@@ -24,7 +26,7 @@ The lockfile's platform-only `libc` and `r-efi` are not compiled into the browse
 
 [Data provenance and update procedure](docs/time-zone-data.md) identify the exact source,
 checksums, license audit and matching [machine-readable dataset](public/data/timezones-2026e.tzb).
-Visible credit and the data download appear with the other credits on the How it works page.
+Visible credit and the data download appear with the other credits on the Licenses and credits page.
 
 ## UI components
 
@@ -36,4 +38,4 @@ has no runtime dependencies. They are bundled locally, with legal comments retai
 minified assets. No CDN, external font, icon service or runtime third-party request is needed.
 
 [Full notices and licenses](public/licenses/bootstrap-notices.txt) are embedded in the offline
-How it works guide, alongside visible credit for both projects.
+Licenses and credits page, alongside visible credit for both projects.

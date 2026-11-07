@@ -1,3 +1,6 @@
+/*! Night Planner Atlas · Copyright (C) 2026 Mike Magruder
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * Full terms are in Docs, Licenses and credits. */
 /* global release */
 
 const scope = self.registration.scope;

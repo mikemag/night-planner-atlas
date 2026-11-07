@@ -6,6 +6,11 @@ import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
+const codeNotice = `/*! Night Planner Atlas
+ * Copyright (C) 2026 Mike Magruder
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * License terms and third-party notices are in Docs, Licenses and credits.
+ */`;
 const inputs = readdirSync(root + 'src/model', { recursive: true })
   .map(String)
   .filter((p) => p.endsWith('.ts') && !p.endsWith('.test.ts') && !p.startsWith('testdata/'))
@@ -73,10 +78,10 @@ export default defineConfig({
     target: 'es2022',
     sourcemap: true,
     // Keep license headers (e.g. Astronomy Engine's MIT notice) in the minified bundle.
-    rolldownOptions: { output: { comments: { legal: true } } },
+    rolldownOptions: { output: { banner: codeNotice, comments: { legal: true } } },
   },
   worker: {
-    rolldownOptions: { output: { comments: { legal: true } } },
+    rolldownOptions: { output: { banner: codeNotice, comments: { legal: true } } },
   },
   test: {
     include: ['src/**/*.test.ts'],

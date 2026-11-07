@@ -40,7 +40,7 @@ platform-only `libc` and `r-efi` dependencies are not part of the browser target
 
 The boundary data is ODbL 1.0, approved for this feature in
 [issue #20](https://github.com/mikemag/night-planner-atlas/issues/20). Attribution names
-OpenStreetMap contributors, timezone-boundary-builder and tzf-dist in the How it works credits.
+OpenStreetMap contributors, timezone-boundary-builder and tzf-dist in Licenses and credits.
 [Full code/data notices](../public/licenses/timezone-notices.txt), including ODbL, ship with the
 site and are readable within its guide offline. The matching dataset is offered separately.
 Third-party code and data retain their own licenses independently of the app's license.

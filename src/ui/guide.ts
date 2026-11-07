@@ -6,20 +6,25 @@ import faq from './docs/faq.html?raw';
 import using from './docs/using.html?raw';
 import calculations from './docs/calculations.html?raw';
 import privacy from './docs/privacy.html?raw';
+import licenses from './docs/licenses.html?raw';
 import { initExamples, renderExamples } from './docs/examples';
+import codeLicense from '../../LICENSE?raw';
+import contentLicense from '/licenses/cc-by-sa-4.0.txt?raw';
+import resultsLicense from '/licenses/cc0-1.0.txt?raw';
 import astronomyNotices from '/licenses/astronomy-engine.txt?raw';
 import timezoneNotices from '/licenses/timezone-notices.txt?raw';
 import bootstrapNotices from '/licenses/bootstrap-notices.txt?raw';
 import reference from '../model/testdata/usno.json';
 
-const pages = { overview, faq, using, calculations, privacy };
+const pages = { overview, faq, using, calculations, privacy, licenses };
 export type DocsPage = keyof typeof pages;
 const names: Record<DocsPage, string> = {
   overview: 'Overview',
   faq: 'FAQ',
   using: 'Using the planner',
   calculations: 'How it works',
-  privacy: 'Privacy and credits',
+  privacy: 'Privacy',
+  licenses: 'Licenses and credits',
 };
 const legacy: Record<string, DocsPage> = {
   'reading-night': 'using',
@@ -48,6 +53,11 @@ function url(page: DocsPage, anchor = ''): string {
   return `${location.pathname}?docs=${page}${anchor ? '#' + anchor : ''}`;
 }
 function show(page: DocsPage, anchor = '', focus = true): void {
+  if (
+    page === 'privacy' &&
+    ['astronomyNotices', 'timezoneNotices', 'bootstrapNotices'].includes(anchor)
+  )
+    page = 'licenses';
   if (!opened) {
     scroll = { top: scroller.scrollTop, left: scroller.scrollLeft, page: window.scrollY };
     opener = document.activeElement as HTMLElement | null;
@@ -135,6 +145,9 @@ export function initGuide(onResume: () => void, oldNotes = false): void {
   el('astronomyNotices').textContent = astronomyNotices;
   el('timezoneNotices').textContent = timezoneNotices;
   el('bootstrapNotices').textContent = bootstrapNotices;
+  el('codeLicenseText').textContent = codeLicense;
+  el('contentLicenseText').textContent = contentLicense;
+  el('resultsLicenseText').textContent = resultsLicense;
   for (const source of reference.sources) {
     const item = document.createElement('li'),
       link = document.createElement('a');

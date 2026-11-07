@@ -348,8 +348,8 @@ Lunations retains its focus window and opens the night detail even if the date f
   replace its events before a repeat import.
 - **Docs.** A visible Docs link in the main header opens a reading shell with the app identity,
   Back to planner and the existing theme menu. The site picker, current clock, view switcher,
-  planning controls and shared-plan notice stay with the planner. Five bundled pages provide an
-  Overview, FAQ, Using the planner, How it works, and Privacy and credits. A persistent desktop
+  planning controls and shared-plan notice stay with the planner. Six bundled pages provide an
+  Overview, FAQ, Using the planner, How it works, Privacy, and Licenses and credits. A persistent desktop
   hierarchy exposes sections of the current guide; phones use a Contents disclosure. Page and
   section links use `?docs=…#section`, support reload and browser history, and never carry the
   observing site. Existing guide section anchors and legacy Notes links remain readable.
@@ -365,7 +365,10 @@ Lunations retains its focus window and opens the night detail even if the date f
   charts. Deliberate example links open a temporary public-starter plan in another tab. Technical
   chapters retain upper-edge/center conventions, accuracy provenance, polar/DST and split-window
   explanations. Complete offline code/data notices and the matching boundary dataset stay in
-  Privacy and credits. The sky ramp uses `inkOn` in every palette.
+  Licenses and credits. That page has direct section links for AGPL-3.0-only code, CC BY-SA 4.0
+  content, CC0 numerical results, and third-party credits. Full legal texts are bundled for
+  offline reading. Privacy has its own page and keeps its existing links. The sky ramp uses
+  `inkOn` in every palette.
 - **Night details.** All three charts share ordered event annotations on the same clock axis,
   with illumination, phase, individual usable-window durations and threshold/clock-change notes.
   Calendar reserves the panel after its selected row; Lunations places it beneath its cycle. River
