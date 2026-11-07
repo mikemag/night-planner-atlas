@@ -474,14 +474,21 @@ class CalendarView implements CanvasView {
     }
   }
   drawSummary(n: Night, x: number, y: number, w: number, h: number): void {
-    const narrow = w < 150,
+    const wideCell = 150,
+      narrow = w < wideCell,
+      barWidth = narrow
+        ? Math.max(3, 2 + Math.round(w / 30))
+        : Math.min(18, 7 + Math.round(((w - wideCell) * 11) / 60)),
+      barLeft = w - 4 - barWidth,
+      labelWidth = barLeft - 9,
       dim = S.focus > 0 && Math.abs(n.nmOff) > S.focus,
       ink = dim || !n.mfMs ? C.ink3 : C.ink,
       hours = !n.mfMs ? '0h' : narrow ? `${fmtHrs(n.mfMs)}h` : fmtDur(n.mfMs),
-      hp = narrow ? Math.min(15, ((w - 16) / tw(hours, 15, 600)) * 15) : 21,
+      hp = narrow ? Math.min(15, (labelWidth / tw(hours, 15, 600)) * 15) : 21,
       wp = narrow ? 12 : 18;
-    if (!this.newMoons.has(n.id)) moonGlyph(n, x + w - 15, y + 13, 5);
-    if (w >= 105) text(`${Math.round(n.illum * 100)}%`, x + w - 26, y + 13, 11, C.ink3, 'right');
+    if (!this.newMoons.has(n.id)) moonGlyph(n, x + barLeft - 8, y + 13, 5);
+    if (w >= 105)
+      text(`${Math.round(n.illum * 100)}%`, x + barLeft - 19, y + 13, 11, C.ink3, 'right');
     text(hours, x + 7, y + (narrow ? 32 : 39), hp, ink, 'left', 600);
     let line =
       n.mfH.length === 1
@@ -489,7 +496,7 @@ class CalendarView implements CanvasView {
         : n.mfH.length
           ? `${n.mfH.length} windows`
           : '—';
-    if (tw(line, wp, 500) <= w - 20)
+    if (tw(line, wp, 500) <= labelWidth - 4)
       text(line, x + 7, y + (narrow ? 52 : Math.min(65, h - 18)), wp, ink, 'left', 500);
     else if (n.mfH.length === 1) {
       for (const [j, t] of n.mfH[0].entries()) {
@@ -498,7 +505,7 @@ class CalendarView implements CanvasView {
           label,
           x + 5,
           y + 49 + j * 14,
-          Math.min(wp, ((w - 16) / tw(label, wp, 500)) * wp),
+          Math.min(wp, (labelWidth / tw(label, wp, 500)) * wp),
           ink,
           'left',
           500,
@@ -514,9 +521,9 @@ class CalendarView implements CanvasView {
       drawDurationBar(
         n.mfMs,
         this.scale() * MS_H,
-        x + w - 7,
+        x + barLeft,
         y + h - 8 - maxHeight,
-        3,
+        barWidth,
         maxHeight,
         'v',
         this.durationOpacity(n),

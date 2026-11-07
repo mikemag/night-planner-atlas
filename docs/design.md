@@ -165,8 +165,9 @@ Friday/Saturday coloring do not appear in Month or Year.
   times. Multiple intervals are labeled as separate windows, never joined into a continuous range;
   exact intervals remain in the expansion. There is no presentation selector.
 - **Duration bars.** An inset vertical green bar at the right of each Month cell grows upward
-  from a shared baseline within its row. Its height makes daily differences clear across the week;
-  all months share the same maximum bar height and hours scale. Year day cells use horizontal bars
+  from a shared baseline within its row. Its width grows from 3 to 18 pixels with the cell width,
+  with space reserved for labels. Its height makes daily differences clear across the week.
+  All months share the same maximum bar height and hours scale. Year day cells use horizontal bars
   on the same hours scale, rounded up to an even number. End margins keep bars distinct from the
   grid. All three views use the same duration-bar renderer; Calendar and Lunations share the
   rounded hours scale. Compact Year cards show a chronological daily bar profile when their

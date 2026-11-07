@@ -156,6 +156,7 @@ for (const width of [1512, 390]) {
       return {
         green,
         bar: pixel(x + r.geometry.cw - 6, y),
+        innerBar: pixel(x + r.geometry.cw - 20, y),
         left: pixel(x + 3, y),
         right: pixel(x + r.geometry.cw - 2, y),
         backgrounds: [...Array(7)].map((_, d) =>
@@ -164,6 +165,7 @@ for (const width of [1512, 390]) {
       };
     });
     expect(pixels.bar).toBe(pixels.green);
+    if (width === 1512) expect(pixels.innerBar).toBe(pixels.green);
     expect(pixels.left).not.toBe(pixels.green);
     expect(pixels.right).not.toBe(pixels.green);
     expect(new Set(pixels.backgrounds).size).toBe(1);
