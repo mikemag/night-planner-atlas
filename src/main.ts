@@ -7,7 +7,7 @@ import { initCalendarExport } from './ui/calendar-export';
 
 await personal.initialize();
 initControls();
-initSharing();
+await initSharing();
 initCalendarExport();
 boot();
 void initOffline();

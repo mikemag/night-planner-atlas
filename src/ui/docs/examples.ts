@@ -136,6 +136,7 @@ export function renderExamples(): void {
     const link = document.querySelector<HTMLAnchorElement>(`[data-example-link="${key}"]`)!;
     link.href = createShareLink(location.href, {
       v: 1,
+      preview: true,
       view: 'river',
       start: '2026-09',
       night: n.id,

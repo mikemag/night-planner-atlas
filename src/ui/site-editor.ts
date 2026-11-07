@@ -173,9 +173,6 @@ export function initSiteEditor(): void {
       draft.active = { id: favorite.id };
     });
   });
-  el('shareReviewSite').addEventListener('click', (event) =>
-    openEditor(event.currentTarget as HTMLElement),
-  );
   window.addEventListener('npa-site-change', refreshPicker);
   personal.subscribe(() => {
     refreshPicker();

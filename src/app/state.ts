@@ -10,7 +10,7 @@ export interface UiState {
   rangeStart: { y: number; m: number } | null;
   /** Initial selected evening date from a link, consumed only after its range finishes. */
   pendingNight: string | null;
-  /** Shared controls remain temporary until the viewer deliberately saves them. */
+  /** Worked-example previews keep their controls separate from saved preferences. */
   sharedSettings: boolean;
   /** Selected night index, or −1. */
   sel: number;

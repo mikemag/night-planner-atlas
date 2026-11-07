@@ -212,9 +212,9 @@ Friday/Saturday coloring do not appear in Month or Year.
   pointed-at night and otherwise summarizes the selection. Richer seasonal profiles and weekend
   rankings remain in River.
 - **Sharing.** Month/Week, the selected evening date and expansion are reproducible through the
-  existing site-optional links. Incoming settings remain temporary until saved. Earlier links with
+  existing site-optional links. Incoming plan settings become the current saved choices. Earlier links with
   month-presentation or orientation fields remain readable; new links omit the retired presentation
-  choice. Existing stored preferences are left intact.
+  choice. Unrelated stored preferences are preserved.
 - _Best at_ choosing familiar dates, comparing a week and locating new moons across a year.
 - _Weak at_ the continuity of long-term patterns; River and Lunations provide those comparisons.
 
@@ -324,17 +324,26 @@ Lunations retains its focus window and opens the night detail even if the date f
   clicking outside dismisses it. Page Up/Down scroll the key without navigating the chart. The
   dropdown fits the available viewport, including short phones, and does not resize the chart or
   change the browsed position. Full-size layouts retain the compact key inline when it closes.
-- **Sharing.** A versioned, validated URL fragment carries the first of 14 loaded months, current
-  view/zooms/orientation, focus, thresholds, selected evening date and River/Lunations expansion. The site
-  record is omitted by default; the Share dialog explains that recipients use their own site and
-  may see different results. Explicit inclusion previews name, coordinates, zone and optional
-  elevation and explains copied-link/history exposure. Opening a link applies temporary controls
-  and an optional temporary site without overwriting saved preferences or favorites. Keeping view
-  settings and saving the included site are separate deliberate actions. Theme stays personal.
-  A notice can restore the viewer's saved plan. Copy failure selects the link for manual copying.
-  Links use readable named fields such as `#npa=1&view=river&start=2026-09`, omitting fixed defaults
-  to keep them short; `crescent` is an integer percentage. Earlier encoded JSON links still open.
-  Plans remain self-contained, with no link-shortening service or server-stored lookup.
+- **Sharing.** More offers Share site and Share plan. A site invitation uses a validated
+  `#npa=2` fragment containing just the site. It opens around today with the recipient's own
+  settings, automatically saves a new favorite, and offers Undo in a dismissible twelve-second
+  notice. Focus or pointer hover keeps the notice available. Successful invitations leave an
+  ordinary URL so reload cannot repeat an addition after Undo. Existing locations are reused
+  within 0.00001° coordinate rounding, preserving the saved name and metadata. Undo removes
+  only the unchanged addition and restores saved activation only if that favorite is still active.
+  It preserves subsequent edits and selections, including work in another tab.
+  Plan links retain the first of 14 loaded months, view/zooms/orientation, focus, thresholds,
+  selected evening date and expansion in the existing `#npa=1` format. Their settings become
+  ordinary saved preferences. A site is omitted by default; explicit inclusion previews its
+  name, coordinates, zone and optional elevation and explains copied-link/history exposure.
+  A new plan site is used immediately with Save site and Dismiss. Dismiss keeps the plan open.
+  Matching locations create no duplicate or save offer. If the link has different zone/elevation
+  details, those apply to the open plan while the existing favorite retains its saved values.
+  Worked examples use an explicit `preview=1` plan, keeping their settings separate from the
+  reader's preferences. Theme stays personal. Invalid links have dismissible feedback, and
+  unavailable storage leaves changes temporary. Copy failure selects the link for manual copying.
+  Earlier encoded JSON plans and calendar-export links still open. All link data remains in the
+  fragment, with no link-shortening service or server-stored lookup.
 - **Calendar export.** More opens a date and event preview scoped to the loaded range, defaulting
   to the next 30 observing dates when available. The browser downloads one iCalendar snapshot.
   New moons use the site's civil date and include the associated observing night's details when
@@ -353,7 +362,7 @@ Lunations retains its focus window and opens the night detail even if the date f
   hierarchy exposes sections of the current guide; phones use a Contents disclosure. Page and
   section links use `?docs=…#section`, support reload and browser history, and never carry the
   observing site. Existing guide section anchors and legacy Notes links remain readable.
-  The planner remains mounted: closing Docs restores the site, temporary shared plan, settings,
+  The planner remains mounted: closing Docs restores the site, open shared plan, settings,
   selection, expansion and browsed position without saving a Docs view preference. Direct Docs
   visits defer the full range calculation until returning to the planner. Once More shows
   **Ready to reopen offline**, the planner and direct Docs links can reopen offline in the same
@@ -381,7 +390,7 @@ Lunations retains its focus window and opens the night detail even if the date f
   every number and the weekend picks, not just the drawing.
 - **Site.** A native dropdown switches directly between named local favorites. **Manage sites…**
   opens the keyboard-accessible editor, with add, edit, duplicate and confirmed removal. The name,
-  coordinates, IANA zone and optional elevation are saved together. Shared or unsaved sites remain
+  coordinates, IANA zone and optional elevation are saved together. Unsaved plan sites remain
   visible as the current selection.
   A fresh browser starts with Seattle's Paramount Park selected, plus Edinburgh's Royal
   Observatory, Sydney's Linden Observatory, Chile's Vera C. Rubin Observatory, Quito's

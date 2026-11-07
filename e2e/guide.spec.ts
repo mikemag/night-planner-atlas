@@ -225,7 +225,7 @@ test('direct section links reload and old guide links still work without computi
   expect(await page.evaluate(() => window.__npa!.nights.length)).toBeGreaterThan(400);
 });
 
-test('Docs preserves a temporary included-site shared plan without copying its site into docs URLs', async ({
+test('Docs preserves an included-site shared plan without copying its site into docs URLs', async ({
   page,
 }) => {
   await page.goto(

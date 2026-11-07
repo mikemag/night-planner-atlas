@@ -10,7 +10,15 @@ export interface SharedPlan extends Omit<Settings, 'site'> {
   night: string | null;
   expanded: boolean;
   site?: Site;
+  /** Worked examples can be explored without changing the reader's saved preferences. */
+  preview?: true;
 }
+
+export interface SiteInvitation {
+  v: 2;
+  site: Site;
+}
+export type SharedLink = SharedPlan | SiteInvitation;
 
 const PREFIX = '#npa=';
 // These defaults belong to this link version, independent of personal/app defaults.
@@ -46,7 +54,8 @@ function validate(value: unknown): SharedPlan {
     !among(p.moonAlt, [0, 5, 10, 15] as const) ||
     !among(p.crescent, [0, 0.1, 0.2, 0.3] as const) ||
     typeof p.expanded !== 'boolean' ||
-    (p.night !== null && typeof p.night !== 'string')
+    (p.night !== null && typeof p.night !== 'string') ||
+    (p.preview !== undefined && p.preview !== true)
   )
     throw new Error(INVALID);
   const [year, month] = p.start.split('-').map(Number);
@@ -88,15 +97,16 @@ function validate(value: unknown): SharedPlan {
     night: p.night,
     expanded: p.expanded,
     ...(p.site === undefined ? {} : { site: siteRecord(p.site as Site) }),
+    ...(p.preview === true ? { preview: true } : {}),
   };
 }
 
-export function readSharedPlan(hash: string): SharedPlan | null {
+export function readSharedLink(hash: string): SharedLink | null {
   if (!hash.startsWith(PREFIX)) return null;
   if (hash.length > 8192) throw new Error(INVALID);
   try {
     const params = new URLSearchParams(hash.slice(1));
-    if (params.get('npa') === '1') {
+    if (params.get('npa') === '1' || params.get('npa') === '2') {
       for (const key of params.keys())
         if (params.getAll(key).length !== 1) throw new Error(INVALID);
       const number = (key: string, fallback?: number) => {
@@ -108,6 +118,19 @@ export function readSharedPlan(hash: string): SharedPlan | null {
       const expanded = params.get('expanded');
       if (expanded !== null && expanded !== '0' && expanded !== '1') throw new Error(INVALID);
       const hasSite = ['name', 'lat', 'lon', 'tz', 'elevation'].some((key) => params.has(key));
+      const site = {
+        name: params.get('name'),
+        lat: number('lat'),
+        lon: number('lon'),
+        tz: params.get('tz'),
+        ...(params.has('elevation') ? { elevation: number('elevation') } : {}),
+      };
+      if (params.get('npa') === '2') {
+        if (!isSite(site) || site.name.length > 200) throw new Error(INVALID);
+        return { v: 2, site: siteRecord(site) };
+      }
+      const preview = params.get('preview');
+      if (preview !== null && preview !== '1') throw new Error(INVALID);
       return validate({
         v: 1,
         start: params.get('start'),
@@ -121,17 +144,8 @@ export function readSharedPlan(hash: string): SharedPlan | null {
         crescent: number('crescent', 0)! / 100,
         night: params.get('night'),
         expanded: expanded === '1',
-        ...(hasSite
-          ? {
-              site: {
-                name: params.get('name'),
-                lat: number('lat'),
-                lon: number('lon'),
-                tz: params.get('tz'),
-                ...(params.has('elevation') ? { elevation: number('elevation') } : {}),
-              },
-            }
-          : {}),
+        ...(hasSite ? { site } : {}),
+        ...(preview === '1' ? { preview: true } : {}),
       });
     }
     // Keep previously copied JSON links working; new links use readable fields.
@@ -141,20 +155,37 @@ export function readSharedPlan(hash: string): SharedPlan | null {
   }
 }
 
-export function createShareLink(base: string, plan: SharedPlan): string {
-  const clean = validate(plan);
+export function readSharedPlan(hash: string): SharedPlan | null {
+  const link = readSharedLink(hash);
+  return link?.v === 1 ? link : null;
+}
+
+function linkURL(base: string, params: URLSearchParams): string {
   const url = new URL(base);
   url.search = '';
+  // A slash is safe in a fragment value; keep IANA names readable.
+  url.hash = params.toString().replaceAll('%2F', '/');
+  if (url.hash.length > 8192) throw new Error(INVALID);
+  return url.href;
+}
+
+export function createSiteLink(base: string, site: Site): string {
+  if (!isSite(site) || site.name.length > 200) throw new Error(INVALID);
+  const params = new URLSearchParams({ npa: '2' });
+  for (const [key, value] of Object.entries(siteRecord(site))) params.set(key, String(value));
+  return linkURL(base, params);
+}
+
+export function createShareLink(base: string, plan: SharedPlan): string {
+  const clean = validate(plan);
   const params = new URLSearchParams({ npa: '1', view: clean.view, start: clean.start });
   if (clean.night) params.set('night', clean.night);
   for (const key of ['riverZoom', 'calZoom', 'calOrient', 'focus', 'moonAlt'] as const)
     if (clean[key] !== DEFAULTS[key]) params.set(key, String(clean[key]));
   if (clean.crescent !== DEFAULTS.crescent) params.set('crescent', String(clean.crescent * 100));
   if (clean.expanded) params.set('expanded', '1');
+  if (clean.preview) params.set('preview', '1');
   if (clean.site)
     for (const [key, value] of Object.entries(clean.site)) params.set(key, String(value));
-  // A slash is safe in a fragment value; keep IANA names like America/Los_Angeles readable.
-  url.hash = params.toString().replaceAll('%2F', '/');
-  if (url.hash.length > 8192) throw new Error(INVALID);
-  return url.href;
+  return linkURL(base, params);
 }

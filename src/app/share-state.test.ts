@@ -1,5 +1,11 @@
 import { expect, it } from 'vitest';
-import { createShareLink, readSharedPlan, type SharedPlan } from './share-state';
+import {
+  createShareLink,
+  createSiteLink,
+  readSharedLink,
+  readSharedPlan,
+  type SharedPlan,
+} from './share-state';
 
 const plan: SharedPlan = {
   v: 1,
@@ -15,6 +21,48 @@ const plan: SharedPlan = {
   expanded: true,
 };
 const hash = (value: unknown) => '#npa=' + encodeURIComponent(JSON.stringify(value));
+
+it('shares a reusable site invitation with no dates, settings, local identity or unrelated URL fields', () => {
+  const site = {
+    name: 'Example & friends',
+    lat: 45,
+    lon: -120,
+    tz: 'America/Los_Angeles',
+    elevation: 500,
+  };
+  const url = new URL(
+    createSiteLink('https://example.test/?docs=overview#old', {
+      ...site,
+      id: 'local',
+    } as typeof site),
+  );
+  expect(url.search).toBe('');
+  expect(url.hash).toContain('#npa=2&name=');
+  expect(url.hash).not.toMatch(/start|night|view|focus|moonAlt|local/);
+  expect(readSharedLink(url.hash)).toEqual({ v: 2, site });
+  expect(readSharedPlan(url.hash)).toBeNull();
+  url.hash += '&start=2020-01&focus=7';
+  expect(readSharedLink(url.hash)).toEqual({ v: 2, site });
+});
+
+it('keeps malformed invitations from changing personal data or echoing coordinates', () => {
+  for (const fragment of [
+    '#npa=2&name=Private&lat=91&lon=-122&tz=Etc/UTC',
+    '#npa=2&name=Private&lat=45&lat=46&lon=-122&tz=Etc/UTC',
+    '#npa=2&name=Private&lat=45&lon=-122&tz=Invalid/Zone',
+  ]) {
+    expect(() => readSharedLink(fragment)).toThrow('saved settings were not changed');
+  }
+});
+
+it('preserves explicit worked-example previews through readable and original JSON links', () => {
+  const preview: SharedPlan = { ...plan, preview: true };
+  const url = new URL(createShareLink('https://example.test/', preview));
+  expect(url.hash).toContain('preview=1');
+  expect(readSharedPlan(url.hash)).toEqual(preview);
+  expect(readSharedPlan(hash(preview))).toEqual(preview);
+  expect(() => readSharedPlan(url.hash + '0')).toThrow();
+});
 
 it('round-trips local evening dates and loaded months without the private site or unrelated URL data', () => {
   const url = new URL(createShareLink('https://example.test/planner/?tracking=old#other', plan));

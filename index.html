@@ -159,6 +159,7 @@
               role="menu"
               aria-label="Planner options"
             >
+              <button class="dropdown-item" id="shareSiteBtn" role="menuitem">Share site…</button>
               <button class="dropdown-item" id="shareBtn" role="menuitem" disabled>
                 Share plan…
               </button>
@@ -215,13 +216,8 @@
       <aside id="sharedNotice" class="shared-notice" aria-label="Shared plan" hidden>
         <p id="sharedNoticeText" role="status"></p>
         <div class="dialog-actions">
-          <button class="btn btn-outline-secondary" id="shareKeepSettings">
-            Save these view settings
-          </button>
-          <button class="btn btn-outline-secondary" id="shareReviewSite">
-            Review site in favorites…
-          </button>
-          <button class="btn btn-outline-secondary" id="shareRestore">Use my saved plan</button>
+          <button class="btn btn-outline-secondary" id="shareAction" hidden></button>
+          <button class="btn btn-outline-secondary" id="shareDismiss">Dismiss</button>
         </div>
       </aside>
 
@@ -658,7 +654,7 @@
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <form class="modal-content" id="shareForm">
           <div class="modal-header">
-            <h2 class="modal-title fs-5" id="shareTitle">Share this plan</h2>
+            <h2 class="modal-title fs-5" id="shareTitle">Share plan</h2>
             <button
               class="btn-close"
               id="shareClose"
@@ -668,11 +664,8 @@
           </div>
           <div class="modal-body">
             <p id="shareContext" class="form-text"></p>
-            <p>
-              The link restores dates, view, focus, planning thresholds and the selected night. By
-              default the recipient uses their own site, so their results may differ from yours.
-            </p>
-            <div class="form-check">
+            <p id="shareDescription"></p>
+            <div class="form-check" id="shareIncludeSiteChoice">
               <input type="checkbox" id="shareIncludeSite" class="form-check-input" /><label
                 class="form-check-label"
                 for="shareIncludeSite"
@@ -680,13 +673,13 @@
               >
             </div>
             <div id="shareSitePreview" hidden>
-              <p><strong>These site fields will be included:</strong></p>
+              <p><strong>Site details in this link</strong></p>
               <dl class="share-site-fields" id="shareSiteFields"></dl>
               <p>
                 The fields above will appear in the copied URL fragment and may remain in browser
-                history. Anyone with the link can read them. Opening the link does not save the site
-                to the recipient’s favorites.
+                history. Anyone with the link can read them.
               </p>
+              <p id="shareSiteBehavior"></p>
             </div>
             <label for="shareLink" class="form-label"
               >Share link<textarea

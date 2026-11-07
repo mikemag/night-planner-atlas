@@ -177,7 +177,7 @@ test('More options supports keyboard dismissal and does not pass keys through to
   await more.press('Enter');
   await expect(page.getByRole('menu', { name: 'Planner options', exact: true })).toBeVisible();
   await expect(more).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.locator('#shareBtn')).toBeFocused();
+  await expect(page.locator('#shareSiteBtn')).toBeFocused();
   await page.keyboard.press('ArrowDown');
   expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(selected);
   await page.keyboard.press('Escape');

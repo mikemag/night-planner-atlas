@@ -137,6 +137,8 @@ for (const width of [1512, 390]) {
     const more = page.locator('#moreBtn');
     await more.focus();
     await more.press('Enter');
+    await expect(page.locator('#shareSiteBtn')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
     await expect(page.locator('#shareBtn')).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(page.locator('#calendarExportBtn')).toBeFocused();
@@ -153,7 +155,7 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#appMenu')).toBeHidden();
     await expect(more).toBeFocused();
     await more.press('ArrowDown');
-    await expect(page.locator('#shareBtn')).toBeFocused();
+    await expect(page.locator('#shareSiteBtn')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.locator('#appMenu')).toBeHidden();
     await expect(more).toBeFocused();
