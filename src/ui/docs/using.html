@@ -11,15 +11,17 @@
   <div
     class="guide-sky-ramp"
     role="img"
-    aria-label="Day, civil, nautical and astronomical twilight, then true dark"
+    aria-label="Day, civil, nautical and astronomical twilight, then astronomical darkness"
   >
     <span data-sky-stage="day">Day</span><span data-sky-stage="civil">Civil</span
-    ><span data-sky-stage="naut">Nautical</span><span data-sky-stage="astro">Astronomical</span
-    ><span data-sky-stage="dark">True dark</span>
+    ><span data-sky-stage="naut">Nautical</span
+    ><span data-sky-stage="astro">Astronomical twilight</span
+    ><span data-sky-stage="dark">Astronomical darkness</span>
   </div>
   <ul>
     <li>
-      <strong>Black</strong> marks moon-free darkness. A gray wash marks moonlight during true dark.
+      <strong>Black</strong> marks astronomical darkness while the Moon is below the horizon. A gray
+      wash marks moonlight during astronomical darkness.
     </li>
     <li>
       <strong>Accepted moonlight</strong> has a green tint in Light and Dark, and a dashed outline
@@ -37,12 +39,13 @@
   <figure class="guide-example" id="simple-example">
     <figcaption>
       <p class="guide-kicker">Example 1 · strict settings</p>
-      <h4>Moon-free throughout true dark</h4>
+      <h4>The whole dark window is usable</h4>
       <p>Friday September 11 → Saturday September 12, 2026</p>
     </figcaption>
     <div data-night-example="simple"></div>
     <p>
-      The Moon stays below the horizon throughout true dark, so the entire black band is usable.
+      The Moon stays below the horizon throughout astronomical darkness, so the entire black band is
+      usable.
     </p>
     <a class="example-link" data-example-link="simple" target="_blank" rel="noopener"
       >Open this example in the planner ↗</a
@@ -116,13 +119,13 @@
   <h3>Planning settings</h3>
   <ul>
     <li>
-      For <strong>strict moon-free time</strong>, keep the Moon threshold at 0° and crescent
-      ignoring off for moon-free time.
+      For <strong>moon-free usable dark</strong>, keep the Moon threshold at 0° and crescent
+      ignoring off.
     </li>
     <li>Raise the <strong>Moon height threshold</strong> to accept time while the Moon is low.</li>
     <li>
-      The <strong>crescent setting</strong> accepts all true dark when the Moon is below your chosen
-      illumination at local midnight.
+      The <strong>crescent setting</strong> accepts all astronomical darkness when the Moon’s
+      illumination at local midnight is below your chosen percentage.
     </li>
     <li>
       <strong>New-moon focus</strong> highlights nights near new moon. The usable windows for each

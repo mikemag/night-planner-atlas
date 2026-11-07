@@ -1,5 +1,5 @@
 import { S, atlas } from '../app/state';
-import { phaseName } from '../model/describe';
+import { noUsableDarkReason, phaseName } from '../model/describe';
 import { fmtClock, fmtDur, nightTitle, SUN_NAMES } from '../model/format';
 import { SUN_EVENTS, solarCrossings, wallH, type Night } from '../model/night';
 import { layoutBoundaryLabels } from '../render/boundary-labels';
@@ -182,7 +182,7 @@ export function annotationChart(n: Night, g: DetailGeometry): SVGSVGElement {
   }
   if (!durations.length) {
     const text = svgElement('text', { x: g.width / 2, y: 25, class: 'river-no-window' });
-    text.textContent = n.td ? 'Moon up through all true dark' : 'No astronomical darkness';
+    text.textContent = noUsableDarkReason(n);
     const textWidth = tw(text.textContent, 12, 500) + 12;
     svg.appendChild(
       svgElement('rect', {

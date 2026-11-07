@@ -5,7 +5,7 @@ import { MS_H, MS_M } from './time';
 export interface ObservingTrip {
   nights: Night[];
   usable: number;
-  trueDark: number;
+  astronomicalDarkness: number;
   longest: number;
 }
 
@@ -19,7 +19,7 @@ export interface TripPeriod {
   first: Night;
   last: Night;
   partial: boolean;
-  trueDark: number;
+  astronomicalDarkness: number;
   usable: number;
   candidates: TripWeekend[];
   bestWeekend: ObservingTrip | null;
@@ -30,7 +30,7 @@ function trip(nights: Night[]): ObservingTrip {
   return {
     nights,
     usable: nights.reduce((total, n) => total + n.mfMs, 0),
-    trueDark: nights.reduce((total, n) => total + n.tdMs, 0),
+    astronomicalDarkness: nights.reduce((total, n) => total + n.tdMs, 0),
     longest: Math.max(0, ...nights.flatMap((n) => n.mf.map(([start, end]) => end - start))),
   };
 }
@@ -65,7 +65,7 @@ export function darkWeekendPeriods(range: NightRange): TripPeriod[] {
       first: nights[first],
       last: nights[last],
       partial: first !== cycle.first || last !== cycle.last,
-      trueDark: owned.reduce((total, n) => total + n.tdMs, 0),
+      astronomicalDarkness: owned.reduce((total, n) => total + n.tdMs, 0),
       usable: owned.reduce((total, n) => total + n.mfMs, 0),
       candidates,
       bestWeekend,

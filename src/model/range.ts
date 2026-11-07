@@ -32,7 +32,7 @@ export interface Quarter {
   i: number;
 }
 
-/** A Friday night index and the combined moon-free time of it and the Saturday after. */
+/** A Friday night index and the combined usable dark of Friday and Saturday. */
 export interface WeekendPick {
   i: number;
   sum: number;

@@ -6,7 +6,7 @@
     <title>Night Planner Atlas</title>
     <meta
       name="description"
-      content="Plan dark-sky nights by month and year: twilight, moonlight and moon-free true dark for any site, in River, Calendar and Lunations views."
+      content="Plan dark-sky nights by month and year with twilight, astronomical darkness, moonlight and usable dark for any observing site."
     />
     <meta name="color-scheme" content="light dark" />
     <script>
@@ -259,7 +259,7 @@
                   <div class="legend-item" role="listitem">
                     <span class="legend-term"
                       ><i class="sw" style="background: var(--sky-astro)" aria-hidden="true"></i
-                      >Astronomical</span
+                      >Astronomical twilight</span
                     >
                     <span class="legend-detail"
                       >Between the nautical and astronomical twilight boundaries.</span
@@ -267,12 +267,12 @@
                   </div>
                   <div class="legend-item" role="listitem">
                     <span class="legend-term"
-                      ><i class="sw" style="background: var(--sky-dark)" aria-hidden="true"></i>True
-                      dark</span
+                      ><i class="sw" style="background: var(--sky-dark)" aria-hidden="true"></i
+                      >Astronomical darkness</span
                     >
                     <span class="legend-detail"
-                      >From astronomical dusk to dawn, with the Sun at least 18° below the horizon.
-                      Moonlight can brighten this interval.</span
+                      >The Sun’s center is more than 18° below the horizon. Moonlight can brighten
+                      this interval.</span
                     >
                   </div>
                 </div>
@@ -281,8 +281,8 @@
                     ><i class="sw" id="moonSw" aria-hidden="true"></i>Moonlight</span
                   >
                   <span class="legend-detail"
-                    >The Moon’s upper edge is above the natural horizon during true dark. Brighter
-                    means fuller.</span
+                    >The Moon’s upper edge is above the natural horizon during astronomical
+                    darkness. Brighter means fuller.</span
                   >
                 </div>
                 <div class="legend-item" id="acceptedMoonKey" role="listitem" hidden>
@@ -291,7 +291,7 @@
                     >Accepted moonlight</span
                   >
                   <span class="legend-detail"
-                    >Moonlit true-dark time accepted by your altitude or crescent settings.
+                    >Moonlit time within astronomical darkness that meets your Moon settings.
                     Brightness still follows illumination; Observing adds a dashed boundary.</span
                   >
                 </div>
@@ -301,8 +301,8 @@
                     >Usable dark</span
                   >
                   <span class="legend-detail"
-                    >Duration bars and window brackets show time accepted by your settings. Strict
-                    settings count only moon-free true dark.</span
+                    >Duration bars and window brackets show the part of astronomical darkness that
+                    meets your Moon settings. By default, the Moon must be below the horizon.</span
                   >
                 </div>
               </div>

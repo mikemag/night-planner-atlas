@@ -18,6 +18,7 @@ type WeekendEvent = {
   moon: number;
   nights: Night[];
   usable: number;
+  astronomicalDarkness: number;
   partial: boolean;
 };
 type NightEvent = { kind: 'nights'; start: string; night: Night };
@@ -65,6 +66,7 @@ export function selectCalendarEvents(
         moon: period.moon,
         nights: pick.nights,
         usable: pick.usable,
+        astronomicalDarkness: pick.astronomicalDarkness,
         partial: period.partial,
       });
   }
@@ -103,9 +105,9 @@ export function calendarEventDescriptions(zone: string) {
     intervals.map(([a, b]) => `${local.format(a)} – ${local.format(b)}`).join('\n');
   const light = (n: Night) =>
     `Moon at site-local midnight: ${Math.round(n.illum * 100)}% lit · ${phaseName(n)}`;
-  const trueDark = (n: Night) =>
+  const astronomicalDarkness = (n: Night) =>
     n.tdMs
-      ? `True dark: ${fmtDur(n.tdMs)}\n${windows(n.sunBelow.astronomical)}`
+      ? `Astronomical darkness: ${fmtDur(n.tdMs)}\n${windows(n.sunBelow.astronomical)}`
       : 'No astronomical darkness';
   const sky = (n: Night) => [
     ...SUN_EVENTS.map(
@@ -119,7 +121,12 @@ export function calendarEventDescriptions(zone: string) {
   ];
   const usable = (n: Night) =>
     n.mfMs ? `Usable dark: ${fmtDur(n.mfMs)}\n${windows(n.mf)}` : 'No usable dark';
-  const nightHighlights = (n: Night) => [nightTitle(n), usable(n), trueDark(n), light(n)];
+  const nightHighlights = (n: Night) => [
+    nightTitle(n),
+    usable(n),
+    astronomicalDarkness(n),
+    light(n),
+  ];
   return (
     event: CalendarEvent,
   ): {
@@ -145,17 +152,22 @@ export function calendarEventDescriptions(zone: string) {
     if (event.kind === 'nights') {
       const n = event.night;
       return {
-        title: `NPA · ${fmtDur(n.mfMs)} usable · ${Math.round(n.illum * 100)}% Moon`,
+        title: `NPA · ${fmtDur(n.mfMs)} usable dark · ${Math.round(n.illum * 100)}% Moon`,
         highlights: nightHighlights(n),
         details: sky(n),
       };
     }
     return {
-      title: `Best dark weekend · ${fmtDur(event.usable)} usable`,
-      highlights: event.nights.map((n) => `${WD3[n.dow]} ${MON3[n.m - 1]} ${n.d} · ${usable(n)}`),
+      title: `Best dark weekend · ${fmtDur(event.usable)} usable dark`,
+      highlights: [
+        `Astronomical darkness: ${fmtDur(event.astronomicalDarkness)}`,
+        ...event.nights.map((n) => `${WD3[n.dow]} ${MON3[n.m - 1]} ${n.d} · ${usable(n)}`),
+      ],
       details: [
         `Best Fri–Sat by combined usable dark for the ${precise.format(event.moon)} new moon${event.partial ? ' (among loaded nights)' : ''}.`,
-        ...event.nights.map((n) => [nightTitle(n), trueDark(n), light(n), ...sky(n)].join('\n')),
+        ...event.nights.map((n) =>
+          [nightTitle(n), astronomicalDarkness(n), light(n), ...sky(n)].join('\n'),
+        ),
       ],
     };
   };

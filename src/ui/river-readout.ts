@@ -16,14 +16,10 @@ export function updateRiverReadout(): void {
       const alt = moonAltAt(n, hover.hh);
       const moon =
         alt == null ? '' : ` · Moon center ${Math.round(alt).toString().replace('-', '−')}°`;
-      value = `${date} · ${fmtClock(hover.hh)} · ${phaseAt(n, hover.hh).replace('True dark', 'Astronomical darkness')}${moon}`;
+      value = `${date} · ${fmtClock(hover.hh)} · ${phaseAt(n, hover.hh)}${moon}`;
     } else {
-      const total = n.mfMs
-        ? `${fmtDur(n.mfMs)} usable dark`
-        : n.tdMs
-          ? 'No usable dark'
-          : 'No true dark';
-      value = `${date} · ${total} · ${windowsText(n)}`;
+      const total = n.mfMs ? `${fmtDur(n.mfMs)} usable dark · ` : '';
+      value = `${date} · ${total}${windowsText(n)}`;
     }
     const event = atlas().quarters.find((q) => {
       if (q.q !== 0) return false;

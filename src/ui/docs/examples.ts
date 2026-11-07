@@ -131,7 +131,7 @@ export function renderExamples(): void {
     host.replaceChildren(timeline(n, Math.max(240, Math.floor(host.clientWidth))));
     const summary = document.createElement('p');
     summary.className = 'example-summary';
-    summary.textContent = `${fmtDur(n.mfMs)} usable · ${n.mfH.map(([a, b]) => `${fmtClock(a)}–${fmtClock(b)}`).join(' · ')}`;
+    summary.textContent = `${fmtDur(n.mfMs)} usable dark · ${n.mfH.map(([a, b]) => `${fmtClock(a)}–${fmtClock(b)}`).join(' · ')}`;
     host.append(summary);
     const link = document.querySelector<HTMLAnchorElement>(`[data-example-link="${key}"]`)!;
     link.href = createShareLink(location.href, {
@@ -151,7 +151,7 @@ export function renderExamples(): void {
   document.getElementById('exampleExplanation')!.textContent = {
     strict: 'The usable window ends at moonrise.',
     height: 'The 5° cutoff accepts 40 minutes of low moonlight.',
-    crescent: 'The crescent setting accepts the full 7h 17m of true dark.',
+    crescent: 'The crescent setting counts all 7h 17m of astronomical darkness as usable dark.',
   }[choice];
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-example-setting]')) {
     button.setAttribute('aria-pressed', String(button.dataset.exampleSetting === choice));

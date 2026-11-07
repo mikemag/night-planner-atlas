@@ -10,26 +10,26 @@ GitHub issues.
 Each night is labeled by the local date of its evening and runs from local noon to the next local
 noon. For every night the site knows the eight sun events (sunset; civil, nautical and
 astronomical dusk; astronomical, nautical and civil dawn; sunrise), the moon's altitude through the
-night, and its illumination. From those it derives the headline number: **moon-free true dark**,
-the part of astronomical darkness when the moon is down. [night-model.md](night-model.md) defines
-all of this precisely.
+night, and its illumination. The Sun determines **astronomical darkness**. The Moon settings
+determine which parts count as **usable dark**, the headline number. By default, usable dark
+requires the Moon to be below the horizon. [night-model.md](night-model.md) defines both measures.
 
 ## Visual language
 
 One encoding everywhere, so a night looks the same in every view and in the single-night chart:
 
 - **Sky darkness** is an ordered ramp that darkens monotonically: day, civil twilight (warm, like
-  the dusk sky), nautical (blue), astronomical (indigo), true dark (near black). Lightness carries
-  the order; hue only helps tell neighbors apart.
-- **Moonlight** washes true dark toward a warm grey, stronger the fuller the moon. It is scaled so
+  the dusk sky), nautical twilight (blue), astronomical twilight (indigo), and astronomical
+  darkness (near black). Lightness carries the order; hue only helps tell neighbors apart.
+- **Moonlight** washes astronomical darkness toward a warm grey, stronger the fuller the moon. It is scaled so
   a full moon looks about as bright as late nautical twilight, roughly its real effect on sky
-  brightness, while a thin crescent barely lifts the black. The wash is drawn only over true dark,
+  brightness, while a thin crescent barely lifts the black. The wash is drawn over astronomical darkness,
   where moonlight is what matters. It follows the Moon’s upper edge at the natural horizon (0°),
   independently of planning thresholds.
-- **Moon-free true dark** is black, without an edge marker. Green identifies duration bars, total markers and usable-window brackets. Small numeric
+- **Moon-free astronomical darkness** is black. Green identifies duration bars, total markers and usable-window brackets. Small numeric
   labels use normal ink for contrast; the night bands retain their sky-stage colors.
 - **Accepted moonlight** uses a green wash with the same illumination-based opacity as ordinary
-  moonlight. Only the intersection of natural-horizon moonlight, true dark and accepted planning
+  moonlight. Only the intersection of natural-horizon moonlight, astronomical darkness and accepted planning
   windows is green. The green tint replaces the ordinary wash there rather than layering over it,
   so brightness continues to represent illumination. Raising the Moon-altitude threshold or ignoring
   a crescent can add green time; truly moon-free time stays plain black. Night details use the same
@@ -115,7 +115,7 @@ flattened.
 - **Gutters.** The left gutter holds date and weekday (weekends tinted and bold) and a moon phase
   glyph, replaced by a tick for Year's new-moon event rows. The first of a month uses its month
   name in place of the weekday. On the right, a bar and
-  value give moon-free duration per night, in hours and minutes matching the night detail (for
+  value give usable dark per night, in hours and minutes matching the night detail (for
   example, "8h 5m"). The duration column is wider than in Year zoom to fit these values on phones.
   The pinned axis names the top visible month (abbreviated
   with its year on narrow screens). In Month zoom on desktop, a minimap of the whole range
@@ -132,7 +132,7 @@ flattened.
   the pointed-at date, site-local clock time, sky stage and explicitly labeled Moon center
   altitude in Month. "Astronomical darkness" describes the sky stage independently of
   whether the Moon is up. In Year, or when pointing at a date or duration gutter, it shows the
-  night's moon-free duration and full window times (or why there is none). The crosshair and
+  night's usable dark duration and full window times (or why there is none). The crosshair and
   axis clock label remain. Leaving the chart clears pointer information; clicking, tapping or
   keyboard navigation shows the selected night's summary without requiring hover. Moving the
   pointer previews other nights without changing selection. The readout has
@@ -183,7 +183,7 @@ Friday/Saturday coloring do not appear in Month or Year.
 - **Week detail.** Seven nights share a clock axis from their earliest sunset to latest sunrise,
   padded to half hours. Evening is at the top and morning below. The shared sky/Moon renderer
   supplies the same colors and accepted-moonlight treatment as River and Lunations. Time labels
-  mark the painted transitions: sunset, twilight levels, sunrise, and the edges between true dark,
+  mark the painted transitions: sunset, twilight levels, sunrise, and the edges between astronomical darkness,
   ordinary moonlight and accepted moonlight. Moon rise/set events outside the dark region receive
   no extra labels. Labels show only the time: the bands already identify the boundaries.
   A label stays on its boundary whenever it fits, with no connector. Crowded labels move apart and
@@ -263,7 +263,7 @@ New-moon focus crops each cycle to ±N without changing ownership.
 A fourth view compares the best Fri–Sat and Thu–Sun trips side by side for every new moon in the
 loaded range. The list opens near tonight when the range contains the current date. It shares the
 site, range and Moon settings, and its results are independent of new-moon focus. Each row shows
-the exact local new moon, cycle coverage and true and usable dark.
+the exact local new moon, cycle coverage, astronomical darkness, and usable dark.
 Disclosures show every eligible weekend, the gain from adding Thursday and Sunday on the same
 weekend, and the separate usable windows on each night. An amber badge marks the best dates for
 each trip length, and the summary calls out when the preferred weekend changes. Trip durations
@@ -391,7 +391,7 @@ Lunations retains its focus window and opens the night detail even if the date f
   All latitudes from −90° to +90° are accepted. When sunrise or sunset is absent, every view uses
   a noon-to-noon clock axis. Solar shading follows intervals below each threshold, including stages
   that continue throughout the period and twilight without a sunrise. Clipped noon boundaries do
-  not invent rise/set events. The same intervals drive sky-color labels, true-dark totals and
+  not invent rise/set events. The same intervals drive sky-color labels, astronomical darkness totals and
   moonlight in every view. Calendar Week retains the full period for these cases too.
   In the editor, choosing a favorite fills a draft; Save & use applies its complete record.
   Cancel and Escape discard form edits and return focus to the opener.

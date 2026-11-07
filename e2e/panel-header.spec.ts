@@ -87,6 +87,8 @@ for (const width of [1512, 390]) {
     await expect(popup).toBeVisible();
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     await expect(popup.locator('#legend')).toBeVisible();
+    await expect(popup.getByText('Astronomical twilight', { exact: true })).toBeVisible();
+    await expect(popup.getByText('Astronomical darkness', { exact: true })).toBeVisible();
     await expect(popup).toContainText('Brighter means fuller.');
     await expect(popup).not.toContainText('New moon');
     await expect(page.locator('#acceptedMoonKey')).toBeHidden();

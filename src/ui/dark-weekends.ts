@@ -73,7 +73,8 @@ function nightList(trip: ObservingTrip, period: TripPeriod): string {
   return `<div class="trip-night-details">
     <p class="trip-muted">
       <strong>${trip.nights.length === 4 ? 'Thu–Sun' : 'Fri–Sat'} · ${tripDates(trip)}</strong>
-      · ${fmtDur(trip.trueDark)} true dark · ${fmtDur(trip.usable / trip.nights.length)} usable per night
+      · ${fmtDur(trip.astronomicalDarkness)} astronomical darkness · ${fmtDur(trip.usable)} usable dark
+      · ${fmtDur(trip.usable / trip.nights.length)} usable per night
       · ${fmtDur(trip.longest)} longest window
     </p>
     <ul>${trip.nights
@@ -81,7 +82,7 @@ function nightList(trip: ObservingTrip, period: TripPeriod): string {
         (n) => `<li>
           <strong>${WD3[n.dow]} ${date(n)}</strong>
           <div>${windowsText(n)}
-            <div class="trip-muted">${fmtDur(n.mfMs)} usable · ${fmtDur(n.tdMs)} true dark${n.dst ? ' · Clock change' : ''}${n.id < period.first.id || n.id > period.last.id ? ' · Outside cycle' : ''}</div>
+            <div class="trip-muted">${fmtDur(n.tdMs)} astronomical darkness · ${fmtDur(n.mfMs)} usable dark${n.dst ? ' · Clock change' : ''}${n.id < period.first.id || n.id > period.last.id ? ' · Outside cycle' : ''}</div>
           </div>
         </li>`,
       )
@@ -159,7 +160,7 @@ function periodRow(period: TripPeriod, open: Set<string>, timeZone: string): str
         <span class="trip-label">New moon</span>
         <h3 id="trip-moon-${period.moon}">${moonDate}</h3>
         <p class="trip-muted">${moonTime} · ${period.partial ? 'Partial cycle' : 'Cycle'} ${span(period.first, period.last)}</p>
-        <p class="trip-muted">${fmtDur(period.trueDark)} true dark · ${fmtDur(period.usable)} usable in ${period.partial ? 'loaded dates' : 'cycle'}</p>
+        <p class="trip-muted">${fmtDur(period.astronomicalDarkness)} astronomical darkness · ${fmtDur(period.usable)} usable dark in ${period.partial ? 'loaded dates' : 'cycle'}</p>
       </div>
       ${pick('Best Fri–Sat', bestWeekend)}
       ${pick('Best Thu–Sun', bestExtended)}

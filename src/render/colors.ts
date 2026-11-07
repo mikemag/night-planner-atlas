@@ -107,7 +107,7 @@ export function inkOn(hex: string): string {
     : '#ffffff';
 }
 
-/** Opacity of the moonlight wash over true dark: a full moon reads like late nautical twilight. */
+/** Opacity of the moonlight wash during astronomical darkness. A full Moon reads like late nautical twilight. */
 export function moonAlpha(illum: number): number {
   return 0.17 + 0.4 * Math.pow(illum, 0.8);
 }

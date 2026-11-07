@@ -210,7 +210,7 @@ class RiverView implements CanvasView {
           sunset != null && sunrise != null ? (sunset + sunrise) / 2 : (ax.start + ax.end) / 2;
         newMoonLabels.push({ x: X(center), y: y + (barH - gap) / 2, lines });
       }
-      // right gutter: moon-free hours
+      // Right gutter: usable dark
       const bx = x1 + 8,
         bw = this.GR - (S.riverZoom === 'year' ? 44 : 72);
       const bh = Math.max(1, Math.min(barH - gap - 2, 9));

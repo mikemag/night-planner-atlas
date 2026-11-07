@@ -40,7 +40,7 @@ export function prepareLunationsHeaders(r: NightRange, N: number): void {
     const duration = document.createElement('strong');
     duration.textContent = fmtDur(L.total);
     const caption = document.createElement('span');
-    caption.textContent = N >= FULL_CYCLE ? 'usable · full cycle' : `usable in ±${N}`;
+    caption.textContent = N >= FULL_CYCLE ? 'usable dark · full cycle' : `usable dark in ±${N}`;
     summary.append(duration, caption);
     const explanation = document.createElement('p');
     explanation.textContent = `${fmtDur(L.total)} is the sum of usable dark across the ${count} displayed evening dates: ${range}. Planning thresholds apply. Separate windows and nights are added together.${N >= FULL_CYCLE ? ' Each night belongs to the new moon nearest its site-local midnight; cycles do not overlap. Empty edge positions are outside this cycle.' : ''}${partial ? ` Partial range: ${count} of ${window.last - window.first + 1} nights are loaded.` : ''}`;

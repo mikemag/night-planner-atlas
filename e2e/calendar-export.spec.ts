@@ -28,7 +28,9 @@ test('downloads the previewed calendar events with site privacy off by default',
   await dialog.getByRole('spinbutton').fill('645');
   await expect(dialog.getByText('5 events in file')).toBeVisible();
   await dialog.getByLabel('Preview an event').selectOption('nights');
-  await expect(dialog.getByRole('heading', { name: /NPA · .* usable · .*% Moon/ })).toBeVisible();
+  await expect(
+    dialog.getByRole('heading', { name: /NPA · .* usable dark · .*% Moon/ }),
+  ).toBeVisible();
   await dialog.getByText('More event details', { exact: true }).click();
   await expect(dialog.getByText(/Sunrise: Nov 7/)).toBeVisible();
   await dialog.getByLabel('Preview an event').selectOption('moons');
@@ -63,6 +65,7 @@ test('downloads the previewed calendar events with site privacy off by default',
   expect(newMoon).toContain('Sun Nov 8 → Mon Nov 9');
   expect(newMoon).toContain('UTC');
   expect(newMoon).toContain('Usable dark:');
+  expect(newMoon).toContain('Astronomical darkness:');
   expect(newMoon).toContain('Sunrise: Nov 9');
   expect(privateFile).toContain(
     'DTSTART;VALUE=DATE:20261106\r\nDTEND;VALUE=DATE:20261108\r\nTRANSP:TRANSPARENT\r\nSUMMARY:Best dark weekend',

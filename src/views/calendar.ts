@@ -188,7 +188,7 @@ class CalendarView implements CanvasView {
       this.headings.push({
         key: mo.key,
         title: `${MONL[mo.m - 1]} ${mo.y}`,
-        context: `${fmtDur(mo.total)} usable`,
+        context: `${fmtDur(mo.total)} usable dark`,
         y,
         h: this.TOP,
       });
@@ -691,7 +691,7 @@ class CalendarView implements CanvasView {
     const bars = !this.yr.compact || this.blocks.some((b) => b.t === 'mini' && b.h >= 74);
     text(
       bars
-        ? `Green: usable hours · 0–${this.scale()}h · ${this.yr.compact ? 'New moon dates' : '● New moon'}`
+        ? `Green: usable dark · 0–${this.scale()}h · ${this.yr.compact ? 'New moon dates' : '● New moon'}`
         : 'New moon dates · select a month',
       this.PAD,
       this.total - 12,

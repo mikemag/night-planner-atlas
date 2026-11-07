@@ -53,7 +53,7 @@ describe('polar observing nights', () => {
     expect(n.sunBelow.sun).toEqual([[n.noon, n.nextNoon]]);
     expect(n.sunBelow.civil).toEqual([[n.noon, n.nextNoon]]);
     expect(phaseAt(n, 0)).toBe('Nautical twilight');
-    expect(phaseAt(n, 12)).toBe('True dark');
+    expect(phaseAt(n, 12)).toBe('Astronomical darkness');
     expect(n.tdMs / MS_H).toBeGreaterThan(15);
     expect(n.tdMs / MS_H).toBeLessThan(16);
     expect(n.S0).toBe(n.noon);
@@ -66,12 +66,12 @@ describe('polar observing nights', () => {
     [-85, 6],
     [-90, 6],
   ])(
-    '%i° latitude: counts continuous true dark through the complete observing period',
+    '%i° latitude: counts continuous astronomical darkness through the complete observing period',
     (lat, month) => {
       const n = night({ ...KHO, lat, lon: 0, tz: 'Etc/UTC' }, month, 21, true);
       expect(n.sunBelow.astronomical).toEqual([[n.noon, n.nextNoon]]);
       expect(n.tdMs).toBe(MS_D);
-      expect(phaseAt(n, 24)).toBe('True dark');
+      expect(phaseAt(n, 24)).toBe('Astronomical darkness');
       expect(n.mf).toEqual([[n.noon, n.nextNoon]]);
       expect(n.mfMs).toBe(MS_D);
     },

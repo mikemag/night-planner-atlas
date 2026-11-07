@@ -88,7 +88,7 @@ export interface Night {
   nmOff: number;
   moonUp: Interval[];
   moonUpH: Interval[];
-  /** First true-dark interval; sunBelow.astronomical contains every interval. */
+  /** First interval of astronomical darkness; sunBelow.astronomical contains every interval. */
   td: Interval | null;
   tdH: Interval | null;
   tdMs: number;
@@ -292,7 +292,7 @@ export function solarCrossings(n: Night): Array<{ event: SunEvent; t: number }> 
   });
 }
 
-/** Fill in true dark, moon-up and moon-free intervals under the given thresholds. */
+/** Fill in astronomical darkness, Moon-up intervals, and usable dark under the given thresholds. */
 export function deriveNight(n: Night, th: Thresholds): void {
   n.moonUp = n.moonWindows[th.moonAlt].above;
   n.moonUpH = n.moonUp.map(([a, b]): Interval => [wallH(a, n), wallH(b, n)]);

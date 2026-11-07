@@ -412,7 +412,7 @@ test('no-dark and split-window nights retain useful inline explanations', async 
   await open(page, 390, null, true);
   await page.locator('#cv').press('Enter');
   await expect(page.locator('#lunationsDetail')).toContainText('No astronomical darkness');
-  await expect(page.locator('#riverReadout')).toContainText('No true dark');
+  await expect(page.locator('#riverReadout')).toContainText('No astronomical darkness');
   await page.locator('#moonSettingsSummary').click();
   await page.locator('#moonAltSel').selectOption('15');
   await page.evaluate(() => {

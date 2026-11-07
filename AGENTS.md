@@ -1,8 +1,9 @@
 # Night Planner Atlas agent guidance
 
 Night Planner Atlas is a static website for planning dark-sky nights. For any site it shows
-twilight, moonlight and moon-free true dark night by night, across months and years, in several
-views. It is Mike's project, developed with agents. It is private for now and will become public.
+twilight, astronomical darkness, moonlight and usable dark night by night, across months and
+years, in several views. It is Mike's project, developed with agents. It is private for now and
+will become public.
 
 ## Orientation
 

@@ -1,9 +1,9 @@
 # Night Planner Atlas
 
 Plan dark-sky nights by the month and the year. For any site, Night Planner Atlas shows each
-night's twilight stages, when the moon is up, and how much **moon-free true dark** there is. The
-layout shows how that shape shifts across weeks, lunar cycles and seasons, so you can pick the
-nights worth the drive to a dark site.
+night's twilight stages, when the Moon is up, and how much **usable dark** there is. Usable dark
+is the part of astronomical darkness that meets your Moon settings. The views show how these
+windows shift across weeks, lunar cycles, and seasons.
 
 ![River view: one row per night, clock time across](docs/images/river-month.png)
 

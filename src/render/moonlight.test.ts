@@ -33,7 +33,7 @@ describe('physical moonlight and accepted moonlit time', () => {
       accepted: [],
     });
   });
-  it('leaves strict moon-free windows plain black, clipping the wash to true dark', () => {
+  it('leaves strict moon-free windows plain black, clipping the wash to astronomical darkness', () => {
     expect(
       bands(
         [10, 90],
@@ -72,7 +72,7 @@ describe('physical moonlight and accepted moonlit time', () => {
       ],
     });
   });
-  it('ignoring a crescent colors all of its moonlit true dark', () => {
+  it('ignoring a crescent colors all of its moonlit astronomical darkness', () => {
     expect(
       bands(
         [10, 90],
@@ -90,7 +90,7 @@ describe('physical moonlight and accepted moonlit time', () => {
       ],
     });
   });
-  it('draws no moonlight bands without true dark or while the Moon is down', () => {
+  it('draws no moonlight bands without astronomical darkness or while the Moon is down', () => {
     expect(bands(null, [], [[0, 100]])).toEqual({ ordinary: [], accepted: [] });
     expect(bands([10, 90], [[10, 90]], [])).toEqual({ ordinary: [], accepted: [] });
   });

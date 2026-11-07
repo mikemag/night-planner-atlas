@@ -314,13 +314,13 @@ test('expanded facts stay accurate for no-window nights, clock changes and ignor
     }, id);
   await choose('2026-09-25');
   await expect(detail(page).locator('.river-no-window')).toHaveText(
-    'Moon up through all true dark',
+    'No usable dark with these Moon settings',
   );
   await expect(detail(page)).not.toContainText('0m usable dark');
   await expect(detail(page).locator('.river-detail-note')).not.toContainText(
-    'Moon up through all true dark',
+    'No usable dark with these Moon settings',
   );
-  await expect(detail(page)).toContainText('Moon up through all true dark');
+  await expect(detail(page)).toContainText('No usable dark with these Moon settings');
   await choose('2026-10-31');
   await expect(detail(page)).toContainText('Clocks change · elapsed durations');
   if (process.env.SCREENSHOTS)

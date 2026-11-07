@@ -108,7 +108,7 @@ async function sharedDetail(page: Page) {
     if (n.evH[key] != null) await expect(detail).toContainText(fmtClock(n.evH[key]));
   for (const t of n.mfH.flat()) await expect(detail).toContainText(fmtClock(t));
   await expect(page.locator('#riverReadout')).toContainText(
-    n.mfMs ? `${fmtDur(n.mfMs)} usable dark` : 'No true dark',
+    n.mfMs ? `${fmtDur(n.mfMs)} usable dark` : 'No astronomical darkness',
   );
 }
 
@@ -337,7 +337,7 @@ for (const width of [1512, 390]) {
         daylightLabels: a.calendarRows.annotations.filter((e) => e.i === daylightMoon).length,
       };
     });
-    // A Moon intrusion in true dark has a painted edge; daytime rise/set adds no extra label.
+    // A Moon intrusion during astronomical darkness has a painted edge; daytime rise/set adds no extra label.
     expect(paintedEdges.darkTimes).toContain(fmtClockS(paintedEdges.intrusion));
     expect(paintedEdges.daylightLabels).toBe(8);
     const night = await selected(page);

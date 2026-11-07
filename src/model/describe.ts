@@ -15,7 +15,7 @@ export function phaseName(n: Night): string {
 /** Sky stage at `hh` wall-clock hours after local noon. */
 export function phaseAt(n: Night, hh: number): string {
   return {
-    astronomical: 'True dark',
+    astronomical: 'Astronomical darkness',
     nautical: 'Astronomical twilight',
     civil: 'Nautical twilight',
     sun: 'Civil twilight',
@@ -41,8 +41,8 @@ export function nightFacts(n: Night): string[] {
     out: string[] = [];
   out.push(
     n.td
-      ? `Dark ${n.sunBelow.astronomical.map(([a, b]) => `${fmtClockS(wallH(a, n))}–${fmtClockS(wallH(b, n))}`).join(', ')}`
-      : 'No true dark',
+      ? `Astronomical darkness ${n.sunBelow.astronomical.map(([a, b]) => `${fmtClockS(wallH(a, n))}–${fmtClockS(wallH(b, n))}`).join(', ')}`
+      : 'No astronomical darkness',
   );
   const inNight = (t: number | null): t is number =>
     t != null && n.sunBelow.sun.some(([a, b]) => t > a && t < b);
@@ -62,10 +62,14 @@ export function nightFacts(n: Night): string[] {
   return out;
 }
 
-/** The night's moon-free windows as text, or why there are none. */
+export function noUsableDarkReason(n: Night): string {
+  return n.td ? 'No usable dark with these Moon settings' : 'No astronomical darkness';
+}
+
+/** The night's usable windows as text, or why there are none. */
 export function windowsText(n: Night): string {
-  if (!n.td) return 'No astronomical darkness this night';
+  if (!n.td) return noUsableDarkReason(n);
   if (!n.mfH.length)
-    return `Moon up through all true dark (${n.sunBelow.astronomical.map(([a, b]) => `${fmtClock(wallH(a, n))} – ${fmtClock(wallH(b, n))}`).join(' · ')})`;
+    return `${noUsableDarkReason(n)} · Astronomical darkness ${n.sunBelow.astronomical.map(([a, b]) => `${fmtClock(wallH(a, n))} – ${fmtClock(wallH(b, n))}`).join(' · ')}`;
   return n.mfH.map(([a, b]) => `${fmtClock(a)} – ${fmtClock(b)}`).join('  ·  ');
 }

@@ -2,7 +2,7 @@
   "name": "night-planner-atlas",
   "version": "0.1.0",
   "private": true,
-  "description": "Plan dark-sky nights by month and year: twilight, moonlight and moon-free true dark for any site.",
+  "description": "Plan dark-sky nights by month and year with twilight, astronomical darkness, moonlight and usable dark for any site.",
   "type": "module",
   "engines": {
     "node": ">=24.11"

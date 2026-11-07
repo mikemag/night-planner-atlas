@@ -107,7 +107,7 @@ describe('clock changes', () => {
   });
 });
 
-describe('nights without true dark', () => {
+describe('nights without astronomical darkness', () => {
   it('Edinburgh at midsummer never gets past nautical twilight', () => {
     const n = night(EDINBURGH, '2027-06-20');
     expect(n.ev.sunset).not.toBeNull();
@@ -145,7 +145,7 @@ describe('moon-free intervals', () => {
     expect(subtract([0, H], [[2 * H, 3 * H]])).toEqual([[0, H]]);
   });
 
-  it('a new-moon night is moon-free for all of its true dark', () => {
+  it('a new-moon night is moon-free throughout astronomical darkness', () => {
     const n = night(SEATTLE, '2026-10-09');
     expect(phaseName(n)).toBe('New moon');
     expect(n.td).not.toBeNull();
@@ -153,7 +153,7 @@ describe('moon-free intervals', () => {
     expect(n.mfMs).toBe(n.tdMs);
   });
 
-  it('a full-moon night has no moon-free true dark', () => {
+  it('a full-moon night has no usable dark under default settings', () => {
     const n = night(SEATTLE, '2026-10-25');
     expect(phaseName(n)).toBe('Full moon');
     expect(n.tdMs).toBeGreaterThan(9 * H);

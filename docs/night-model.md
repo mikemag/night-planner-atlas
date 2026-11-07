@@ -61,14 +61,13 @@ below it. Ordered downward/upward crossings then define **all intervals below th
 clipped to the observing period. Further crossings are retained on long clock-change days.
 The same intervals drive shading and sky-stage readouts in every view. A stage can continue
 throughout the period without either boundary event. Polar night can still contain midday
-twilight; it is not automatically 24 hours of true dark. The views label periods without
-astronomical darkness, for example "No true dark".
+twilight. The views label nights when the Sun never gets below −18° as "No astronomical darkness".
 
-## True dark
+## Astronomical darkness
 
 All intervals below −18°, clipped to the noon-to-noon period. Normally this is astronomical
 dusk to astronomical dawn; it can also be the entire period, or two pieces when the selected
-clock zone puts noon inside true dark. The total sums elapsed time across every piece, including
+clock zone puts noon inside astronomical darkness. The total sums elapsed time across every piece, including
 23/25-hour periods. Adjacent observing periods meet at noon without double counting. `td` and
 `tdH` retain the first interval for existing callers; `sunBelow.astronomical` contains every
 interval and drives all rendering, totals, moonlight and usable-window calculations.
@@ -126,23 +125,24 @@ interval and drives all rendering, totals, moonlight and usable-window calculati
   initial ±3 choice remains a display default, with explicit saved/shared choices taking precedence.
   Focusing does not reassign ownership or change any night's Sun/Moon events, intervals or duration.
 
-## Moon-free true dark
+## Usable dark
 
-- True dark minus the intervals when any part of the Moon clears the **moon threshold** (default 0°; 5°, 10°
-  and 15° are available).
-- With **Ignore a moon under N% lit**, a night whose illumination is below N counts all of its true
-  dark as moon-free. The moon is still drawn.
+- Usable dark is the part of astronomical darkness that meets the Moon settings. By default,
+  the Moon’s upper edge must be below the natural horizon. Raising the **Moon threshold** from
+  0° to 5°, 10°, or 15° accepts some moonlit time.
+- With **Ignore a moon under N% lit**, a night whose illumination is below N counts all of its
+  astronomical darkness as usable dark. The Moon is still drawn.
 - Pieces shorter than a minute are dropped. The headline number is the sum of the pieces, and the
   window lists them in order.
 
 ## Derived numbers
 
-- **Month totals** sum moon-free true dark over the month's nights. "Nights ≥ 4 h" counts nights
+- **Month totals** sum usable dark over the month's nights. "Nights ≥ 4 h" counts nights
   with at least 4 hours of it.
 - **Lunation totals** sum it over the displayed owned nights: the full cycle or its ±N crop,
   clipped to the loaded range. Full-cycle totals add up to the total for all loaded nights.
 - **Best weekend** (Lunations) is the Friday and Saturday pair in the displayed owned dates with the most
-  combined moon-free time. A Lunations pair must have both nights in the same cycle and displayed
+  combined usable dark. A Lunations pair must have both nights in the same cycle and displayed
   window. Ties retain the earlier Friday.
 - **Dark Weekends view** ranks complete Fri–Sat and Thu–Sun trips independently by summed
   elapsed usable time under the active Moon settings. A trip belongs to the centered cycle that
@@ -153,7 +153,7 @@ interval and drives all rendering, totals, moonlight and usable-window calculati
   totals and candidates use its loaded dates, including past dates.
   Compare the two best picks to see whether the dates change. The gain on an individual weekend
   compares its two presets. All sums and differences precede display rounding.
-- **Moonlight wash** (display only): opacity 0.17 + 0.40 × illumination^0.8, drawn over true dark
+- **Moonlight wash** (display only): opacity 0.17 + 0.40 × illumination^0.8, drawn over astronomical darkness
   while the Moon’s upper edge is above the natural horizon (0°), independent of planning thresholds.
   The intersection of that moonlight with accepted planning windows uses a green wash in ordinary
   palettes, or a neutral wash with a dashed cue in Observing, at the same illumination-based opacity.
@@ -175,11 +175,11 @@ query URLs, decimal coordinates, UTC dates and verbatim table cells. UTC avoids 
 table applying the wrong offset across a clock change. Tests select events inside Atlas's search
 windows, then check site-local dates and both offsets on the clock-change nights.
 
-| Site                            | Evening date(s), 2026  | Coverage                                            |
-| ------------------------------- | ---------------------- | --------------------------------------------------- |
-| Seattle, 47.60621°N 122.34253°W | October 3, 9, 25, 31   | Rising Moon, new/full Moon, fall-back night         |
-| Edinburgh, 55.95°N 3.19°W       | June 20                | No nautical/astronomical dusk or dawn; no true dark |
-| Sydney, 33.87°S 151.21°E        | October 3; December 21 | Spring-forward night; southern summer solstice      |
+| Site                            | Evening date(s), 2026  | Coverage                                                               |
+| ------------------------------- | ---------------------- | ---------------------------------------------------------------------- |
+| Seattle, 47.60621°N 122.34253°W | October 3, 9, 25, 31   | Rising Moon, new/full Moon, fall-back night                            |
+| Edinburgh, 55.95°N 3.19°W       | June 20                | No nautical or astronomical dusk or dawn, and no astronomical darkness |
+| Sydney, 33.87°S 151.21°E        | October 3; December 21 | Spring-forward night; southern summer solstice                         |
 
 All **52 available solar events** agree within **29.6 seconds** of the minute-rounded USNO
 values; the four absent twilight events agree too. Tests allow 60 seconds to accommodate table
@@ -231,7 +231,7 @@ confirms December 9 dusk at 15:20 UTC / December 10 dawn at 06:18 UTC, and Decem
 dusk at 15:13 UTC / December 22 dawn at 06:35 UTC; June has no astronomical darkness.
 These minute-rounded sea-level values are pinned offline in `polar.test.ts` with a 60 s tolerance.
 The independent solar model also checks the available March, June and December events within
-30 s. Continuous true dark, split intervals, both hemispheres, poles and clock changes are tested
+30 s. Continuous astronomical darkness, split intervals, both hemispheres, poles and clock changes are tested
 separately. Elevation still uses the idealized atmosphere and level horizon described above.
 
 ### Elevation checks and limits
@@ -268,7 +268,7 @@ Golden files in `src/model/testdata/` pin every computed number for Seattle, Edi
 under three threshold settings. They were first captured from the original prototype; the TypeScript
 model pins their current values. This deliberate model change updates Moonrise/Moonset,
 moon-up and moon-free windows/totals, lunation totals and weekend picks. Sun events, center-altitude
-samples, phases, illumination, time zones, range alignment and true-dark intervals are unchanged.
+samples, phases, illumination, time zones, range alignment and astronomical darkness intervals are unchanged.
 Adding optional elevation preserves these sea-level golden records exactly; elevated sites
 have separate tests. The external USNO fixture is not regenerated from Atlas.
 
