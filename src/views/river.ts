@@ -146,6 +146,12 @@ class RiverView implements CanvasView {
     ctx.beginPath();
     ctx.rect(0, top, W - this.MINI, H - top);
     ctx.clip();
+    const tintSeparators = C.riverRowSeparator !== C.panel;
+    if (tintSeparators) {
+      // A continuous backdrop also quiets the seams between fractional-height Year rows.
+      ctx.fillStyle = C.riverRowSeparator;
+      ctx.fillRect(x0, top, cw, Math.max(0, Math.min(H - top, this.ys[N] - st)));
+    }
     const i0 = Math.max(0, this.rowAt(st));
     const newMoonTicks: number[] = [];
     const newMoonLabels: Array<{ x: number; y: number; lines: string[] }> = [];
@@ -172,6 +178,10 @@ class RiverView implements CanvasView {
         labelWeight: S.riverZoom === 'month' && !weekend && i !== S.sel ? 450 : 600,
         labelSize: expanded ? 11.5 : 10.5,
       });
+      if (expanded && tintSeparators) {
+        ctx.fillStyle = C.panel;
+        ctx.fillRect(x0, y + barH, cw, h - barH);
+      }
       // gutter labels
       if (barH >= 11 && !contextRow) {
         const wk = n.dow === 5 || n.dow === 6;
@@ -186,8 +196,13 @@ class RiverView implements CanvasView {
         );
       }
       if (n.d === 1) {
-        ctx.fillStyle = n.m === 1 && i > 0 && S.riverZoom === 'year' ? C.ink2 : C.panel;
+        const yearBoundary = n.m === 1 && i > 0 && S.riverZoom === 'year';
+        ctx.fillStyle = yearBoundary ? C.ink2 : C.panel;
         ctx.fillRect(0, y - 1, W - this.MINI, 1);
+        if (!yearBoundary && tintSeparators) {
+          ctx.fillStyle = C.riverRowSeparator;
+          ctx.fillRect(x0, y - 1, cw, 1);
+        }
         if (barH < 11 && !contextRow)
           text(`${MON3[n.m - 1]}${n.m === 1 ? ' ' + n.y : ''}`, 8, y + 6, 10.5, C.ink, 'left', 700);
       }

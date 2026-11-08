@@ -20,6 +20,7 @@ export interface Palette {
   ink3: string;
   hair: string;
   hair2: string;
+  riverRowSeparator: string;
   panel: string;
   raised: string;
   chip: string;
@@ -44,6 +45,7 @@ export const C: Palette = {
   ink3: '',
   hair: '',
   hair2: '',
+  riverRowSeparator: '',
   panel: '',
   raised: '',
   chip: '',
@@ -72,6 +74,7 @@ export function readColors(): void {
     ink3: g('--ink-3'),
     hair: g('--hair'),
     hair2: g('--hair-2'),
+    riverRowSeparator: g('--river-row-separator'),
     panel: g('--panel'),
     raised: g('--raised'),
     chip: g('--chip'),

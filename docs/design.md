@@ -68,6 +68,10 @@ flattened.
   for easier tapping. Window times appear wherever both fit, with quieter weekday labels.
   Short windows retain their duration in the right gutter; exact times are available on expansion.
   Week zoom has been replaced by individual night expansion. Saved Week preferences open Month.
+- **Row separators.** In Light, a muted slate backdrop keeps the one-pixel Month gaps and the
+  fine seams between Year rows quiet against moon-free darkness. Gutters and expanded details
+  retain the panel surface, and Year keeps its stronger January boundary. Dark and Observing
+  retain their panel-colored separators.
 - **Expand a night.** Clicking or tapping a Month row opens just that night; activating its
   timeline again collapses it without clearing selection. Its sky band keeps its compact row
   height on the same clock axis. Every Sun/twilight boundary, Moon rise/set within the displayed hours, and
