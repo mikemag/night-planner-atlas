@@ -46,7 +46,7 @@ async function canvasColors(page: Page): Promise<number> {
 const insDate = (page: Page) => page.locator('#riverSelection');
 
 for (const view of VIEWS) {
-  test(`${view.tab} view renders`, async ({ page }, info) => {
+  test(`${view.tab} view renders @retina`, async ({ page }, info) => {
     const errors = await open(page);
     if (view.id === 'notes') await openGuide(page);
     else await page.getByRole('button', { name: view.tab, exact: true }).click();

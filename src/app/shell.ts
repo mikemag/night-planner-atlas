@@ -613,6 +613,7 @@ export function restart(): void {
   data.ready = false;
   el('darkWeekends').inert = true;
   el('loading').hidden = false;
+  window.dispatchEvent(new Event('npa-loading'));
   el<HTMLButtonElement>('shareBtn').disabled = true;
   el<HTMLButtonElement>('calendarExportBtn').disabled = true;
   el<HTMLButtonElement>('rangePrev').disabled = !canShiftRange(spec, -1);

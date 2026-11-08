@@ -113,7 +113,7 @@ async function sharedDetail(page: Page) {
 }
 
 for (const width of [1512, 390]) {
-  test(`a six-row month keeps readable cells at ${width}px with inset duration bars and inline detail`, async ({
+  test(`a six-row month keeps readable cells at ${width}px with inset duration bars and inline detail @retina`, async ({
     page,
   }, info) => {
     const errors: string[] = [];
@@ -267,7 +267,7 @@ test('Month defaults with Year / Month / Week order and ignores the retired pref
 });
 
 for (const width of [1512, 390]) {
-  test(`Week fits all seven nights on one sunset-to-sunrise clock at ${width}px`, async ({
+  test(`Week fits all seven nights on one sunset-to-sunrise clock at ${width}px @retina`, async ({
     page,
   }, info) => {
     await open(page, width);
@@ -367,7 +367,7 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#calendarDetail')).toBeVisible();
     expect((await selected(page)).id).toBe('2026-10-09');
   });
-  test(`Year keeps all loaded months accessible with keyboard month choosers at ${width}px`, async ({
+  test(`Year keeps all loaded months accessible with keyboard month choosers at ${width}px @retina`, async ({
     page,
   }, info) => {
     await open(page, width, 'windows', 'year');

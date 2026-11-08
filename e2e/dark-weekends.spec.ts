@@ -3,7 +3,7 @@ import { chooseTheme } from './header-controls';
 import { readPreference } from './storage';
 
 for (const width of [1512, 390]) {
-  test(`Dark Weekends compares trip lengths and opens nights at ${width}px`, async ({
+  test(`Dark Weekends compares trip lengths and opens nights at ${width}px @retina`, async ({
     page,
   }, info) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });

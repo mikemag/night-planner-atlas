@@ -337,7 +337,9 @@ Lunations retains its focus window and opens the night detail even if the date f
 - **Sharing.** More offers Share site and Share plan. A site invitation uses a validated
   `#npa=2` fragment containing just the site. It opens in Around now with the recipient's own
   settings, automatically saves a new favorite, and offers Undo in a dismissible twelve-second
-  notice. Focus or pointer hover keeps the notice available. Successful invitations leave an
+  notice. Its countdown pauses during calculations, in hidden tabs or inactive windows, and
+  while the notice has keyboard focus or pointer hover. Returning to the ready, active planner
+  resumes the remaining time. Successful invitations leave an
   ordinary URL so reload cannot repeat an addition after Undo. Existing locations are reused
   within 0.00001° coordinate rounding, preserving the saved name and metadata. Undo removes
   only the unchanged addition and restores saved activation only if that favorite is still active.

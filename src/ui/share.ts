@@ -65,41 +65,74 @@ export async function initSharing(): Promise<void> {
   const action = el<HTMLButtonElement>('shareAction');
   let noticeAction: (() => Promise<void>) | null = null;
   let timeout = 0;
+  let expires = false;
+  let remaining = 0;
+  let started: number | null = null;
   let receiveToken = 0;
   let incomingHash = '';
-  const hideNotice = () => {
+  const pauseExpiry = () => {
     window.clearTimeout(timeout);
+    if (started !== null) remaining = Math.max(0, remaining - (performance.now() - started));
+    started = null;
+  };
+  const cancelExpiry = () => {
+    pauseExpiry();
+    expires = false;
+  };
+  const hideNotice = () => {
+    cancelExpiry();
     if (notice.contains(document.activeElement)) el('siteSel').focus({ preventScroll: true });
     notice.hidden = true;
     noticeAction = null;
   };
-  const expireNotice = () => {
-    timeout = window.setTimeout(() => {
-      if (notice.matches(':focus-within, :hover')) expireNotice();
-      else hideNotice();
-    }, 12_000);
+  // Count only time when the planner and the user are ready to act on the notice.
+  const syncExpiry = () => {
+    pauseExpiry();
+    if (
+      !expires ||
+      notice.hidden ||
+      !data.ready ||
+      document.hidden ||
+      !document.hasFocus() ||
+      notice.matches(':focus-within, :hover')
+    )
+      return;
+    if (remaining === 0) {
+      hideNotice();
+      return;
+    }
+    started = performance.now();
+    timeout = window.setTimeout(syncExpiry, remaining);
   };
+  for (const event of ['npa-loading', 'npa-ready', 'focus', 'blur', 'pageshow'])
+    window.addEventListener(event, syncExpiry);
+  document.addEventListener('visibilitychange', syncExpiry);
+  window.addEventListener('pagehide', pauseExpiry);
+  for (const event of ['pointerenter', 'pointerleave', 'focusin', 'focusout'])
+    notice.addEventListener(event, () => queueMicrotask(syncExpiry));
   const showNotice = (
     text: string,
     label = '',
     run: (() => Promise<void>) | null = null,
     brief = false,
   ) => {
-    window.clearTimeout(timeout);
+    cancelExpiry();
     message.textContent = text;
     action.textContent = label;
     action.hidden = !run;
     action.disabled = false;
     noticeAction = run;
     notice.hidden = false;
-    if (brief) expireNotice();
+    expires = brief;
+    remaining = 12_000;
+    syncExpiry();
   };
   action.addEventListener('click', async () => {
     const run = noticeAction;
     if (!run) return;
     const token = receiveToken;
     const focused = document.activeElement === action;
-    window.clearTimeout(timeout);
+    cancelExpiry();
     action.disabled = true;
     try {
       await run();

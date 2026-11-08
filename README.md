@@ -78,19 +78,26 @@ See [Hosting the Helen preview](docs/hosting.md) for local deployment, caching, 
 per-browser settings behavior. Deployment publishes only the built site; the repository stays
 private.
 
-| Command               | What it does                                                                      |
-| --------------------- | --------------------------------------------------------------------------------- |
-| `npm run check`       | Lint, format check, type check, unit tests and build                              |
-| `npm run deploy`      | Run local checks and browser tests, then publish to Firebase Hosting              |
-| `npm test`            | Unit tests for the night model (Vitest)                                           |
-| `npm run test:e2e`    | Browser smoke tests of the built site in Chromium and WebKit (Playwright)         |
-| `npm run screenshots` | The smoke tests, saving a screenshot of every view to `test-results/screenshots/` |
-| `npm run format`      | Format everything with Prettier                                                   |
+| Command                      | What it does                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------------- |
+| `npm run check`              | Lint, format check, type check, unit tests and build                                   |
+| `npm run deploy`             | Run local checks and browser tests, then publish to Firebase Hosting                   |
+| `npm test`                   | Unit tests for the night model (Vitest)                                                |
+| `npm run test:e2e`           | Browser smoke tests of the built site in Chromium and WebKit (Playwright)              |
+| `npm run screenshots`        | Browser tests and Retina visual checks, saving captures to `test-results/screenshots/` |
+| `npm run screenshots:retina` | Only the Retina visual checks in a visible WebKit window                               |
+| `npm run format`             | Format everything with Prettier                                                        |
 
 The first time you run the browser tests, install their browsers with
 `npx playwright install chromium webkit`. All checks run locally; GitHub does not run tests on
 pushes or pull requests. Browser tests build and start their own preview server on port 4174 and
 fail if that port is already occupied, so they cannot accidentally test a different server.
+
+Functional WebKit tests use standard pixel density: headless Retina WebKit on macOS can throttle
+startup timers enough to trip otherwise healthy readiness checks. Screenshot runs also include
+one visible WebKit window at 2× density, using the existing `@retina` cases for desktop/phone
+views, expanded nights, and themes. These checks require a desktop session. Keep the visual
+window active while they run; `npm run screenshots:retina` runs just that coverage.
 
 ## Layout
 

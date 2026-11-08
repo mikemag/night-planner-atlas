@@ -46,7 +46,7 @@ async function selectedRow(page: Page) {
 }
 
 for (const width of [1512, 390]) {
-  test(`Month expands key facts, toggles, and preserves compact Year at ${width}px`, async ({
+  test(`Month expands key facts, toggles, and preserves compact Year at ${width}px @retina`, async ({
     page,
   }, info) => {
     const errors: string[] = [];

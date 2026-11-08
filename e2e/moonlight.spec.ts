@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { chooseTheme } from './header-controls';
 
 for (const width of [1512, 390]) {
-  test(`phase/altitude wash preserves coverage in every view and theme at ${width}px`, async ({
+  test(`phase/altitude wash preserves coverage in every view and theme at ${width}px @retina`, async ({
     page,
   }, info) => {
     test.setTimeout(90_000);

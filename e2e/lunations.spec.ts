@@ -120,7 +120,7 @@ test('Full cycle covers every night once, restores formerly missing dates, and i
 });
 
 for (const width of [1512, 390]) {
-  test(`Lunations shows readable cycles and an ordered inline night at ${width}px`, async ({
+  test(`Lunations shows readable cycles and an ordered inline night at ${width}px @retina`, async ({
     page,
   }, info) => {
     const errors: string[] = [];

@@ -2,7 +2,7 @@ import { chooseTheme, openAppMenu } from './header-controls';
 import { expect, test } from '@playwright/test';
 
 for (const width of [1512, 390]) {
-  test(`themes preserve the expanded night and browsed position at ${width}px`, async ({
+  test(`themes preserve the expanded night and browsed position at ${width}px @retina`, async ({
     page,
   }, info) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
