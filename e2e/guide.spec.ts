@@ -62,6 +62,14 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#docsBack')).toBeInViewport();
     await expect(page.locator('[data-night-example="simple"]')).toContainText('7h 38m usable');
     await expect(page.locator('[data-night-example="moon"]')).toContainText('4h 30m usable');
+    await expect(page.locator('[data-night-example="simple"] linearGradient')).toHaveCount(0);
+    const wash = await page
+      .locator('[data-night-example="moon"] linearGradient stop')
+      .evaluateAll((stops) => stops.map((stop) => Number(stop.getAttribute('stop-opacity'))));
+    expect(wash.length).toBeGreaterThan(2);
+    expect(Math.min(...wash)).toBeGreaterThan(0.234);
+    expect(Math.max(...wash)).toBeLessThan(0.255);
+    expect(Math.max(...wash) - Math.min(...wash)).toBeGreaterThan(0.01);
     const saved = await page.evaluate(() => localStorage.getItem('npa:personal'));
     for (const [setting, total] of [
       ['height', '5h 10m'],

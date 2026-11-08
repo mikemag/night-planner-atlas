@@ -102,7 +102,9 @@ interval and drives all rendering, totals, moonlight and usable-window calculati
   minutes (121 samples on ordinary nights, more for extended periods). These samples illustrate the curve; they do not determine event times
   or planning intervals. Center-altitude curves use elevation-scaled refraction too. The Moon's
   center can be below 0° when its upper edge first appears.
-- Illumination (fraction lit) and phase angle (0° new, 180° full) are taken at local midnight.
+- Illumination (fraction lit) and phase/elongation (0° new, 180° full) for labels and planning
+  thresholds are taken at local midnight. The display-only wash separately samples the physical
+  phase angle (0° full, 180° new) through the night.
   Phase names use illumination thresholds: under 3% is new, over 97% is full, and within
   6 percentage points of half lit is a quarter; the phase angle distinguishes waxing and waning.
 - New and full moons come from `SearchMoonQuarter`. Event-to-night assignment and the day offsets
@@ -154,12 +156,60 @@ interval and drives all rendering, totals, moonlight and usable-window calculati
   totals and candidates use its loaded dates, including past dates.
   Compare the two best picks to see whether the dates change. The gain on an individual weekend
   compares its two presets. All sums and differences precede display rounding.
-- **Moonlight wash** (display only): opacity 0.17 + 0.40 × illumination^0.8, drawn over astronomical darkness
-  while the Moon’s upper edge is above the natural horizon (0°), independent of planning thresholds.
-  The intersection of that moonlight with accepted planning windows uses a green wash in ordinary
-  palettes, or a neutral wash with a dashed cue in Observing, at the same illumination-based opacity.
-  The bands do not overlap, and genuinely
-  moon-free time stays plain black. This display distinction does not change any computed events, windows or totals.
+
+## Moonlight wash (display only)
+
+`moonlight.ts` implements the fixed-reference zenith moonlight equations from
+[Krisciunas & Schaefer (1991), equations 15, 20 and 21](https://articles.adsabs.harvard.edu/pdf/1991PASP..103.1033K).
+This is original code implementing the published equations. It is an illustrative brightness
+cue, not a calibrated prediction of the site's sky or a criterion for usable hours.
+
+With angles in degrees, physical phase angle `a` is **0° full, 180° new**, from Astronomy Engine's
+`Illumination(...).phase_angle`; it is not the midnight `Night.phase` elongation. Use geometric
+topocentric Moon-center altitude `h`, with fixed V-band extinction `k = 0.172` mag/airmass:
+
+```text
+h = clamp(geometric altitude, 0°, 80°)
+rho = 90° − h
+X(z) = (1 − 0.96 × sin²(z))^−0.5
+I = 10^[−0.4 × (3.84 + 0.026 × a + 4e−9 × a⁴)]
+f = 10^5.36 × (1.06 + cos²(rho)) + 10^(6.15 − rho/40)
+Bmoon = f × I × 10^[−0.4 × k × X(90° − h)] × (1 − 10^[−0.4 × k])
+Bdark = 34.08 × exp(20.7233 − 0.92104 × 21.6)
+u = log1p(Bmoon / Bdark) / log1p(Bref / Bdark)
+opacity = min(0.57, 0.17 + 0.40 × sqrt(u))
+```
+
+Brightness is in nanoLamberts. `Bdark` is a fixed 21.6 V mag/arcsec² reference; `Bref` is `Bmoon`
+for a full Moon at 60°. The 0.17 floor and square-root lift keep a crescent or low quarter Moon
+visibly distinct from moon-free time. The 0.57 ceiling limits glare. These are display choices
+selected in #8; the reference atmosphere/background do not describe an individual observing site.
+
+The lower clamp holds the center at 0° while the refracted upper edge is already up. The upper
+clamp holds the entire reference calculation at its 80° boundary, so separation never enters
+the excluded region within 10° of the Moon. It gives a continuous, bounded plateau near zenith,
+not a model of the aureole. Opposition brightening, lunar-distance corrections, local moisture,
+smoke, artificial sky glow, target direction and lunar twilight are not modeled.
+
+`computeNight` stores `moonlight` as a Float32 opacity array on the existing ten-minute altitude
+grid, using instantaneous phase and geometric altitude. This covers ordinary, extended and
+23/25-hour periods. Rendering interpolates these display samples at the **existing exact** band
+boundaries and draws gradients along the site's wall-clock time axis in either orientation.
+Repeated clock positions retain the later sample; opacity stops are sorted and bounded. No
+ephemeris work occurs during drawing, theme switches or threshold changes. The monthly cache
+preserves the array and rejects missing, mismatched or out-of-range samples.
+
+Only the intersection of astronomical darkness and the natural-horizon upper-limb Moon-up
+interval receives a wash. Threshold-accepted portions use the same opacity in green (Light/Dark)
+or warm neutral with a dashed boundary (Observing), replacing the ordinary tint there. Moon-free
+time remains unwashed; there is no wash during twilight or after the upper edge sets. Canvas
+views, shared night details and SVG guide examples use the same gradient stops. Neither the
+floor nor any other brightness value changes events, usable intervals, totals, rankings or exports.
+
+Published Table 2 values at 30° Moon altitude are checked independently to within their 1 nL
+rounding. The reviewed September Seattle examples also pin the brighter mapping: about 23.5–25.4%
+opacity for the rising crescent and 32.3–33.5% for the low quarter Moon. Planning golden files
+remain unchanged; they do not include these display-only samples.
 
 ## Reference verification and accuracy
 
@@ -301,7 +351,7 @@ calculation. In development, edits to fingerprinted calculation/codec sources or
 lockfile restart Vite and reload the page with a fresh fingerprint. UI/style hot reloads retain
 compatible calculations. No worker, progressive rendering or third-party service is involved.
 
-The key combines cache format 1, a build-generated compute fingerprint, exact latitude/longitude,
+The key combines cache format 2, a build-generated compute fingerprint, exact latitude/longitude,
 elevation (missing equals zero), IANA zone and calendar year/month. The fingerprint includes all
 non-test model sources, the cache codec and the resolved Astronomy Engine dependency. UI-only
 releases retain compatible results. Changed computation/codec generations are never reused;
@@ -309,8 +359,8 @@ older entries remain disposable within the same bounded least-recently-used cach
 versions of saved personal data and share links do not determine numerical cache compatibility.
 
 The payload preserves UTC solar events, below-threshold solar intervals, all four refined Moon
-threshold windows/crossings, illumination/phase, sample origin and the original Float32 altitude
-arrays. Classes, wall-clock fields, range structures and threshold summaries are rebuilt. A block
+threshold windows/crossings, illumination/phase, sample origin and Float32 altitude and moonlight
+opacity arrays. Classes, wall-clock fields, range structures and threshold summaries are rebuilt. A block
 must contain every expected date and valid finite arrays/intervals. Current browser rules must
 still map each local noon, midnight and next noon to the stored instants; otherwise that month
 is recomputed. Fresh clock fields use the current time-zone rules. Cache hydration preserves the

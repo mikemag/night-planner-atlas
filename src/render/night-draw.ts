@@ -2,8 +2,8 @@ import { atlas } from '../app/state';
 import type { Axis } from '../model/range';
 import { fmtClockS } from '../model/format';
 import { STEP, sunBandAt, wallH, type Night } from '../model/night';
-import { C, moonAlpha } from './colors';
-import { moonlightBands } from './moonlight';
+import { C } from './colors';
+import { moonlightBands, moonlightStops } from './moonlight';
 import { ctx, snap, text, tw } from './surface';
 
 export interface NightDrawOptions {
@@ -39,7 +39,7 @@ export function drawNight(
   const L = o === 'h' ? w : h;
   const span = ax.end - ax.start;
   const P = (t: number) => snap(((t - ax.start) / span) * L);
-  const seg = (a: number, b: number, color: string) => {
+  const seg = (a: number, b: number, color: string | CanvasGradient) => {
     let p0 = P(a),
       p1 = P(b);
     if (p0 < 0) p0 = 0;
@@ -59,16 +59,26 @@ export function drawNight(
   ] as const)
     for (const [a, b] of n.sunBelow[band]) seg(wallH(a, n), wallH(b, n), color);
   const bands = moonlightBands(n);
+  const wash = (a: number, b: number, rgb: string) => {
+    const start = wallH(a, n),
+      end = wallH(b, n);
+    if (end <= start || P(end) <= 0 || P(start) >= L) return;
+    const gradient =
+      o === 'h'
+        ? ctx.createLinearGradient(x + P(start), y, x + P(end), y)
+        : ctx.createLinearGradient(x, y + P(start), x, y + P(end));
+    for (const { offset, opacity } of moonlightStops(n, [a, b]))
+      gradient.addColorStop(offset, `rgba(${rgb},${opacity})`);
+    seg(start, end, gradient);
+  };
   if (bands.ordinary.length) {
-    const col = `rgba(${C.moon},${moonAlpha(n.illum).toFixed(3)})`;
-    for (const [a, b] of bands.ordinary) seg(wallH(a, n), wallH(b, n), col);
+    for (const [a, b] of bands.ordinary) wash(a, b, C.moon);
   }
   if (bands.accepted.length) {
-    const green = `rgba(${C.acceptedMoon},${moonAlpha(n.illum).toFixed(3)})`;
     for (const [a, b] of bands.accepted) {
       const start = wallH(a, n),
         end = wallH(b, n);
-      seg(start, end, green);
+      wash(a, b, C.acceptedMoon);
       if (C.acceptedEdge !== 'transparent') {
         const p0 = Math.max(0, P(start)),
           p1 = Math.min(L, P(end));

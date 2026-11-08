@@ -34,6 +34,7 @@ for (const [site, y, m] of [
       const restored = unpackMonth(structuredClone(packed), key, y, m, new TimeZone(site.tz))!;
       expect(restored).not.toBeNull();
       expect(restored[0].moonAlt).toBeInstanceOf(Float32Array);
+      expect(restored[0].moonlight).toBeInstanceOf(Float32Array);
       const cold = buildStructures(nights, site, tz, spec, now);
       const warm = buildStructures(restored, site, restored[0].tz, spec, now);
       for (const moonAlt of [0, 5, 10, 15])
@@ -58,6 +59,15 @@ for (const [site, y, m] of [
         },
         (p: CachedMonth) => {
           p.nights[0].moonAlt[0] = NaN;
+        },
+        (p: CachedMonth) => {
+          p.nights[0].moonlight[0] = NaN;
+        },
+        (p: CachedMonth) => {
+          p.nights[0].moonlight[0] = 0.99;
+        },
+        (p: CachedMonth) => {
+          p.nights[0].moonlight = new Float32Array(1);
         },
         (p: CachedMonth) => {
           p.nights[0].moonWindows[5].above = [[NaN, 1]];

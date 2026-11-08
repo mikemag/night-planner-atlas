@@ -1,4 +1,34 @@
-import type { Interval, Night } from '../model/night';
+import { STEP, wallH, type Interval, type Night } from '../model/night';
+
+/** Interpolate cached display samples in elapsed time; never used by planning rules. */
+export function moonlightAt(n: Pick<Night, 'S0' | 'moonlight'>, t: number): number {
+  const position = Math.max(0, Math.min(n.moonlight.length - 1, (t - n.S0) / STEP));
+  const i = Math.floor(position),
+    next = Math.min(i + 1, n.moonlight.length - 1);
+  return n.moonlight[i] + (n.moonlight[next] - n.moonlight[i]) * (position - i);
+}
+
+/** Shared Canvas/SVG gradient on the existing wall-clock axis, with exact band endpoints. */
+export function moonlightStops(
+  n: Night,
+  [a, b]: Interval,
+): Array<{ offset: number; opacity: number }> {
+  const start = wallH(a, n),
+    span = wallH(b, n) - start;
+  if (span <= 0) return [];
+  const stops = new Map<number, number>();
+  for (let i = Math.max(0, Math.ceil((a - n.S0) / STEP)); i < n.moonlight.length; i++) {
+    const t = n.S0 + i * STEP;
+    if (t >= b) break;
+    const offset = (wallH(t, n) - start) / span;
+    // Repeated clock hours share a position; retain the later passage, as the
+    // altitude curve does. Sorting prevents backwards/out-of-range gradient stops.
+    if (offset > 0 && offset < 1) stops.set(offset, n.moonlight[i]);
+  }
+  stops.set(0, moonlightAt(n, a));
+  stops.set(1, moonlightAt(n, b));
+  return [...stops].sort(([a], [b]) => a - b).map(([offset, opacity]) => ({ offset, opacity }));
+}
 
 /** Ordinary and accepted moonlight, split into disjoint bands, in instants so DST cannot change membership. */
 export function moonlightBands(n: Pick<Night, 'sunBelow' | 'mf' | 'moonWindows'>): {

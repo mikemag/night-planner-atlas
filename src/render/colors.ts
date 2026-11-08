@@ -1,4 +1,5 @@
 import { el } from '../ui/dom';
+import { MIN_MOON_OPACITY, MAX_MOON_OPACITY } from '../model/moonlight';
 
 /** Canvas colors, read from the theme tokens in atlas.css. */
 export interface Palette {
@@ -84,7 +85,7 @@ export function readColors(): void {
     ['acceptedMoonSw', C.acceptedMoon],
   ]) {
     el(id).style.background =
-      `linear-gradient(90deg, rgba(${rgb},${moonAlpha(0)}), rgba(${rgb},${moonAlpha(1)})), ${C.dark}`;
+      `linear-gradient(90deg, rgba(${rgb},${MIN_MOON_OPACITY}), rgba(${rgb},${MAX_MOON_OPACITY})), ${C.dark}`;
   }
 }
 
@@ -105,9 +106,4 @@ export function inkOn(hex: string): string {
   return (light + 0.05) / (luminance(17, 23, 38) + 0.05) > 1.05 / (light + 0.05)
     ? '#111726'
     : '#ffffff';
-}
-
-/** Opacity of the moonlight wash during astronomical darkness. A full Moon reads like late nautical twilight. */
-export function moonAlpha(illum: number): number {
-  return 0.17 + 0.4 * Math.pow(illum, 0.8);
 }

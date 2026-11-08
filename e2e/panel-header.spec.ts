@@ -89,7 +89,7 @@ for (const width of [1512, 390]) {
     await expect(popup.locator('#legend')).toBeVisible();
     await expect(popup.getByText('Astronomical twilight', { exact: true })).toBeVisible();
     await expect(popup.getByText('Astronomical darkness', { exact: true })).toBeVisible();
-    await expect(popup).toContainText('Brighter means fuller.');
+    await expect(popup).toContainText('The wash varies with phase and altitude');
     await expect(popup).not.toContainText('New moon');
     await expect(page.locator('#acceptedMoonKey')).toBeHidden();
     for (const key of ['ArrowDown', 'ArrowRight', 't', '2']) await page.keyboard.press(key);

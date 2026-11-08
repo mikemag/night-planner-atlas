@@ -7,11 +7,12 @@ import {
   type SunBand,
 } from '../model/night';
 import { MOON_THRESHOLDS } from '../model/moon';
+import { MIN_MOON_OPACITY, MAX_MOON_OPACITY } from '../model/moonlight';
 import { MS_H, TimeZone } from '../model/time';
 import { nightDates, type RangeSpec } from '../model/range';
 import { pad2 } from '../model/format';
 
-export const CACHE_FORMAT = 1;
+export const CACHE_FORMAT = 2;
 declare const __NPA_COMPUTE_REVISION__: string;
 /** Vite fingerprints model/codec sources and the resolved astronomy dependency. */
 export const COMPUTE_REVISION = __NPA_COMPUTE_REVISION__;
@@ -25,6 +26,7 @@ export type NightData = Pick<
   | 'ev'
   | 'sunBelow'
   | 'moonAlt'
+  | 'moonlight'
   | 'moonWindows'
   | 'sunAlt'
   | 'illum'
@@ -51,7 +53,7 @@ export function rangeMonths(spec: RangeSpec): Array<{ y: number; m: number }> {
 }
 export function packMonth(key: string, nights: Night[]): CachedMonth {
   const data = nights.map(
-    ({ noon, nextNoon, mid, S0, ev, sunBelow, moonAlt, moonWindows, sunAlt, illum, phase }) => ({
+    ({
       noon,
       nextNoon,
       mid,
@@ -59,6 +61,20 @@ export function packMonth(key: string, nights: Night[]): CachedMonth {
       ev,
       sunBelow,
       moonAlt,
+      moonlight,
+      moonWindows,
+      sunAlt,
+      illum,
+      phase,
+    }) => ({
+      noon,
+      nextNoon,
+      mid,
+      S0,
+      ev,
+      sunBelow,
+      moonAlt,
+      moonlight,
       moonWindows,
       sunAlt,
       illum,
@@ -69,7 +85,11 @@ export function packMonth(key: string, nights: Night[]): CachedMonth {
   const bytes =
     new TextEncoder().encode(
       JSON.stringify(data, (_key, value) => (ArrayBuffer.isView(value) ? null : value)),
-    ).byteLength + data.reduce((sum, n) => sum + n.moonAlt.byteLength + n.sunAlt.byteLength, 0);
+    ).byteLength +
+    data.reduce(
+      (sum, n) => sum + n.moonAlt.byteLength + n.moonlight.byteLength + n.sunAlt.byteLength,
+      0,
+    );
   return { key, bytes, nights: data };
 }
 const object = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object';
@@ -95,10 +115,16 @@ function isNightData(value: unknown): value is NightData {
     !object(value) ||
     !['noon', 'nextNoon', 'mid', 'S0', 'illum', 'phase'].every((k) => finite(value[k])) ||
     !(value.moonAlt instanceof Float32Array) ||
+    !(value.moonlight instanceof Float32Array) ||
     !(value.sunAlt instanceof Float32Array) ||
     value.moonAlt.length < 2 ||
     value.moonAlt.length !== value.sunAlt.length ||
+    value.moonAlt.length !== value.moonlight.length ||
     !value.moonAlt.every(Number.isFinite) ||
+    !value.moonlight.every(
+      (opacity) =>
+        Number.isFinite(opacity) && opacity >= MIN_MOON_OPACITY && opacity <= MAX_MOON_OPACITY,
+    ) ||
     !value.sunAlt.every(Number.isFinite) ||
     !object(value.ev) ||
     !object(value.sunBelow) ||

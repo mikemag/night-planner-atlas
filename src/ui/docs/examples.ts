@@ -4,8 +4,8 @@ import { createShareLink } from '../../app/share-state';
 import { computeNight, deriveNight, wallH, type Night } from '../../model/night';
 import { TimeZone } from '../../model/time';
 import { fmtClock, fmtClockS, fmtDur } from '../../model/format';
-import { C, moonAlpha } from '../../render/colors';
-import { moonlightBands } from '../../render/moonlight';
+import { C } from '../../render/colors';
+import { moonlightBands, moonlightStops } from '../../render/moonlight';
 
 const site = DEFAULT_SITES[0];
 const settings = {
@@ -55,12 +55,28 @@ function timeline(n: Night, width: number): SVGSVGElement {
   ] as const)
     for (const [a, b] of n.sunBelow[band]) segment(wallH(a, n), wallH(b, n), color);
   const bands = moonlightBands(n);
+  const defs = svgNode('defs', {});
+  svg.append(defs);
   for (const [type, rgb] of [
     ['ordinary', C.moon],
     ['accepted', C.acceptedMoon],
   ] as const)
     for (const [a, b] of bands[type]) {
-      segment(wallH(a, n), wallH(b, n), `rgb(${rgb})`, moonAlpha(n.illum));
+      const id = `moonlight-${n.id}-${type}-${defs.childElementCount}`;
+      const gradient = svgNode('linearGradient', {
+        id,
+        gradientUnits: 'userSpaceOnUse',
+        x1: x(wallH(a, n)),
+        y1: 0,
+        x2: x(wallH(b, n)),
+        y2: 0,
+      });
+      for (const { offset, opacity } of moonlightStops(n, [a, b]))
+        gradient.append(
+          svgNode('stop', { offset, 'stop-color': `rgb(${rgb})`, 'stop-opacity': opacity }),
+        );
+      defs.append(gradient);
+      segment(wallH(a, n), wallH(b, n), `url(#${id})`);
       if (type === 'accepted' && C.acceptedEdge !== 'transparent')
         svg.append(
           svgNode('rect', {

@@ -21,17 +21,20 @@ One encoding everywhere, so a night looks the same in every view and in the sing
 - **Sky darkness** is an ordered ramp that darkens monotonically: day, civil twilight (warm, like
   the dusk sky), nautical twilight (blue), astronomical twilight (indigo), and astronomical
   darkness (near black). Lightness carries the order; hue only helps tell neighbors apart.
-- **Moonlight** washes astronomical darkness toward a warm grey, stronger the fuller the moon. It is scaled so
-  a full moon looks about as bright as late nautical twilight, roughly its real effect on sky
-  brightness, while a thin crescent barely lifts the black. The wash is drawn over astronomical darkness,
-  where moonlight is what matters. It follows the Moon’s upper edge at the natural horizon (0°),
-  independently of planning thresholds.
+- **Moonlight** washes astronomical darkness toward a warm grey, varying through the night with
+  lunar phase-dependent brightness and altitude. A fixed-reference scattering model feeds a
+  perceptual opacity curve: a 0.17 floor keeps Moon-up time recognizable, a square-root lift makes
+  faint moonlight legible, and a 0.57 ceiling retains the familiar full-Moon brightness. This is an
+  illustrative cue, not a prediction of local sky brightness or an observing-quality cutoff.
+  The wash follows the Moon’s upper edge at the natural horizon (0°), only during astronomical
+  darkness and independently of planning thresholds. It uses the same samples in every chart and
+  guide example; the detailed mapping and bounded near-zenith treatment are in `night-model.md`.
 - **Moon-free astronomical darkness** is black. Green identifies duration bars, total markers and usable-window brackets. Small numeric
   labels use normal ink for contrast; the night bands retain their sky-stage colors.
-- **Accepted moonlight** uses a green wash with the same illumination-based opacity as ordinary
+- **Accepted moonlight** uses a green wash with the same phase-and-altitude opacity as ordinary
   moonlight. Only the intersection of natural-horizon moonlight, astronomical darkness and accepted planning
   windows is green. The green tint replaces the ordinary wash there rather than layering over it,
-  so brightness continues to represent illumination. Raising the Moon-altitude threshold or ignoring
+  so the brightness curve is continuous across an accepted boundary. Raising the Moon-altitude threshold or ignoring
   a crescent can add green time; truly moon-free time stays plain black. Night details use the same
   treatment.
 - **Weekends** (Friday and Saturday nights) get an amber tint, **selection** is an amber outline,
@@ -375,7 +378,7 @@ Lunations retains its focus window and opens the night detail even if the date f
   The practical guide pairs two computed Seattle/Paramount Park nights: September 11, 2026,
   with one complete moon-free window, and September 6 with a rising crescent. A local example
   control compares strict, 5° and ignored-under-20% choices without changing personal settings.
-  SVG strips use the same solar intervals, disjoint moonlight bands and palette tokens as the
+  SVG strips use the same solar intervals, disjoint moonlight bands, opacity gradients and palette tokens as the
   charts. Deliberate example links open a temporary public-starter plan in another tab. Technical
   chapters retain upper-edge/center conventions, accuracy provenance, polar/DST and split-window
   explanations. Complete offline code/data notices and the matching boundary dataset stay in
@@ -496,12 +499,16 @@ Clicking the site editor's backdrop leaves the draft open; Cancel, Close and Esc
 
 Rationale that isn't obvious from the result:
 
-- **Moonlight wash.** A bright beige wash dominated the chart and read brighter than nautical
-  twilight. The current warm grey, with opacity 0.17 + 0.40 × illumination^0.8, keeps a full moon
-  near late nautical twilight's brightness.
+- **Moonlight wash.** Phase and altitude make the warm-grey wash more informative than a constant
+  illuminated-fraction wash. In #8's comparison, the first physical-to-display mapping made an
+  18.3%-lit crescent and a low 54.2%-lit quarter Moon too dim. The selected mapping restores the
+  0.17 floor and lifts faint values with a square root, while retaining the 0.57 ceiling. Moon-up
+  remains a recognizable visual state and altitude adds a subtle gradient. Fixed reference
+  conditions keep this display self-contained; no atmospheric inputs or new usable-hour rules
+  follow from the apparent brightness.
 - **Marking planning windows.** A thin green edge was hard to interpret when planning thresholds
   accepted time beyond strictly moon-free darkness. Accepted moonlit time now uses a green wash
-  instead of hatching. Its opacity follows the same 0.17 + 0.40 × illumination^0.8 curve as ordinary
+  instead of hatching. Its opacity follows the same phase-and-altitude curve as ordinary
   moonlight, with green RGB values chosen for comparable luminance in each theme. Truly moon-free
   time stays plain black. Green duration bars and totals still identify all usable time.
 - **Night expansion.** Exact times have more space and a predictable order on a horizontal

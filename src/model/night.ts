@@ -11,6 +11,7 @@ import {
 import { pad2 } from './format';
 import { apparentAltitude } from './refraction';
 import { moonWindows, type MoonWindow } from './moon';
+import { moonlightOpacity } from './moonlight';
 import { MS_D, MS_H, MS_M, type TimeZone } from './time';
 
 export interface Site {
@@ -75,6 +76,8 @@ export interface Night {
   sunBelow: Record<SunBand, Interval[]>;
   /** Apparent center altitude, for drawing the altitude curve only. */
   moonAlt: Float32Array;
+  /** Display-only phase/altitude wash opacity, on the same ten-minute grid. */
+  moonlight: Float32Array;
   /** Refined upper-limb windows at every supported apparent horizon height. */
   moonWindows: Record<number, MoonWindow>;
   sunAlt: Float32Array;
@@ -193,11 +196,14 @@ export function computeNight(
       );
   const samples = Math.round((sampleEnd - S0) / STEP) + 1;
   const moonAlt = new Float32Array(samples),
+    moonlight = new Float32Array(samples),
     sunAlt = new Float32Array(samples);
   for (let i = 0; i < samples; i++) {
     const t = new Date(S0 + i * STEP);
     const em = Equator(Body.Moon, t, observer, true, true);
-    moonAlt[i] = apparentAltitude(Horizon(t, observer, em.ra, em.dec).altitude, density);
+    const moonHeight = Horizon(t, observer, em.ra, em.dec).altitude;
+    moonAlt[i] = apparentAltitude(moonHeight, density);
+    moonlight[i] = moonlightOpacity(Illumination(Body.Moon, t).phase_angle, moonHeight);
     const es = Equator(Body.Sun, t, observer, true, true);
     sunAlt[i] = apparentAltitude(Horizon(t, observer, es.ra, es.dec).altitude, density);
   }
@@ -222,6 +228,7 @@ export function computeNight(
     evH: { ...ev },
     sunBelow,
     moonAlt,
+    moonlight,
     moonWindows: moonWindows(observer, S0, sampleEnd),
     sunAlt,
     illum,
