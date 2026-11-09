@@ -64,6 +64,16 @@ The same intervals drive shading and sky-stage readouts in every view. A stage c
 throughout the period without either boundary event. Polar night can still contain midday
 twilight. The views label nights when the Sun never gets below −18° as "No astronomical darkness".
 
+The header's live countdown searches for the next solar crossing after the actual current
+instant, independently of the loaded range. It uses these same geometric twilight thresholds
+and elevation-adjusted solar horizon. The label names the phase entered: sunset begins civil
+twilight, civil dusk begins nautical twilight, nautical dusk begins astronomical twilight,
+and astronomical dusk begins astronomical darkness; dawn reverses those stages toward daylight.
+Searches cover up to 370 days for polar seasons and narrow to the earliest crossing found.
+They start one second beyond now so numerical search tolerance cannot repeat a just-reached event.
+Elapsed UTC milliseconds determine the countdown, including across midnight and clock changes.
+This does not change any observing-night calculations or their golden records.
+
 ## Astronomical darkness
 
 All intervals below −18°, clipped to the noon-to-noon period. Normally this is astronomical

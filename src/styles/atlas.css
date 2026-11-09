@@ -184,7 +184,7 @@ input {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 32px;
   align-items: start;
-  gap: 12px;
+  gap: 3px 12px;
   min-width: 0;
 }
 .header-flow {
@@ -242,7 +242,11 @@ input {
   max-width: 100%;
 }
 .site-clock {
-  display: block;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.5em;
   max-width: 100%;
   min-height: 17px;
   font-size: 12px;
@@ -251,6 +255,9 @@ input {
   color: var(--ink-2);
   overflow-wrap: anywhere;
   padding-inline: 4px;
+}
+#siteClockCountdown::before {
+  content: '· ';
 }
 #viewSeg {
   flex: none;
@@ -437,6 +444,13 @@ input {
   .brand {
     grid-column: 1;
     grid-row: 1;
+  }
+  .site-clock {
+    flex-direction: column;
+    min-height: 34px;
+  }
+  #siteClockCountdown::before {
+    content: none;
   }
   #viewSeg,
   .range-control,
@@ -1739,6 +1753,7 @@ kbd {
   align-content: center;
 }
 .docs-open > .topbar .header-flow,
+.docs-open > .topbar .site-clock,
 .docs-open > #viewBody,
 .docs-open > #sharedNotice,
 .docs-open > #siteStorageNotice,

@@ -1,5 +1,10 @@
 import { InverseRefraction, Refraction } from 'astronomy-engine';
 
+/** Solar center threshold for the upper limb at a level horizon, with scaled refraction. */
+export function solarHorizon(density: number): number {
+  return -0.833 + (34 / 60) * (1 - density);
+}
+
 /** Idealized refraction scales with air density (pressure / absolute temperature). */
 export function apparentAltitude(geometric: number, density: number): number {
   return geometric + density * Refraction('normal', geometric);

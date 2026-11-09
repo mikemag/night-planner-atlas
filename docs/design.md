@@ -295,7 +295,12 @@ Lunations retains its focus window and opens the night detail even if the date f
   thresholds share one horizontal band. Related controls stay together and wrap as groups when
   space runs out. The site block has a bounded width so it cannot push every other control away.
   Desktop control faces share a 30 px height and top edge; small labels align with the app title,
-  while the site clock occupies its own line below. The view tabs and More button align with the
+  while the site clock and next-phase countdown share a full-width line below the control band.
+  The countdown follows the next solar phase (civil, nautical or astronomical twilight,
+  astronomical darkness, or daylight), using the site's location and elevation. It shows elapsed
+  minutes, adding hours/days for longer waits and showing “<1min” just before a transition.
+  Phones reserve two lines for the time and countdown so a longer phase name cannot move the chart.
+  The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
   An upper-right, unboxed **More options (⋯)** button with vertically centered dots opens a
   Bootstrap dropdown with sharing, calendar export and theme controls. System, Light, Dark and Observing
@@ -437,9 +442,11 @@ Lunations retains its focus window and opens the night detail even if the date f
   Blank elevation uses sea level; existing saved sites keep their coordinates.
   Elevation adjusts observer position and idealized refraction while assuming
   a level horizon, with no terrain lookup. The default is Seattle. Beside the location, a reserved
-  readout shows the site's current local date/time, abbreviation, UTC offset and IANA zone.
-  It updates each minute, on returning to the page and immediately on site changes; chart
-  selection does not affect that clock.
+  readout shows the site's current local date/time, abbreviation, UTC offset and IANA zone,
+  followed by the time until the next solar phase. It updates at clock/countdown minutes and
+  phase boundaries, on returning to the page and immediately on site changes. The selected
+  night, loaded range and Moon settings do not affect the readout. Calculations stay in the
+  browser; the next transition is cached until it passes or the location/elevation changes.
 
   Starter elevations are approximate metres above sea level, looked up during development and
   bundled with the sites; there is no runtime elevation request:

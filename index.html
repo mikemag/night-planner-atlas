@@ -48,9 +48,6 @@
                   <option>Seattle</option>
                 </select>
               </span>
-              <span class="site-clock" id="siteClock" aria-label="Current time at the site"
-                ><span id="siteClockTime"></span><span class="sr-only" id="siteClockZone"></span
-              ></span>
             </div>
           </div>
           <div class="seg btn-group btn-group-sm" id="viewSeg" role="group" aria-label="View">
@@ -156,6 +153,11 @@
               </div>
             </details>
           </div>
+        </div>
+        <div class="site-clock" id="siteClock" aria-label="Current time and next phase at the site">
+          <span id="siteClockTime"></span>
+          <span id="siteClockCountdown"></span>
+          <span class="sr-only" id="siteClockZone"></span>
         </div>
         <div class="header-actions">
           <a

@@ -9,7 +9,7 @@ import {
   SearchAltitude,
 } from 'astronomy-engine';
 import { pad2 } from './format';
-import { apparentAltitude } from './refraction';
+import { apparentAltitude, solarHorizon } from './refraction';
 import { moonWindows, type MoonWindow } from './moon';
 import { moonlightOpacity } from './moonlight';
 import { MS_D, MS_H, MS_M, type TimeZone } from './time';
@@ -120,7 +120,7 @@ export function computeNight(
   const noon = tz.utcForWall(wallNoon);
   const nextNoon = tz.utcForWall(Date.UTC(y, m - 1, d + 1, 12));
   const density = Atmosphere(observer.height).density;
-  const sunHorizon = -0.833 + (34 / 60) * (1 - density);
+  const sunHorizon = solarHorizon(density);
   const find = (dir: number, alt: number, from = noon): number | null => {
     if (from >= nextNoon) return null;
     try {
