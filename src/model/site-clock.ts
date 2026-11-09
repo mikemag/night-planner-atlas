@@ -1,6 +1,4 @@
-import { Atmosphere, Body, Observer, SearchAltitude } from 'astronomy-engine';
-import { SUN_EVENTS, type Site, type SunEvent } from './night';
-import { solarHorizon } from './refraction';
+import { solarCrossings, type Interval, type Night, type SunEvent } from './night';
 import { MS_D, MS_M } from './time';
 
 /** Current civil time at the site, independent of both the chart date and the viewer's zone. */
@@ -40,38 +38,20 @@ const NEXT_PHASE: Record<SunEvent, string> = {
   sunrise: 'daylight',
 };
 
-/** Next real solar transition, independent of the chart range and its noon boundaries. */
-export function nextSolarPhase(site: Site, now: number): NextSolarPhase | null {
-  const observer = new Observer(site.lat, site.lon, site.elevation ?? 0);
-  const horizon = solarHorizon(Atmosphere(observer.height).density);
-  const altitudes = [horizon, -6, -12, -18, -18, -12, -6, horizon];
+/** Read the chart's real solar crossings, never a clipped noon boundary. */
+export function nextSolarPhase(nights: readonly Night[], now: number): NextSolarPhase | null {
   let next: NextSolarPhase | null = null;
-  // Step past the solver's subsecond tolerance so a just-reached crossing cannot repeat.
-  const from = now + 1000;
-  // A full year covers polar seasons. Narrow later searches to the earliest event found.
-  let until = now + 370 * MS_D;
-  for (const [i, event] of SUN_EVENTS.entries()) {
-    const result = SearchAltitude(
-      Body.Sun,
-      observer,
-      i < 4 ? -1 : 1,
-      new Date(from),
-      (until - from) / MS_D,
-      altitudes[i],
-    );
-    if (result) {
-      const at = result.date.getTime();
-      next = { event, at, name: NEXT_PHASE[event] };
-      until = at;
-    }
+  for (const n of nights) {
+    if (n.nextNoon <= now || (next && n.noon >= next.at)) continue;
+    for (const { event, t } of solarCrossings(n))
+      if (t > now && (!next || t < next.at)) next = { event, at: t, name: NEXT_PHASE[event] };
   }
   return next;
 }
 
 /** Elapsed time, rounded up to minutes; never show zero before the transition. */
-export function formatPhaseCountdown(next: NextSolarPhase, now: number): string {
-  const remaining = next.at - now;
-  if (remaining < MS_M) return `<1min to ${next.name}`;
+export function formatCountdown(remaining: number): string {
+  if (remaining < MS_M) return '<1min';
   const minutes = Math.ceil(remaining / MS_M);
   const days = Math.floor(minutes / 1440);
   const hours = Math.floor((minutes % 1440) / 60);
@@ -79,5 +59,99 @@ export function formatPhaseCountdown(next: NextSolarPhase, now: number): string 
   const duration = [days && `${days}d`, hours && `${hours}h`, mins && `${mins}min`]
     .filter(Boolean)
     .join(' ');
-  return `${duration} to ${next.name}`;
+  return duration;
+}
+
+export function formatPhaseCountdown(next: NextSolarPhase, now: number): string {
+  return `${formatCountdown(next.at - now)} to ${next.name}`;
+}
+
+export interface NightStatus {
+  solar: NextSolarPhase | null;
+  /** A usable start within this night's darkness, or the current window's end. */
+  usable: { active: boolean; at: number | null } | null;
+  /** More coverage is needed to settle usable darkness, including an unknown current end. */
+  usablePending: boolean;
+  /** End of uninterrupted coverage, not necessarily a real transition. */
+  through: number;
+}
+
+/** Use the very same derived windows as the views, joining them across observing-date boundaries. */
+export function nightStatus(nights: readonly Night[], now: number): NightStatus | null {
+  const first = nights.findIndex((n) => n.noon <= now && now < n.nextNoon);
+  if (first < 0) return null;
+  let end = first + 1;
+  while (end < nights.length && nights[end].noon === nights[end - 1].nextNoon) end++;
+  const covered = nights.slice(first, end);
+  const through = covered.at(-1)!.nextNoon;
+  // Stop at this observing night's astronomical dawn. Only darkness that actually
+  // continues through noon can extend the search into subsequent observing dates.
+  let darkEnd = covered[0].sunBelow.astronomical.at(-1)?.[1] ?? covered[0].noon;
+  for (let i = 1; i < covered.length && darkEnd === covered[i].noon; i++) {
+    const continuation = covered[i].sunBelow.astronomical[0];
+    if (continuation?.[0] !== darkEnd) break;
+    darkEnd = continuation[1];
+  }
+  let window: Interval | null = null;
+  for (const n of covered) {
+    if (n.noon >= darkEnd) break;
+    for (const [a, b] of n.mf) {
+      if (b <= now || a >= darkEnd) continue;
+      if (!window) window = [a, b];
+      else if (a <= window[1]) window[1] = Math.max(window[1], b);
+      else break;
+    }
+    if (window && window[1] < n.nextNoon) break;
+  }
+  const active = window != null && window[0] <= now;
+  return {
+    solar: nextSolarPhase(covered, now),
+    usable: window
+      ? { active, at: active ? (window[1] < through ? window[1] : null) : window[0] }
+      : null,
+    usablePending: window ? active && window[1] === through : darkEnd === through,
+    through,
+  };
+}
+
+/** Two text segments become one shared countdown when their actual boundary instants match. */
+export function formatNightStatus(status: NightStatus | null, now: number, finished = false) {
+  const solar = status?.solar;
+  const usable = status?.usable;
+  const horizon = Math.max(1, Math.floor(((status?.through ?? now) - now) / MS_D));
+  let phase = solar
+    ? formatPhaseCountdown(solar, now)
+    : finished
+      ? `No solar change in next ${horizon}d`
+      : 'Finding next phase…';
+  let dark = !usable
+    ? (status && !status.usablePending) || finished
+      ? ''
+      : 'Finding usable dark…'
+    : usable.active
+      ? `Usable dark now${usable.at == null ? '' : `, ${formatCountdown(usable.at - now)} left`}`
+      : `usable dark in ${formatCountdown(usable.at! - now)}`;
+  let combined: 'start' | 'end' | '' = '';
+  if (solar && usable?.at === solar.at) {
+    if (usable.active) {
+      combined = 'end';
+      phase = 'Usable dark now';
+      dark = `${formatCountdown(solar.at - now)} left, until ${solar.name}`;
+    } else {
+      combined = 'start';
+      dark = '+ usable dark';
+    }
+  }
+  return { phase, dark, combined, active: usable?.active ?? false };
+}
+
+/** Wake for both countdowns, phase/window transitions and wall-clock minutes. */
+export function nextClockTick(status: NightStatus | null, now: number): number {
+  let delay = MS_M - (now % MS_M);
+  for (const at of [status?.solar?.at, status?.usable?.at]) {
+    if (at == null || at <= now) continue;
+    const remaining = at - now;
+    delay = Math.min(delay, remaining, (remaining % MS_M || MS_M) + 1);
+  }
+  return Math.max(1, delay);
 }

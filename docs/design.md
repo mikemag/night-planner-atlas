@@ -295,11 +295,22 @@ Lunations retains its focus window and opens the night detail even if the date f
   thresholds share one horizontal band. Related controls stay together and wrap as groups when
   space runs out. The site block has a bounded width so it cannot push every other control away.
   Desktop control faces share a 30 px height and top edge; small labels align with the app title,
-  while the site clock and next-phase countdown share a full-width line below the control band.
+  while the site clock, next-phase countdown and usable-dark status share a full-width line below the control band.
   The countdown follows the next solar phase (civil, nautical or astronomical twilight,
   astronomical darkness, or daylight), using the site's location and elevation. It shows elapsed
   minutes, adding hours/days for longer waits and showing “<1min” just before a transition.
-  Phones reserve two lines for the time and countdown so a longer phase name cannot move the chart.
+  Usable dark follows the same windows and Moon settings as the charts. Before a window, its
+  readout says “usable dark in …”; inside one, “Usable dark now, … left” has a small green marker.
+  The usable countdown stops at the end of the current observing night's astronomical darkness;
+  it never skips ahead to another night's window. Without a remaining usable window, only the
+  solar countdown is shown; the usable segment and its separator are empty.
+  Shared starts read “14min to astronomical darkness + usable dark.” When a usable window ends
+  at dawn, the readout combines them as “Usable dark now · 2h left, until astronomical twilight.”
+  Combining requires identical event instants, not merely the same rounded minute. Adjacent
+  usable windows are joined across observing-date boundaries, so noon alone cannot end a window.
+  Phones reserve three lines for the clock and two status segments, including while calculations
+  load and when the usable segment is empty, so changing phase names or shared/separate
+  transitions cannot move the chart.
   The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
   An upper-right, unboxed **More options (⋯)** button with vertically centered dots opens a
@@ -443,10 +454,11 @@ Lunations retains its focus window and opens the night detail even if the date f
   Elevation adjusts observer position and idealized refraction while assuming
   a level horizon, with no terrain lookup. The default is Seattle. Beside the location, a reserved
   readout shows the site's current local date/time, abbreviation, UTC offset and IANA zone,
-  followed by the time until the next solar phase. It updates at clock/countdown minutes and
-  phase boundaries, on returning to the page and immediately on site changes. The selected
-  night, loaded range and Moon settings do not affect the readout. Calculations stay in the
-  browser; the next transition is cached until it passes or the location/elevation changes.
+  followed by the solar and usable-dark status. It updates at clock/countdown minutes, solar
+  and usable-window boundaries, on returning to the page and immediately on site or Moon-setting
+  changes. The selected night and browsed range do not affect it. Calculations stay in the
+  browser. The status reads the chart's computed nights directly and retains current nights while
+  another year is browsed. Missing months use the same calculation and cache path as the views.
 
   Starter elevations are approximate metres above sea level, looked up during development and
   bundled with the sites; there is no runtime elevation request:

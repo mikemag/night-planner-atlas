@@ -1,15 +1,10 @@
-import { S } from '../app/state';
-import type { Site } from '../model/night';
-import {
-  formatPhaseCountdown,
-  formatSiteClock,
-  nextSolarPhase,
-  type NextSolarPhase,
-} from '../model/site-clock';
-import { MS_D, MS_M } from '../model/time';
+import { S, data } from '../app/state';
+import { LiveNights } from '../app/live-nights';
+import { siteKey } from '../app/night-cache-format';
+import { formatNightStatus, formatSiteClock, nextClockTick } from '../model/site-clock';
 import { el } from './dom';
 
-let phase: { site: Site; from: number; next: NextSolarPhase | null } | null = null;
+const nights = new LiveNights(updateSiteClock);
 let timer: number | undefined;
 
 export function updateSiteClock(): void {
@@ -20,34 +15,29 @@ export function updateSiteClock(): void {
   el('siteClockZone').textContent = clock.slice(zone);
   el('siteClock').title = S.site.tz;
 
-  if (
-    !phase ||
-    phase.site.lat !== S.site.lat ||
-    phase.site.lon !== S.site.lon ||
-    (phase.site.elevation ?? 0) !== (S.site.elevation ?? 0) ||
-    now < phase.from ||
-    now >= (phase.next?.at ?? phase.from + MS_D)
-  ) {
-    phase = { site: { ...S.site }, from: now, next: nextSolarPhase(S.site, now) };
-  }
-  const next = phase.next;
-  el('siteClockCountdown').textContent = next
-    ? formatPhaseCountdown(next, now)
-    : 'Next phase unavailable';
+  const status = nights.read(S.site, S, now, data.ready ? data.range : null);
+  const text = formatNightStatus(status, now, nights.finished(status, now));
+  el('siteClockCountdown').textContent =
+    nights.unavailable && !status?.solar ? 'Phase timing unavailable' : text.phase;
+  el('siteClockUsable').textContent =
+    nights.unavailable && !status?.usable && (!status || status.usablePending)
+      ? 'Usable dark timing unavailable'
+      : text.dark;
+  el('siteClock').dataset.combined = text.combined;
+  el('siteClockCountdown').classList.toggle('usable-now', text.active && text.combined === 'end');
+  el('siteClockUsable').classList.toggle('usable-now', text.active && text.combined !== 'end');
 
-  // Tick at clock minutes, countdown minutes and the transition itself. Re-arm on site
-  // changes and tab restoration, always using real elapsed time rather than counting ticks.
-  let delay = MS_M - (now % MS_M);
-  if (next) {
-    const remaining = next.at - now;
-    delay = Math.min(delay, remaining, (remaining % MS_M || MS_M) + 1);
-  }
+  // Let the chart supply its nights first. When browsing another year, the same acquisition
+  // path supplies just the missing current months, with no separate solar or lunar solver.
+  if (data.ready && data.range && siteKey(data.range.site) === siteKey(S.site))
+    nights.extend(S.site, status, now);
   window.clearTimeout(timer);
-  timer = window.setTimeout(updateSiteClock, Math.max(1, delay));
+  timer = window.setTimeout(updateSiteClock, nextClockTick(status, now));
 }
 
 export function initSiteClock(): void {
   updateSiteClock();
+  window.addEventListener('npa-ready', updateSiteClock);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) updateSiteClock();
   });

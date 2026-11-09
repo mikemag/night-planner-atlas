@@ -318,7 +318,9 @@ export function deriveRange(r: NightRange, th: Thresholds, lunN: number): void {
 
 export interface ComputeOptions {
   /** Validated, threshold-independent nights restored by the app's optional month cache. */
-  cachedNights?: ReadonlyMap<string, Night>;
+  cachedNights?: Pick<ReadonlyMap<string, Night>, 'get'>;
+  /** Publish each night before yielding, so concurrent consumers can share its calculation. */
+  onNight?: (night: Night, computed: boolean) => void;
   /** An explicit range, e.g. a shared plan or calendar year. */
   spec?: RangeSpec;
   /** Called after each slice with the number of nights done and the total. */
@@ -340,15 +342,14 @@ function setup(site: Site, shift: number, now: number, explicit?: RangeSpec) {
  * Compute every night of the range in short slices, yielding between them so the page
  * stays responsive. Resolves to null when cancelled.
  */
-export async function computeRange(
+export async function computeNights(
   site: Site,
-  shift: number,
-  th: Thresholds,
-  lunN: number,
-  now: number,
-  opts: ComputeOptions = {},
-): Promise<NightRange | null> {
-  const { tz, observer, spec, list } = setup(site, shift, now, opts.spec);
+  spec: RangeSpec,
+  opts: Omit<ComputeOptions, 'spec'> = {},
+): Promise<Night[] | null> {
+  const tz = new TimeZone(site.tz);
+  const observer = new Observer(site.lat, site.lon, site.elevation ?? 0);
+  const list = nightDates(spec);
   const slice = opts.sliceMs ?? 24;
   const nights: Night[] = [];
   let k = 0;
@@ -358,14 +359,32 @@ export async function computeRange(
     while (k < list.length && performance.now() - t < slice) {
       const [y, m, d] = list[k];
       const id = `${y}-${pad2(m)}-${pad2(d)}`;
-      nights.push(opts.cachedNights?.get(id) ?? computeNight(observer, tz, y, m, d));
+      const cached = opts.cachedNights?.get(id);
+      const night = cached ?? computeNight(observer, tz, y, m, d);
+      nights.push(night);
+      opts.onNight?.(night, !cached);
       k++;
     }
     opts.onProgress?.(k, list.length);
     if (k >= list.length) break;
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
   }
-  const r = buildStructures(nights, site, tz, spec, now);
+  return nights;
+}
+
+/** Shared night calculations plus the chart's range structures and planning summaries. */
+export async function computeRange(
+  site: Site,
+  shift: number,
+  th: Thresholds,
+  lunN: number,
+  now: number,
+  opts: ComputeOptions = {},
+): Promise<NightRange | null> {
+  const spec = opts.spec ?? rangeStart(now, new TimeZone(site.tz), shift);
+  const nights = await computeNights(site, spec, opts);
+  if (!nights || opts.isCancelled?.()) return null;
+  const r = buildStructures(nights, site, nights[0].tz, spec, now);
   deriveRange(r, th, lunN);
   return r;
 }

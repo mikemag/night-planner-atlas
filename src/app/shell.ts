@@ -36,7 +36,7 @@ import type { CanvasView } from '../views/view';
 import type { ChartViewId, ViewId } from './settings';
 import { savePreferences, type Preferences } from './personal-data';
 import { S, activeFocus, data, type AppState } from './state';
-import { computeCachedRange } from './compute-cached';
+import { calculationTotals, computeCachedRange } from './compute-cached';
 
 const sizer = el('sizer');
 
@@ -546,6 +546,7 @@ export function setThreshold(key: 'moonAlt' | 'crescent', value: number): void {
     relayout();
     if (anchor) calendar.restoreAnchor(anchor);
   }
+  updateSiteClock();
 }
 
 function requestedRange(now: number, tz: TimeZone): RangeSpec {
@@ -728,6 +729,7 @@ export function boot(): void {
 
 export interface TestHooks {
   readonly computation: typeof data.computation;
+  readonly calculatedNights: number;
   S: typeof S;
   select: typeof select;
   setView: typeof setView;
@@ -770,6 +772,9 @@ declare global {
 
 function exposeTestHooks(): void {
   window.__npa = {
+    get calculatedNights() {
+      return calculationTotals.nights;
+    },
     get computation() {
       return data.computation;
     },

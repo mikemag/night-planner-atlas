@@ -256,8 +256,22 @@ input {
   overflow-wrap: anywhere;
   padding-inline: 4px;
 }
-#siteClockCountdown::before {
+#siteClockCountdown::before,
+#siteClockUsable::before {
   content: '· ';
+}
+.site-clock[data-combined='start'] #siteClockUsable::before,
+#siteClockUsable:empty::before {
+  content: none;
+}
+.site-clock .usable-now::after {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-inline-start: 5px;
+  vertical-align: middle;
+  background: var(--good);
 }
 #viewSeg {
   flex: none;
@@ -447,9 +461,13 @@ input {
   }
   .site-clock {
     flex-direction: column;
-    min-height: 34px;
+    min-height: 51px;
   }
-  #siteClockCountdown::before {
+  .site-clock > span:not(.sr-only) {
+    min-height: 17px;
+  }
+  #siteClockCountdown::before,
+  #siteClockUsable::before {
     content: none;
   }
   #viewSeg,

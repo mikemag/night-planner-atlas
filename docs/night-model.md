@@ -64,13 +64,10 @@ The same intervals drive shading and sky-stage readouts in every view. A stage c
 throughout the period without either boundary event. Polar night can still contain midday
 twilight. The views label nights when the Sun never gets below −18° as "No astronomical darkness".
 
-The header's live countdown searches for the next solar crossing after the actual current
-instant, independently of the loaded range. It uses these same geometric twilight thresholds
-and elevation-adjusted solar horizon. The label names the phase entered: sunset begins civil
+The header's live status reads the next real solar crossing from these same computed nights,
+independently of the browsed range. It performs no separate solar search. The label names the phase entered: sunset begins civil
 twilight, civil dusk begins nautical twilight, nautical dusk begins astronomical twilight,
 and astronomical dusk begins astronomical darkness; dawn reverses those stages toward daylight.
-Searches cover up to 370 days for polar seasons and narrow to the earliest crossing found.
-They start one second beyond now so numerical search tolerance cannot repeat a just-reached event.
 Elapsed UTC milliseconds determine the countdown, including across midnight and clock changes.
 This does not change any observing-night calculations or their golden records.
 
@@ -147,6 +144,26 @@ interval and drives all rendering, totals, moonlight and usable-window calculati
   astronomical darkness as usable dark. The Moon is still drawn.
 - Pieces shorter than a minute are dropped. The headline number is the sum of the pieces, and the
   window lists them in order.
+
+The header uses these same derived windows to report a usable start within the current observing
+night's astronomical darkness or the current window's remaining duration. It never counts down
+to usable darkness beyond that night's final astronomical interval. Without a remaining window,
+the usable segment is empty and only the solar countdown is shown.
+The observing night rolls over at local noon. Astronomical darkness and usable windows that
+continue through noon join across that boundary, including polar nights and clock changes;
+only uninterrupted astronomical darkness can extend the usable search beyond the current date.
+A boundary at the end of loaded coverage stays unknown until the following
+night is available; it is never presented as a real usable-dark ending. Solar and usable
+countdowns combine only when their unrounded instants are identical. Threshold changes reuse
+the precomputed Moon crossings and the same `deriveNight` function as the views.
+
+Current nights remain available while another year is browsed. If the current night or a needed
+future transition is missing, the shared acquisition path loads one month at a time until the
+solar transition and usable status are known or at least 370 days are covered. Finding no
+remaining usable window this night completes the usable search. Already-computed nights come from memory
+or the monthly persistent cache. Only misses run `computeNight`, in the usual short slices;
+the status does not build chart axes, moon-quarter ownership or range summaries. An exhausted
+solar search names its actual coverage horizon rather than claiming a transition never occurs.
 
 ## Derived numbers
 
@@ -353,6 +370,14 @@ and repeats when the site or range changes. Changing a threshold only re-derives
 it doesn't recompute positions.
 
 ## Rebuildable monthly cache
+
+The chart and live status share a bounded cache in memory of the 32 most recently used
+site-months, including partial months still being calculated. Each completed night becomes
+available before the next computation slice yields, so overlapping consumers calculate it
+once even when IndexedDB is unavailable. The same exact site inputs key both caches. An explicit
+cache clear invalidates this shared memory on the next acquisition as well as persistent data;
+already-displayed nights remain usable. Temporary sites may use this tab-only memory without
+acquiring persistent coordinate records.
 
 Both development and production builds optionally persist complete site-month calculation blocks
 in IndexedDB under `npa:computed`. Main-thread computation retains the same 24 ms slices, cancellation checks and
