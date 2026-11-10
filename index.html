@@ -158,10 +158,18 @@
           id="siteClock"
           aria-label="Current time, next phase and usable dark at the site"
         >
-          <span id="siteClockTime"></span>
-          <span id="siteClockCountdown"></span>
-          <span id="siteClockUsable"></span>
-          <span class="sr-only" id="siteClockZone"></span>
+          <div class="site-clock-full">
+            <span id="siteClockTime"></span>
+            <span id="siteClockCountdown"></span>
+            <span id="siteClockUsable"></span>
+            <span class="sr-only" id="siteClockZone"></span>
+          </div>
+          <div class="site-clock-compact" aria-hidden="true">
+            <div>
+              <span id="siteClockCompactTime"></span><span id="siteClockCompactUsable"></span>
+            </div>
+            <div id="siteClockCompactPhase"></div>
+          </div>
         </div>
         <div class="plan-actions" id="planActions">
           <button

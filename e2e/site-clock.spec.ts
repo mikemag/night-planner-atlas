@@ -149,6 +149,25 @@ for (const width of [1512, 390, 320, 568, 844]) {
         await page.locator('.topbar').evaluate((el) => el.getBoundingClientRect().height),
       ).toBe(height);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+      if (width !== 1512) {
+        const compact = page.locator('.site-clock-compact');
+        await expect(compact).toBeVisible();
+        expect(await compact.evaluate((el) => el.getBoundingClientRect().height)).toBe(34);
+        const fits = await compact.evaluate((el) => {
+          const clock = el.parentElement!;
+          const available = clock.clientWidth - parseFloat(getComputedStyle(clock).paddingRight);
+          return el.scrollWidth <= available;
+        });
+        expect(fits).toBe(true);
+        if (name === 'active') {
+          await expect(page.locator('#siteClockCompactUsable')).toHaveText('Usable dark now');
+          await expect(page.locator('#siteClockCompactPhase')).toHaveText(
+            '2h to astronomical twilight',
+          );
+        } else if (name === 'early-end') {
+          await expect(page.locator('#siteClockCompactUsable')).toHaveText('Usable dark, 14m left');
+        }
+      }
       if (process.env.SCREENSHOTS)
         await page.screenshot({
           path: `test-results/screenshots/${info.project.name}-usable-status-${name}-${width}.png`,

@@ -137,12 +137,12 @@ flattened.
   focus/context rows, and clamps at the range ends. Selection and the night detail stay unchanged.
   A keyboard scrollbar overlays the same minimap when focused: arrows browse nights, Page Up/Down
   browse screens and Home/End reach the range ends without selecting a different night.
-- **Fixed readout.** River has no floating night tooltip. A reserved strip below the chart shows
+- **Fixed readout.** River has no floating night tooltip. On pointer devices, a reserved strip below the chart shows
   the pointed-at date, site-local clock time, sky stage and explicitly labeled Moon center
   altitude in Month. "Astronomical darkness" describes the sky stage independently of
   whether the Moon is up. In Year, or when pointing at a date or duration gutter, it shows the
   night's usable dark duration and full window times (or why there is none). The crosshair and
-  axis clock label remain. Leaving the chart clears pointer information; clicking, tapping or
+  axis clock label remain. Leaving the chart clears pointer information; clicking or
   keyboard navigation shows the selected night's summary without requiring hover. Moving the
   pointer previews other nights without changing selection. The readout has
   fixed height in each responsive layout so updates cannot move the chart, and pointer updates
@@ -150,6 +150,8 @@ flattened.
   include the event's site-local date and time, rounded to the nearest minute. This is distinct
   from the row's evening date: the event can occur during daylight or on a different civil date.
   Boundary event times appear in the expanded row.
+  Touch devices omit this strip in every chart, giving its height back to the nights. Tapping
+  still updates the accessible selection announcement; expanded details provide the visible facts.
 - _Best at_ showing the shape: the moon leaving the evening dark after full, the whole night open
   at new moon, the dark sliding to the mornings as the moon waxes. It also shows the seasonal
   hourglass and clock changes.
@@ -214,8 +216,8 @@ Friday/Saturday coloring do not appear in Month or Year.
   or Escape to collapse. Enter/Space toggles; Left/Right select neighboring nights and Up/Down move
   a week, carrying the expansion. Native touch swipes do not select a night.
 - **Focus and settings.** New-moon focus quiets daily summaries without removing dates. Planning
-  controls appear inline above the chart, using the same row as River and Lunations. On small
-  screens, the month can scroll vertically to keep summaries readable. The fixed readout previews a
+  controls share River and Lunations' header or phone Plan settings. On small
+  screens, the month can scroll vertically to keep summaries readable. The pointer readout previews a
   pointed-at night and otherwise summarizes the selection. Richer seasonal profiles and weekend
   rankings remain in River.
 - **Sharing.** Month/Week, the selected evening date and expansion are reproducible through the
@@ -253,7 +255,7 @@ New-moon focus crops each cycle to ±N without changing ownership.
   ordered event callouts, usable-window brackets, phase and illumination. Activate the night again,
   use the Close control, or press Escape to collapse. Enter/Space toggles the selected night;
   Left/Right visit displayed nights, skipping omitted dates, while Up/Down preserve the new-moon
-  offset in the preceding/following cycle. An open detail follows selection. The quiet fixed readout
+  offset in the preceding/following cycle. An open detail follows selection. The quiet pointer readout
   previews pointed-at nights and otherwise summarizes selection; there is no floating night tooltip.
 - At phone width (600 px and below), the initial window is ±3, without changing River/Calendar or
   writing a preference. An explicit saved focus choice or shared link takes precedence, including
@@ -313,9 +315,12 @@ Lunations retains its focus window and opens the night detail even if the date f
   at dawn, the readout combines them as “Usable dark now · 2h left, until astronomical twilight.”
   Combining requires identical event instants, not merely the same rounded minute. Adjacent
   usable windows are joined across observing-date boundaries, so noon alone cannot end a window.
-  Phones reserve three lines for the clock and two status segments, including while calculations
-  load and when the usable segment is empty, so changing phase names or shared/separate
-  transitions cannot move the chart.
+  Phones reserve two lines: local date/time and zone abbreviation plus usable-dark status on
+  the first, and the next solar phase/countdown on the second. Compact durations use “m” for
+  minutes, and the usable-dark status follows the current Moon settings. The full wording,
+  UTC offset and IANA zone remain available to assistive technology.
+  Both lines retain their height while loading and when the usable segment is empty, so phase
+  changes and shared/separate transitions cannot move the chart.
   The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
   An upper-right, unboxed **More options (⋯)** button with vertically centered dots opens a
@@ -341,7 +346,9 @@ Lunations retains its focus window and opens the night detail even if the date f
   Portrait stacks the shared header; short landscape screens place the view tabs beside the
   site and Plan settings/Tonight beside the status. This compact arrangement applies through
   700 px wide, and through 1100 px wide when the viewport is at most 500 px tall.
-  Larger touch targets fit at 320 px without horizontal page scrolling. Docs opens its own reading shell.
+  Phone site/view controls have 32 px faces, with tight group spacing; Plan settings and Tonight
+  use 36 px, and dialog controls retain 44 px. They fit at 320 px without horizontal page
+  scrolling. Docs opens its own reading shell.
 - **Chart toolbar and legend.** The panel header keeps zoom controls and the browsed period;
   the active view is already identified by the shared navigation. Its view heading remains
   available to assistive technology. Explanatory sentences belong in How it works and chart help.
@@ -349,7 +356,7 @@ Lunations retains its focus window and opens the night detail even if the date f
   Calendar adds Week. Lunations shows its browsed period without an empty zoom control. Desktop
   uses one row; phone portrait puts the period below the zoom controls, with Legend alongside
   the controls. Landscape keeps the toolbar in one row to preserve chart space.
-  All views share padding, spacing and touch targets.
+  All views share padding, spacing and 32 px phone toolbar controls.
   The compact inline key groups the five named sky stages and uses short Moonlight, Accepted
   moonlight and Usable dark labels. Accepted moonlight appears only with relaxed planning settings.
   Calendar Month/Year already label their duration scale and omit the sky key; Week keeps the sky
@@ -421,7 +428,7 @@ Lunations retains its focus window and opens the night detail even if the date f
 - **Night details.** All three charts share ordered event annotations on the same clock axis,
   with illumination, phase, individual usable-window durations and threshold/clock-change notes.
   Calendar reserves the panel after its selected row; Lunations places it beneath its cycle. River
-  annotates its selected row directly. A fixed readout previews nights without changing selection
+  annotates its selected row directly. On pointer devices, a fixed readout previews nights without changing selection
   and lists every separate usable window.
 - **Planning thresholds.** _Moon’s upper edge above_ (0°–15°) allows for a tree line or hills.
   The Moon counts as up while any part of its refracted disk

@@ -33,6 +33,7 @@ of the chosen year. The arrows shift the range by a year. **Tonight** jumps to t
 observing night and returns to Around now if that night is outside the range.
 On phones, **Plan settings** groups Range, new-moon focus and Moon thresholds. The compact
 header keeps the site, view tabs, Tonight and live status visible in portrait and landscape.
+The status uses two lines; touch charts omit the desktop hover readout to leave more room for nights.
 
 All views share one visual language and Moon settings for when the Moon counts as up and whether
 to ignore a thin crescent. The charts also support new-moon focus (±N nights) and share ordered

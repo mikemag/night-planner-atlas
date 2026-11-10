@@ -66,6 +66,7 @@ for (const [width, height] of [
         await expect(page.locator('#planSettingsBtn')).toBeVisible();
         await expect(page.locator('#todayBtn')).toBeInViewport();
         await expect(page.locator('#planningControls')).toBeHidden();
+        await expect(page.locator('#riverReadout')).toBeHidden();
         const geometry = await page.evaluate((view) => {
           const bounds = document
             .getElementById(view === 'weekends' ? 'tripScroll' : 'scroller')!
@@ -80,9 +81,17 @@ for (const [width, height] of [
         }, view);
         expect(geometry.width).toBe(width);
         expect(geometry.height).toBe(height);
-        expect(geometry.header).toBeLessThanOrEqual(width > height ? 124 : 230);
-        expect(geometry.panel).toBeGreaterThanOrEqual(width > height ? 80 : 150);
+        expect(geometry.header).toBeLessThanOrEqual(width > height ? 96 : 174);
+        expect(geometry.panel).toBeGreaterThanOrEqual(width > height ? 135 : 280);
         expect(geometry.bottom).toBeLessThan(height);
+        const controls = await page
+          .locator('#siteSel, #viewSeg button, #viewCtl button, #legendBtn')
+          .evaluateAll((nodes) =>
+            nodes
+              .filter((node) => node.getClientRects().length)
+              .map((node) => node.getBoundingClientRect().height),
+          );
+        expect(controls.every((height) => height === 32)).toBe(true);
         if (process.env.SCREENSHOTS)
           await page.screenshot({
             path: `test-results/screenshots/${info.project.name}-phone-${width}x${height}-${view}-${theme}.png`,

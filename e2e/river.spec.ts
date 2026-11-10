@@ -310,7 +310,7 @@ test('Year readout supplies the hovered night total and window', async ({ page }
 
 test.describe('touch River', () => {
   test.use({ hasTouch: true });
-  test('tap reveals the selected night summary without a tooltip or horizontal overflow', async ({
+  test('tap announces the selected night without reserving a hover readout on touch', async ({
     page,
   }, info) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -321,11 +321,7 @@ test.describe('touch River', () => {
     await expect(page.locator('#riverReadout')).toContainText('Fri Sep 25, 2026');
     await expect(page.locator('#tip')).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
-    const readout = page.locator('#riverReadout');
-    await expect(readout).toBeVisible();
-    expect(await readout.evaluate((e) => e.scrollHeight)).toBeLessThanOrEqual(
-      await readout.evaluate((e) => e.clientHeight),
-    );
+    await expect(page.locator('#riverReadout')).toBeHidden();
     if (process.env.SCREENSHOTS)
       await page.screenshot({
         path: `test-results/screenshots/${info.project.name}-river-phone-selected.png`,
