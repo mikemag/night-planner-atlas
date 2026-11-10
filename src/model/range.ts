@@ -1,6 +1,13 @@
 import { NextMoonQuarter, Observer, SearchMoonQuarter } from 'astronomy-engine';
 import { pad2 } from './format';
-import { computeNight, deriveNight, type Night, type Site, type Thresholds } from './night';
+import {
+  computeNight,
+  deriveNight,
+  type Night,
+  type SolarNight,
+  type Site,
+  type Thresholds,
+} from './night';
 import { MS_D, MS_H, TimeZone } from './time';
 
 /** First month and number of months of a loaded range. */
@@ -306,17 +313,22 @@ export function bestWeekends(r: NightRange, N: number): void {
 
 /** Apply thresholds to every night, then refresh the totals that depend on them. */
 export function deriveRange(r: NightRange, th: Thresholds, lunN: number): void {
+  for (const n of r.nights) deriveNight(n, th);
+  summarizeRange(r, lunN);
+}
+
+/** Refresh range-wide totals after all nights have already been derived, e.g. month by month. */
+export function summarizeRange(r: NightRange, lunN: number): void {
   let maxMF = 1;
-  for (const n of r.nights) {
-    deriveNight(n, th);
-    maxMF = Math.max(maxMF, n.mfMs);
-  }
+  for (const n of r.nights) maxMF = Math.max(maxMF, n.mfMs);
   r.maxMF = maxMF;
   bestWeekends(r, lunN);
   for (const mo of r.months) monthStats(r, mo);
 }
 
 export interface ComputeOptions {
+  /** Solar geometry prepared for a progressive range; reuse it in the fallback as well. */
+  solarNights?: Pick<ReadonlyMap<string, SolarNight>, 'get'>;
   /** Validated, threshold-independent nights restored by the app's optional month cache. */
   cachedNights?: Pick<ReadonlyMap<string, Night>, 'get'>;
   /** Publish each night before yielding, so concurrent consumers can share its calculation. */
@@ -360,7 +372,7 @@ export async function computeNights(
       const [y, m, d] = list[k];
       const id = `${y}-${pad2(m)}-${pad2(d)}`;
       const cached = opts.cachedNights?.get(id);
-      const night = cached ?? computeNight(observer, tz, y, m, d);
+      const night = cached ?? computeNight(observer, tz, y, m, d, opts.solarNights?.get(id));
       nights.push(night);
       opts.onNight?.(night, !cached);
       k++;

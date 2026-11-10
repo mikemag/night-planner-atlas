@@ -287,7 +287,10 @@
           <div class="stage-head">
             <h2 class="sr-only" id="viewTitle">River</h2>
             <span id="viewCtl"></span>
-            <span class="view-period" id="periodLabel">—</span>
+            <div class="view-period">
+              <span id="periodLabel">—</span>
+              <div id="periodLoading"></div>
+            </div>
             <div class="panel-key dropdown" id="panelKey">
               <div class="legend" id="legend" role="list" aria-label="Chart color key">
                 <div class="legend-sky" role="presentation">
@@ -465,7 +468,7 @@
               <p class="trip-note">Totals and differences are rounded separately to the minute.</p>
             </div>
           </section>
-          <div class="loading" id="loading">
+          <div class="loading" id="loading" role="status" aria-live="polite">
             <div class="loading-inner">
               <span id="loadingText">Computing sun and moon for each night…</span>
               <div class="bar"><i id="loadingBar"></i></div>

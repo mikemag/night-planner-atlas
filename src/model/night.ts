@@ -104,18 +104,36 @@ export interface Night {
 }
 
 /** Wall-clock hours after the night's local noon for the instant `ms`. */
-export function wallH(ms: number, n: Night): number {
+export function wallH(ms: number, n: Pick<Night, 'tz' | 'wallNoon'>): number {
   return (ms + n.tz.offsetMin(ms) * MS_M - n.wallNoon) / MS_H;
 }
 
-/** Sun events and Sun and Moon altitude samples for the night starting on local date y-m-d. */
-export function computeNight(
+export type SolarNight = Pick<
+  Night,
+  | 'id'
+  | 'y'
+  | 'm'
+  | 'd'
+  | 'dow'
+  | 'tz'
+  | 'wallNoon'
+  | 'noon'
+  | 'nextNoon'
+  | 'mid'
+  | 'ev'
+  | 'evH'
+  | 'sunBelow'
+  | 'dst'
+>;
+
+/** Solar geometry, shared by range preparation and the complete night calculation. */
+export function computeSolarNight(
   observer: Observer,
   tz: TimeZone,
   y: number,
   m: number,
   d: number,
-): Night {
+): SolarNight {
   const wallNoon = Date.UTC(y, m - 1, d, 12);
   const noon = tz.utcForWall(wallNoon);
   const nextNoon = tz.utcForWall(Date.UTC(y, m - 1, d + 1, 12));
@@ -180,6 +198,41 @@ export function computeNight(
     nautical: below(-12, ev.nauticalDusk, ev.nauticalDawn),
     astronomical: below(-18, ev.astroDusk, ev.astroDawn),
   };
+  const n: SolarNight = {
+    id: `${y}-${pad2(m)}-${pad2(d)}`,
+    y,
+    m,
+    d,
+    dow: new Date(Date.UTC(y, m - 1, d)).getUTCDay(),
+    tz,
+    wallNoon,
+    noon,
+    nextNoon,
+    mid: tz.utcForWall(Date.UTC(y, m - 1, d + 1, 0)),
+    ev,
+    evH: { ...ev },
+    sunBelow,
+    dst: tz.offsetMin(noon) !== tz.offsetMin(noon + 20 * MS_H),
+  };
+  for (const k of SUN_EVENTS) {
+    const t = ev[k];
+    n.evH[k] = t == null ? null : wallH(t, n);
+  }
+  return n;
+}
+
+/** Sun and Moon data; a prepared solar night avoids repeating the range's geometry pass. */
+export function computeNight(
+  observer: Observer,
+  tz: TimeZone,
+  y: number,
+  m: number,
+  d: number,
+  solar?: SolarNight,
+): Night {
+  const base = solar ?? computeSolarNight(observer, tz, y, m, d);
+  const { noon, nextNoon, ev, sunBelow, mid } = base;
+  const density = Atmosphere(observer.height).density;
   // Cover the whole dark part of long nights, preserving the ordinary 2 h–22 h window.
   const fullDay = ev.sunset == null || ev.sunrise == null;
   const S0 = fullDay
@@ -207,33 +260,18 @@ export function computeNight(
     const es = Equator(Body.Sun, t, observer, true, true);
     sunAlt[i] = apparentAltitude(Horizon(t, observer, es.ra, es.dec).altitude, density);
   }
-  const mid = tz.utcForWall(Date.UTC(y, m - 1, d + 1, 0));
   const md = new Date(mid);
   const illum = Illumination(Body.Moon, md).phase_fraction;
   const phase = MoonPhase(md);
-  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
   const n: Night = {
-    id: `${y}-${pad2(m)}-${pad2(d)}`,
-    y,
-    m,
-    d,
-    dow,
-    tz,
-    wallNoon,
-    noon,
-    nextNoon,
-    mid,
+    ...base,
     S0,
-    ev,
-    evH: { ...ev },
-    sunBelow,
     moonAlt,
     moonlight,
     moonWindows: moonWindows(observer, S0, sampleEnd),
     sunAlt,
     illum,
     phase,
-    dst: false,
     quarter: -1,
     nmOff: 99,
     moonUp: [],
@@ -248,11 +286,6 @@ export function computeNight(
     moonRise: null,
     moonSet: null,
   };
-  for (const k of SUN_EVENTS) {
-    const t = ev[k];
-    n.evH[k] = t == null ? null : wallH(t, n);
-  }
-  n.dst = tz.offsetMin(noon) !== tz.offsetMin(noon + 20 * MS_H);
   return n;
 }
 

@@ -18,7 +18,7 @@ import {
   toggleCalendarNight,
   openCalendarMonth,
 } from '../app/shell';
-import { S, data } from '../app/state';
+import { S, data, viewReady } from '../app/state';
 import { prepareTimeZones } from '../app/timezones';
 import { MAX_CALENDAR_YEAR, MIN_CALENDAR_YEAR } from '../model/range';
 import { cv, size } from '../render/surface';
@@ -98,7 +98,7 @@ function initCanvasPointer(): void {
   } | null = null;
   cv.addEventListener('pointermove', (e) => {
     const v = canvasView();
-    if (!data.ready || !v) return;
+    if (!viewReady() || !v) return;
     const r = cv.getBoundingClientRect();
     const px = e.clientX - r.left,
       py = e.clientY - r.top;
@@ -121,7 +121,7 @@ function initCanvasPointer(): void {
   });
   cv.addEventListener('pointerdown', (e) => {
     const v = canvasView();
-    if (!data.ready || !v || e.button !== 0) return;
+    if (!viewReady() || !v || e.button !== 0) return;
     const r = cv.getBoundingClientRect();
     const h = v.hit(e.clientX - r.left, e.clientY - r.top);
     if (!h) return;
@@ -206,7 +206,7 @@ function initKeyboard(): void {
       target?.closest('.modal, .dropdown-menu') ||
       target?.closest('#riverMinimap') ||
       (e.key !== 'Escape' && target?.closest('#calendarHeaders')) ||
-      !data.ready ||
+      !viewReady() ||
       !data.range ||
       e.altKey ||
       e.ctrlKey ||

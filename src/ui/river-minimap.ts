@@ -1,4 +1,4 @@
-import { S, data } from '../app/state';
+import { S, data, viewReady } from '../app/state';
 import { nightTitle } from '../model/format';
 import { cv, size } from '../render/surface';
 import { river } from '../views/river';
@@ -7,7 +7,7 @@ import { el, scroller } from './dom';
 /** Keyboard twin of the painted minimap; pointer input continues to go to the canvas. */
 export function initRiverMinimap(): void {
   el('riverMinimap').addEventListener('keydown', (event) => {
-    if (event.altKey || event.ctrlKey || event.metaKey || !data.ready) return;
+    if (event.altKey || event.ctrlKey || event.metaKey || !viewReady()) return;
     const i = river.topNight();
     const last = data.range!.nights.length - 1;
     let y: number;
@@ -41,7 +41,7 @@ export function initRiverMinimap(): void {
 
 export function updateRiverMinimap(): void {
   const nav = el('riverMinimap');
-  nav.hidden = S.view !== 'river' || S.riverZoom !== 'month' || !river.MINI || !data.ready;
+  nav.hidden = S.view !== 'river' || S.riverZoom !== 'month' || !river.MINI || !viewReady();
   if (nav.hidden) {
     if (document.activeElement === nav) cv.focus({ preventScroll: true });
     return;

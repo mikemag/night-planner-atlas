@@ -1,4 +1,4 @@
-import { S, atlas } from '../app/state';
+import { S, atlas, nightReady } from '../app/state';
 import { moonAltAt, phaseAt, windowsText } from '../model/describe';
 import { fmtClock, fmtDur, MON3, WD3 } from '../model/format';
 import { el } from './dom';
@@ -12,6 +12,10 @@ export function updateRiverReadout(): void {
   let value = '';
   if (n) {
     const date = `${WD3[n.dow]} ${MON3[n.m - 1]} ${n.d}, ${n.y}`;
+    if (!nightReady(i)) {
+      box.textContent = `${date} · Still calculating this night…`;
+      return;
+    }
     if (S.view === 'river' && hover?.hh != null && S.riverZoom !== 'year') {
       const alt = moonAltAt(n, hover.hh);
       const moon =

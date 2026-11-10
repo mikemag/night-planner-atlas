@@ -721,6 +721,24 @@ input {
   font-size: 13px;
   background: var(--panel);
 }
+#periodLoading {
+  display: inline;
+}
+.loading.progressive {
+  position: static;
+  display: inline;
+  margin-left: 10px;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 450;
+  pointer-events: none;
+}
+.loading.progressive .loading-inner {
+  display: inline;
+}
+.loading.progressive .bar {
+  display: none;
+}
 .loading-inner {
   display: grid;
   gap: 8px;

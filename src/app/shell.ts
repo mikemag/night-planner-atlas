@@ -1,6 +1,6 @@
 import { MON3, MONL, fmtDur, nightTitle } from '../model/format';
 import { windowsText } from '../model/describe';
-import type { Site } from '../model/night';
+import { deriveNight, type Site } from '../model/night';
 import {
   bestWeekends,
   CALENDAR_MONTHS,
@@ -35,7 +35,7 @@ import { river } from '../views/river';
 import type { CanvasView } from '../views/view';
 import type { ChartViewId, ViewId } from './settings';
 import { savePreferences, type Preferences } from './personal-data';
-import { S, activeFocus, data, type AppState } from './state';
+import { S, activeFocus, data, viewReady, nightReady, type AppState } from './state';
 import { calculationTotals, computeCachedRange } from './compute-cached';
 
 const sizer = el('sizer');
@@ -58,7 +58,7 @@ const remember = (key: string, value: unknown) => {
 export function resize(): void {
   if (docsOpen() || !canvasView()) return;
   const anchor =
-    S.view === 'river' && data.ready && river.hs.length === data.range?.nights.length
+    S.view === 'river' && viewReady() && river.hs.length === data.range?.nights.length
       ? river.anchor()
       : null;
   const lunationAnchor = S.view === 'lunations' && data.ready ? lunations.anchor() : null;
@@ -75,7 +75,7 @@ export function resize(): void {
 /** Lay out the current view; `keepNight` scrolls that night to the top afterwards. */
 export function relayout(keepNight?: number | null): void {
   const v = canvasView();
-  if (!v || !data.ready) return;
+  if (!v || !viewReady()) return;
   // Remove the old absolute minimap bounds before shrinking content (e.g. Month → Year).
   el('riverMinimap').hidden = true;
   v.layout();
@@ -91,7 +91,7 @@ export function draw(): void {
   raf = requestAnimationFrame(() => {
     raf = 0;
     const v = canvasView();
-    if (!v || !data.ready || docsOpen()) return;
+    if (!v || !viewReady() || docsOpen()) return;
     ctx.setTransform(size.dpr, 0, 0, size.dpr, 0, 0);
     ctx.fillStyle = C.panel;
     ctx.fillRect(0, 0, size.W, size.H);
@@ -109,7 +109,9 @@ export function draw(): void {
               : S.riverZoom === 'month' && S.riverExpanded;
         const newMoon = v === calendar ? calendar.newMoons.has(n.id) : n.quarter === 0;
         const moonLabel = newMoon ? (v === calendar ? ' New moon.' : ' New moon night.') : '';
-        const status = `${nightTitle(n)}.${moonLabel} Times in ${S.site.tz}. ${fmtDur(n.mfMs)} usable dark. ${windowsText(n)}.${expanded ? ' Expanded.' : ''}`;
+        const status = !nightReady(S.sel)
+          ? `${nightTitle(n)}. Still calculating this night.`
+          : `${nightTitle(n)}.${moonLabel} Times in ${S.site.tz}. ${fmtDur(n.mfMs)} usable dark. ${windowsText(n)}.${expanded ? ' Expanded.' : ''}`;
         const live = el('riverSelection');
         if (live.textContent !== status) live.textContent = status;
       }
@@ -138,6 +140,7 @@ export function draw(): void {
 /** Select night `i`; `scroll` brings it into view (at the top when `top`). */
 function selectState(i: number): void {
   S.sel = i;
+  if (!nightReady(i)) S.riverExpanded = false;
   S.hover = null;
   S.riverReadoutSelected = true;
 }
@@ -203,7 +206,13 @@ export function select(i: number, scroll: boolean, top?: boolean): void {
 
 /** Toggle only the chosen Month row; preserve its header before minimally revealing details. */
 export function toggleRiverNight(i: number = S.sel): void {
-  if (!data.ready || i < 0 || S.view !== 'river' || S.riverZoom !== 'month') return;
+  if (!viewReady() || i < 0 || S.view !== 'river' || S.riverZoom !== 'month') return;
+  if (!nightReady(i)) {
+    S.riverExpanded = false;
+    select(i, false);
+    relayout();
+    return;
+  }
   const keepY = river.ys[i] - scroller.scrollTop;
   S.riverExpanded = !(S.riverExpanded && S.sel === i);
   selectState(i);
@@ -266,9 +275,9 @@ export function openCalendarMonth(key: string, i?: number): void {
 export function goTonight(): void {
   const r = data.range;
   const now = Date.now();
-  const tz = data.ready && r ? r.tz : new TimeZone(S.site.tz);
+  const tz = viewReady() && r ? r.tz : new TimeZone(S.site.tz);
   const tonight = tonightId(now, tz);
-  const i = data.ready && r ? r.nights.findIndex((n) => n.id === tonight) : -1;
+  const i = viewReady() && r ? r.nights.findIndex((n) => n.id === tonight) : -1;
   if (!r || i < 0) {
     const spec = requestedRange(now, tz);
     const [y, m] = tonight.split('-').map(Number);
@@ -306,7 +315,7 @@ function currentMonthIndex(): number {
 /** The chart's period label follows the scroll position. */
 function updatePeriod(): void {
   const r = data.range;
-  if (!data.ready || !r) return;
+  if (!viewReady() || !r) return;
   if (S.view === 'calendar') {
     el('periodLabel').textContent = calendar.label();
     return;
@@ -381,7 +390,7 @@ export function setOpt<K extends ViewOption>(key: K, val: AppState[K]): void {
   const focused = el('viewCtl').contains(document.activeElement);
   const reopening =
     key === 'riverZoom' && S.riverZoom === 'year' && val === 'month' && S.riverExpanded;
-  const anchor = S.view === 'river' && data.ready ? river.anchor() : null;
+  const anchor = S.view === 'river' && viewReady() ? river.anchor() : null;
   const keep = S.sel >= 0 ? S.sel : null;
   const calNight =
     S.view === 'calendar' && data.ready
@@ -478,9 +487,10 @@ export function setView(view: ViewId): void {
   el('viewTitle').textContent = VIEW_TITLES[view];
   viewControls();
   syncSettingsControls();
-  if (!data.ready) return;
+  syncLoading();
+  if (!viewReady()) return;
   updateDarkWeekends();
-  bestWeekends(data.range!, lunWindow(activeFocus()));
+  if (data.ready) bestWeekends(data.range!, lunWindow(activeFocus()));
   if (v) {
     resize();
     if (keep >= 0) v.scrollTo(keep, true);
@@ -512,15 +522,15 @@ function openTripNight(view: ChartViewId, id: string): void {
 
 /** New-moon focus: ±N nights, or 0 for off. */
 export function setFocus(focus: number): void {
-  const anchor = S.view === 'river' && data.ready ? river.anchor() : null;
+  const anchor = S.view === 'river' && viewReady() ? river.anchor() : null;
   const lunationAnchor = S.view === 'lunations' && data.ready ? lunations.anchor() : null;
   const calendarAnchor = S.view === 'calendar' && data.ready ? calendar.anchor() : null;
   S.focus = focus;
   S.focusExplicit = true;
   remember('focus', focus);
   syncSettingsControls();
-  if (data.ready && data.range) {
-    bestWeekends(data.range, lunWindow(activeFocus()));
+  if (viewReady() && data.range) {
+    if (data.ready) bestWeekends(data.range, lunWindow(activeFocus()));
     relayout(
       anchor || lunationAnchor || calendarAnchor
         ? null
@@ -540,8 +550,10 @@ export function setThreshold(key: 'moonAlt' | 'crescent', value: number): void {
   S[key] = value;
   remember(key, value);
   syncSettingsControls();
-  if (data.ready && data.range) {
-    deriveRange(data.range, thresholds(), lunWindow(activeFocus()));
+  if ((data.ready || data.progressive) && data.range) {
+    if (data.ready) deriveRange(data.range, thresholds(), lunWindow(activeFocus()));
+    else
+      for (const n of data.range.nights) if (!data.pending?.has(n.id)) deriveNight(n, thresholds());
     updateDarkWeekends();
     relayout();
     if (anchor) calendar.restoreAnchor(anchor);
@@ -567,7 +579,7 @@ export function rangePickerYear(): number {
   if (S.fixedRange?.count === CALENDAR_MONTHS) return S.fixedRange.y;
   const now = Date.now();
   const tz = new TimeZone(S.site.tz);
-  return (data.ready && data.range?.nights[S.sel]?.y) || tz.wallParts(now).y;
+  return (viewReady() && data.range?.nights[S.sel]?.y) || tz.wallParts(now).y;
 }
 
 /** Choose the current rolling span or a fixed January–December year. */
@@ -602,9 +614,26 @@ export function applySite(site: Site): void {
 
 // ---------- computing the range
 
+function syncLoading(): void {
+  const progressive = data.progressive && S.view === 'river';
+  const loading = el('loading');
+  loading.classList.toggle('progressive', progressive);
+  const parent = el(progressive ? 'periodLoading' : 'stage');
+  if (loading.parentElement !== parent) parent.append(loading);
+  cv.setAttribute('aria-busy', String(!data.ready));
+}
+function rangeLabel(r: NightRange): void {
+  const last = r.nights.at(-1)!;
+  const label =
+    r.spec.count === CALENDAR_MONTHS
+      ? `Jan – Dec ${r.spec.y}`
+      : `${MON3[r.spec.m - 1]} ${r.spec.y} – ${MON3[last.m - 1]} ${last.y}`;
+  el('rangeLabel').textContent = el('planRangeLabel').textContent = label;
+}
+
 let computeToken = 0;
 
-/** Compute the range for the current site; the previous range stays on screen until it's done. */
+/** Prepare stable geometry, publish complete months for River, then enable the whole range. */
 export function restart(): void {
   const prev = data.range;
   const selId =
@@ -612,6 +641,9 @@ export function restart(): void {
   const now = Date.now();
   const spec = requestedRange(now, new TimeZone(S.site.tz));
   data.ready = false;
+  data.progressive = false;
+  data.pending = null;
+  syncLoading();
   el('darkWeekends').inert = true;
   el('loading').hidden = false;
   window.dispatchEvent(new Event('npa-loading'));
@@ -622,8 +654,52 @@ export function restart(): void {
   el('loadingText').textContent = 'Computing sun and moon for each night…';
   el('loadingBar').style.width = '0%';
   const token = ++computeToken;
-  computeCachedRange(S.site, spec, thresholds(), lunWindow(activeFocus()), now, {
+  // Keep thresholds live so newly arriving nights use controls changed during computation.
+  computeCachedRange(S.site, spec, S, lunWindow(activeFocus()), now, {
     isCancelled: () => token !== computeToken,
+    priorityMonth: () => {
+      const selected = data.range?.nights[S.sel]?.id;
+      const target =
+        data.progressive && S.view === 'river'
+          ? selected && data.pending?.has(selected)
+            ? selected
+            : data.range?.nights[river.topNight()]?.id
+          : (selId ?? tonightId(now, new TimeZone(S.site.tz)));
+      return target?.slice(0, 7) ?? null;
+    },
+    onPartial: (r, pending) => {
+      if (token !== computeToken) return;
+      const first = !data.progressive;
+      data.range = r;
+      data.pending = new Set(pending);
+      data.progressive = true;
+      if (first) {
+        let i = selId ? r.nights.findIndex((n) => n.id === selId) : -1;
+        if (i < 0) i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
+        S.sel = i;
+        S.pendingNight = null;
+        if (!selId || r.nights[i].id !== selId) {
+          S.riverExpanded = S.calendarExpanded = S.lunationsExpanded = false;
+          S.calendarMonth = S.calendarWeek = null;
+        }
+        if (!nightReady(i)) S.riverExpanded = false;
+        rangeLabel(r);
+      }
+      const complete = r.months.filter((m) =>
+        m.idx.every((i) => !pending.has(r.nights[i].id)),
+      ).length;
+      el('loadingText').textContent = `Loading · ${complete}/${r.months.length}`;
+      syncLoading();
+      if (!docsOpen() && S.view === 'river') {
+        if (first) {
+          resize();
+          river.scrollTo(Math.max(0, S.sel), true);
+          scroller.scrollTop = Math.max(0, river.ys[S.sel] - 3 * river.heights().base);
+        } else relayout();
+        draw();
+      }
+      window.dispatchEvent(new Event('npa-partial'));
+    },
     onStats: (stats) => {
       if (token === computeToken) data.computation = stats;
     },
@@ -633,25 +709,29 @@ export function restart(): void {
   })
     .then((r) => {
       if (!r || token !== computeToken) return;
-      // Controls remain usable while positions compute; publish the latest planning choices.
-      deriveRange(r, thresholds(), lunWindow(activeFocus()));
+      const progressive = data.progressive;
+      const anchor =
+        progressive && S.view === 'river' && !docsOpen() && river.hs.length === r.nights.length
+          ? river.anchor()
+          : null;
+      const selected = progressive ? data.range?.nights[S.sel]?.id : selId;
+      // Nights already use the latest thresholds; only the focus-dependent picks need updating.
+      bestWeekends(r, lunWindow(activeFocus()));
       data.range = r;
       S.pendingNight = null;
       data.ready = true;
+      data.progressive = false;
+      data.pending = null;
+      syncLoading();
       el('darkWeekends').inert = false;
       el<HTMLButtonElement>('shareBtn').disabled = false;
       el<HTMLButtonElement>('calendarExportBtn').disabled = false;
       el('loading').hidden = true;
-      const { spec, nights } = r;
-      const last = nights[nights.length - 1];
-      const rangeLabel =
-        spec.count === CALENDAR_MONTHS
-          ? `Jan – Dec ${spec.y}`
-          : `${MON3[spec.m - 1]} ${spec.y} – ${MON3[last.m - 1]} ${last.y}`;
-      el('rangeLabel').textContent = el('planRangeLabel').textContent = rangeLabel;
-      let i = selId ? nights.findIndex((n) => n.id === selId) : -1;
+      const { nights } = r;
+      rangeLabel(r);
+      let i = selected ? nights.findIndex((n) => n.id === selected) : -1;
       if (i < 0) i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
-      if (!selId || nights[i].id !== selId) {
+      if (!selected || nights[i].id !== selected) {
         S.riverExpanded = false;
         S.lunationsExpanded = false;
         S.calendarExpanded = false;
@@ -659,9 +739,13 @@ export function restart(): void {
         S.calendarMonth = null;
       }
       S.sel = i;
-      if (!docsOpen()) setView(S.view);
+      if (!docsOpen()) {
+        if (anchor) relayout();
+        else setView(S.view);
+      }
       const v = docsOpen() ? null : canvasView();
-      if (v) {
+      if (anchor) river.restoreAnchor(anchor);
+      else if (v) {
         if (v === river) scroller.scrollTop = Math.max(0, river.ys[i] - 3 * river.heights().base);
         else v.scrollTo(i, true);
       }
@@ -682,7 +766,7 @@ export function restart(): void {
 export function onTheme(): void {
   readColors();
   updateGuideColors();
-  if (data.ready) draw();
+  if (viewReady()) draw();
 }
 
 export function syncSettingsControls(): void {
@@ -727,6 +811,7 @@ export function boot(): void {
 }
 
 export interface TestHooks {
+  readonly pendingNights: number;
   readonly computation: typeof data.computation;
   readonly calculatedNights: number;
   S: typeof S;
@@ -771,6 +856,9 @@ declare global {
 
 function exposeTestHooks(): void {
   window.__npa = {
+    get pendingNights() {
+      return data.pending?.size ?? 0;
+    },
     get calculatedNights() {
       return calculationTotals.nights;
     },

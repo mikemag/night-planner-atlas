@@ -1,4 +1,4 @@
-import { S, atlas } from '../app/state';
+import { S, atlas, data, nightReady } from '../app/state';
 import { MON3, MONL, WD3, fmtClock, fmtDur } from '../model/format';
 import { wallH } from '../model/night';
 import { C, inkOn } from '../render/colors';
@@ -63,7 +63,7 @@ class RiverView implements CanvasView {
     const { x0, cw } = this.geom();
     const { ax } = atlas();
     const detailHeight = prepareRiverDetail(
-      S.riverZoom === 'month' && S.riverExpanded ? nights[S.sel] : null,
+      S.riverZoom === 'month' && S.riverExpanded && nightReady(S.sel) ? nights[S.sel] : null,
       {
         width: size.W - this.MINI,
         x0,
@@ -160,6 +160,7 @@ class RiverView implements CanvasView {
         h = this.hs[i];
       if (y > H) break;
       const n = nights[i];
+      const ready = nightReady(i);
       const expanded = S.riverZoom === 'month' && S.riverExpanded && i === S.sel;
       const barH = expanded ? this.detailHeader : h;
       const gap = barH >= 7 ? 1 : 0;
@@ -172,12 +173,19 @@ class RiverView implements CanvasView {
         ctx.fillStyle = C.weekend;
         ctx.fillRect(0, y, this.GL + this.GM - 2, barH - gap);
       }
-      drawNight(n, x0, y, cw, barH - gap, 'h', {
-        labels:
-          !expanded && !(W < 700 && n.quarter === 0) && (barH >= 26 || (monthLabel && !n.dst)),
-        labelWeight: S.riverZoom === 'month' && !weekend && i !== S.sel ? 450 : 600,
-        labelSize: expanded ? 11.5 : 10.5,
-      });
+      if (ready)
+        drawNight(n, x0, y, cw, barH - gap, 'h', {
+          labels:
+            !expanded && !(W < 700 && n.quarter === 0) && (barH >= 26 || (monthLabel && !n.dst)),
+          labelWeight: S.riverZoom === 'month' && !weekend && i !== S.sel ? 450 : 600,
+          labelSize: expanded ? 11.5 : 10.5,
+        });
+      if (!ready) {
+        ctx.fillStyle = C.hair;
+        ctx.fillRect(x0, y, cw, barH - gap);
+        if (barH >= 16 && (i === i0 || n.d === 1 || n.dow === 1))
+          text('Calculating…', x0 + cw / 2, y + barH / 2, 10.5, C.ink2, 'center');
+      }
       if (expanded && tintSeparators) {
         ctx.fillStyle = C.panel;
         ctx.fillRect(x0, y + barH, cw, h - barH);
@@ -209,9 +217,9 @@ class RiverView implements CanvasView {
       // moon column
       const mx = this.GL + this.GM / 2;
       if (n.quarter === 0 && S.riverZoom === 'year') newMoonTicks.push(y + (barH - gap) / 2);
-      else if (barH >= 13)
+      else if (ready && barH >= 13)
         moonGlyph(n, mx, y + (barH - gap) / 2, Math.min(6, (barH - gap) / 2 - 1.5));
-      else if (n.quarter === 2) moonGlyph(n, mx, y + barH / 2, 4);
+      else if (ready && n.quarter === 2) moonGlyph(n, mx, y + barH / 2, 4);
       if (n.quarter === 0 && S.riverZoom === 'month') {
         const event = quarters.find((q) => q.q === 0 && q.i === i);
         let lines = ['New Moon'];
@@ -229,10 +237,18 @@ class RiverView implements CanvasView {
       const bx = x1 + 8,
         bw = this.GR - (S.riverZoom === 'year' ? 44 : 72);
       const bh = Math.max(1, Math.min(barH - gap - 2, 9));
-      drawDurationBar(n.mfMs, maxMF, bx, y + (barH - gap - bh) / 2, bw, bh);
+      if (ready)
+        drawDurationBar(
+          n.mfMs,
+          data.pending ? 24 * 3600e3 : maxMF,
+          bx,
+          y + (barH - gap - bh) / 2,
+          bw,
+          bh,
+        );
       if (barH >= 12)
         text(
-          n.mfMs ? fmtDur(n.mfMs) : '—',
+          !ready ? '…' : n.mfMs ? fmtDur(n.mfMs) : '—',
           bx + bw + 4,
           y + (barH - gap) / 2,
           expanded ? 11.5 : 10.5,
@@ -441,7 +457,11 @@ class RiverView implements CanvasView {
       600,
     );
     for (let i = 0; i < N; i++) {
-      drawNight(nights[i], x, y0 + i * rh, w, Math.max(1, rh + 0.35), 'h');
+      if (nightReady(i)) drawNight(nights[i], x, y0 + i * rh, w, Math.max(1, rh + 0.35), 'h');
+      else {
+        ctx.fillStyle = C.hair;
+        ctx.fillRect(x, y0 + i * rh, w, Math.max(1, rh + 0.35));
+      }
     }
     let lastLabelY = -Infinity;
     const yearLabels = nights.flatMap((n, i) => (n.m === 1 && n.d === 1 ? [y0 + i * rh + 7] : []));
@@ -489,7 +509,10 @@ class RiverView implements CanvasView {
       py - this.AX + scroller.scrollTop - this.ys[i] >= this.detailHeader
     )
       return null;
-    const hh = px >= x0 && px <= x1 ? ax.start + ((px - x0) / cw) * (ax.end - ax.start) : null;
+    const hh =
+      nightReady(i) && px >= x0 && px <= x1
+        ? ax.start + ((px - x0) / cw) * (ax.end - ax.start)
+        : null;
     return { i, hh };
   }
 

@@ -161,7 +161,8 @@ Current nights remain available while another year is browsed. If the current ni
 future transition is missing, the shared acquisition path loads one month at a time until the
 solar transition and usable status are known or at least 370 days are covered. Finding no
 remaining usable window this night completes the usable search. Already-computed nights come from memory
-or the monthly persistent cache. Only misses run `computeNight`, in the usual short slices;
+or the monthly persistent cache. Only misses run `computeNight`, using the shared background worker
+with sliced main-thread computation as a fallback;
 the status does not build chart axes, moon-quarter ownership or range summaries. An exhausted
 solar search names its actual coverage horizon rather than claiming a transition never occurs.
 
@@ -365,26 +366,56 @@ local Node measurement after the polar extension. Re-deriving a range after swit
 averaged **0.29 ms** and **0.13 ms**, respectively, over 100 switches. Each night has eight initial
 Sun searches plus checks for further crossings, and ten-minute chart altitude samples (242 on
 ordinary nights, up to 302 for a 25-hour polar period). The Moon requires extrema and crossing
-refinements at all four horizon heights. The work runs in 24 ms slices
-and repeats when the site or range changes. Changing a threshold only re-derives the numbers;
+refinements at all four horizon heights. Missing nights run in a same-origin Web Worker;
+the fallback uses 24 ms main-thread slices. Changing a threshold only re-derives the numbers;
 it doesn't recompute positions.
 
 ## Rebuildable monthly cache
 
 The chart and live status share a bounded cache in memory of the 32 most recently used
 site-months, including partial months still being calculated. Each completed night becomes
-available before the next computation slice yields, so overlapping consumers calculate it
+available before the next night is requested, so overlapping consumers calculate it
 once even when IndexedDB is unavailable. The same exact site inputs key both caches. An explicit
 cache clear invalidates this shared memory on the next acquisition as well as persistent data;
 already-displayed nights remain usable. Temporary sites may use this tab-only memory without
 acquiring persistent coordinate records.
 
 Both development and production builds optionally persist complete site-month calculation blocks
-in IndexedDB under `npa:computed`. Main-thread computation retains the same 24 ms slices, cancellation checks and
-single completed-range publication. Cache hits restore night data; misses alone run the night
-calculation. In development, edits to fingerprinted calculation/codec sources or the dependency
+in IndexedDB under `npa:computed`. Cache hits restore night data; misses alone run the night
+calculation in a shared Web Worker. Each consumer requests one missing complete night at a time, sharing
+any in-flight request for the same physical site and date. This bounds obsolete work after a
+site/range change to the outstanding job; cancelled results cannot publish a stale range.
+Typed sample buffers transfer back with the numerical results, and the caller supplies its own
+`TimeZone` instance because its formatter cannot be cloned. Worker messages yield to page input
+and painting without the timers between main-thread calculation slices.
+
+For progressive River loading, `computeSolarNight` extracts the identical solar part of
+`computeNight`. A cancellable month-by-month preparation pass supplies exact solar events,
+below-horizon intervals, local-noon boundaries and DST fields for missing nights. Cached complete
+nights need no preparation. `computeNight` reuses that solar record when it adds Moon windows and
+sample arrays, including on the sliced fallback path. This refactoring changes no calculated numbers.
+The full range's axis, quarter alignment and focus row heights are known before its first month
+publishes. Geometry-only rows stay in an explicit pending set and never enter the numerical caches,
+night details, exports or recommendations.
+
+The selected month loads first, or tonight's month when no selection is in the range. Subsequent
+months fill outward from the currently browsed month. Only complete months become interactive;
+missing rows say “Calculating…” and show an ellipsis instead of a zero-dark duration. Moon thresholds
+re-derive completed nights immediately, regardless of the active view, and apply to later arrivals.
+Completed nights are derived once as they arrive unless thresholds change; final publication reuses
+the prepared geometry and only adds range-wide summaries. A fully cached range skips progressive
+publication and builds its structures once. Between month jobs, the yielding budget also includes
+publication work so cached months cannot monopolize the main thread. Final publication preserves the
+selected date, expansions and scroll anchor. Calendar, Lunations and Dark Weekends still require the
+complete range, as do sharing and export. `npa-partial` reports each completed month; `npa-ready`
+continues to mean the complete range is available.
+
+Unavailable workers, startup timeouts and worker failures silently resume the original 24 ms
+main-thread slices, reusing completed nights. Error details and site names do not cross the worker
+boundary. The worker is bundled and cached with the offline release; no third-party service is used.
+In development, edits to fingerprinted calculation/codec sources or the dependency
 lockfile restart Vite and reload the page with a fresh fingerprint. UI/style hot reloads retain
-compatible calculations. No worker, progressive rendering or third-party service is involved.
+compatible calculations.
 
 The key combines cache format 2, a build-generated compute fingerprint, exact latitude/longitude,
 elevation (missing equals zero), IANA zone and calendar year/month. The fingerprint includes all

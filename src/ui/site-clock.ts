@@ -20,7 +20,12 @@ export function updateSiteClock(): void {
   el('siteClockZone').textContent = clock.slice(zone);
   el('siteClock').title = S.site.tz;
 
-  const status = nights.read(S.site, S, now, data.ready ? data.range : null);
+  const range = data.ready
+    ? data.range
+    : data.progressive && data.range
+      ? { ...data.range, nights: data.range.nights.filter((n) => !data.pending?.has(n.id)) }
+      : null;
+  const status = nights.read(S.site, S, now, range);
   const text = formatNightStatus(status, now, nights.finished(status, now));
   const phase = nights.unavailable && !status?.solar ? 'Phase timing unavailable' : text.phase;
   const dark =
@@ -65,6 +70,7 @@ export function updateSiteClock(): void {
 export function initSiteClock(): void {
   updateSiteClock();
   window.addEventListener('npa-ready', updateSiteClock);
+  window.addEventListener('npa-partial', updateSiteClock);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) updateSiteClock();
   });

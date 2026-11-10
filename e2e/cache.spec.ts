@@ -53,6 +53,13 @@ async function summary(page: Page) {
 test('reloads and planning variations reuse calculations, preserving all numerical results', async ({
   page,
 }) => {
+  await page.addInitScript(() => {
+    window.addEventListener('npa-partial', () => {
+      document.documentElement.dataset.partialPublications = String(
+        Number(document.documentElement.dataset.partialPublications ?? 0) + 1,
+      );
+    });
+  });
   await open(page);
   expect((await stats(page)).computedNights).toBe(426);
   await cached(page, 14);
@@ -60,6 +67,7 @@ test('reloads and planning variations reuse calculations, preserving all numeric
   await page.reload();
   await expect(page.locator('#loading')).toBeHidden();
   expect((await stats(page)).computedNights).toBe(0);
+  await expect(page.locator('html')).not.toHaveAttribute('data-partial-publications');
   expect(await summary(page)).toEqual(cold);
   await chooseMoon(page, 'moonAltSel', '15');
   await chooseMoon(page, 'crescentSel', '0.3');
@@ -69,6 +77,7 @@ test('reloads and planning variations reuse calculations, preserving all numeric
   await page.reload();
   await expect(page.locator('#loading')).toBeHidden();
   expect((await stats(page)).computedNights).toBe(0);
+  await expect(page.locator('html')).not.toHaveAttribute('data-partial-publications');
   expect(await summary(page)).toEqual(changed);
   await cached(page, 14);
 });

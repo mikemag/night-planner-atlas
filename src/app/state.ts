@@ -8,7 +8,7 @@ export interface UiState {
   rangeShift: number;
   /** A calendar year or the fixed span from a shared plan. Null follows the site-local month. */
   fixedRange: RangeSpec | null;
-  /** Initial selected evening date from a link, consumed only after its range finishes. */
+  /** Initial selected evening date from a link, consumed when its initial month is available. */
   pendingNight: string | null;
   /** Worked-example previews keep their controls separate from saved preferences. */
   sharedSettings: boolean;
@@ -63,11 +63,25 @@ export function activeFocus(): number {
 }
 
 /**
- * The computed range. `ready` is false while a range computes; the previous range stays in
- * place (and on screen) until the new one replaces it.
+ * `ready` means the entire range is complete. A progressive River range has explicit pending
+ * geometry-only rows; other views and range-wide outputs must wait for `ready`.
  */
-export const data: { range: NightRange | null; ready: boolean; computation: ComputeStats | null } =
-  { range: null, ready: false, computation: null };
+export const data: {
+  range: NightRange | null;
+  ready: boolean;
+  progressive: boolean;
+  pending: Set<string> | null;
+  computation: ComputeStats | null;
+} = { range: null, ready: false, progressive: false, pending: null, computation: null };
+
+/** Only River can show a partially calculated range. Summaries and export require every night. */
+export function viewReady(): boolean {
+  return data.ready || (S.view === 'river' && data.progressive);
+}
+export function nightReady(i: number): boolean {
+  const n = data.range?.nights[i];
+  return !!n && !data.pending?.has(n.id);
+}
 
 /** The current range; only call once a range has been computed. */
 export function atlas(): NightRange {

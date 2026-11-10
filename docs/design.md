@@ -599,11 +599,29 @@ estimated payload and 512 monthly entries, with least-recently-used eviction. En
 fingerprints invalidate calculations automatically while personal schema migrations preserve user
 data. Development uses the same cache; calculation/codec and dependency-lock edits restart Vite
 with a fresh fingerprint while UI/style hot reloads preserve compatible calculations. Unsupported,
-missing or damaged cache entries compute again in the existing main-thread slices. The completed
-range still publishes at once.
+missing or damaged cache entries compute in a same-origin background worker, leaving the page
+available for interaction. The chart and live status share in-flight nights; changing sites or
+ranges abandons obsolete requests after the outstanding job (one night or a solar-preparation month).
+Worker failures resume the existing main-thread slices with completed nights retained.
+
+River becomes usable one month at a time. A solar-only pass first establishes the exact full-range
+clock axis and date/quarter alignment; its calculations are reused when completing each night.
+The selected month (or tonight's month) loads first. Remaining months fill outward, reprioritized
+around the browsed month after each completed block. Every date already has its final row height,
+including new-moon focus, so incoming data and completion preserve scrolling and selection.
+Uncomputed rows use the neutral separator color, “Calculating…” labels and ellipses for duration;
+they never use the zero-dark dash or offer fabricated night details. They remain navigable, and
+completed nights support selection, expansion and threshold changes during loading. The header
+shows completed months beside the period label without covering the chart or adding a layout row.
+During loading, duration bars use a fixed 24-hour ceiling; after completion they use the normal
+range maximum. The time axis, row heights and date alignment do not change.
+
+Calendar, Lunations, Dark Weekends, sharing and calendar export wait for the full range, keeping
+incomplete totals and recommendations out of those views. The same calculations feed every view;
+progressive rendering does not change the numerical night model.
 
 **Browser data…** shows approximate cache size/count and a separate **Clear computed cache** action.
 Personal exports omit calculations, and clearing calculations preserves the personal document,
 preferences and recovery copy. Unsaved shared sites and tab-only edits do not persist private
 calculation blocks. The privacy boundary is the browser origin for both kinds of storage; no new
-runtime requests or services are introduced.
+third-party requests or services are introduced. The worker ships with the offline app.

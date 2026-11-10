@@ -69,7 +69,7 @@ export class LiveNights {
     return this.failed;
   }
 
-  /** Month work yields like chart loading, and stale site requests cannot publish their results. */
+  /** Share background work with chart loading; stale site requests cannot publish their results. */
   extend(site: Site, status: NightStatus | null, now: number): void {
     if (
       this.pending ||
