@@ -1,6 +1,29 @@
 import { chooseFocus, chooseMoon } from './header-controls';
 import { expect, test } from '@playwright/test';
 
+test('a delayed stylesheet supplies valid colors before the first chart draw', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
+  await page.addInitScript(() => {
+    const add = CanvasGradient.prototype.addColorStop;
+    CanvasGradient.prototype.addColorStop = function (offset, color) {
+      if (!CSS.supports('color', color)) document.documentElement.dataset.invalidGradient = color;
+      return add.call(this, offset, color);
+    };
+  });
+  // Vite emits the module before its stylesheet. Hold CSS long enough for a fast module
+  // response to reach startup, reproducing a cold CDN load in WebKit.
+  await page.route('**/*.css', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await route.continue();
+  });
+  await page.goto('./');
+  await expect(page.locator('#loading')).toBeHidden();
+  await expect(page.locator('html')).not.toHaveAttribute('data-invalid-gradient');
+  await expect(page.locator('#riverSelection')).toContainText('Wed Oct 28');
+  await page.locator('#cv').press('Enter');
+  await expect(page.locator('#riverDetail')).toBeVisible();
+});
+
 test('controls changed during loading apply to the completed range', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
   await page.goto('./', { waitUntil: 'domcontentloaded' });
