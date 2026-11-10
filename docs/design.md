@@ -129,7 +129,8 @@ flattened.
   with its year on narrow screens). In Month zoom on desktop, a minimap of the whole range
   sits at the right edge. Its nights remain equally spaced when a main row expands; its viewport
   maps the visible dates through the variable row heights. Its three-letter month labels, month ticks, stronger January boundary
-  and range-year heading keep the overview readable. A shaded amber viewport with a center grip
+  and range-year heading keep the overview readable. Short charts omit crowded month labels,
+  preserving January's label and every month tick. A shaded amber viewport with a center grip
   shows the visible dates; its grab area is at least 24 px tall, even with an expanded night. Grab it anywhere
   inside its outline to drag without recentering. Clicking outside the viewport centers that date
   and can continue into a drag. Dragging tracks continuous date position, including unequal
@@ -281,6 +282,10 @@ Lunations retains its focus window and opens the night detail even if the date f
 
 ### Shared pieces
 
+- **Viewport.** Every view fits the available dynamic screen height, with safe-area padding
+  around phone cutouts and the home indicator. Nights, lunar cycles and weekend comparisons
+  scroll inside the remaining panel space; rotating the phone does not force a second page
+  scrollbar or leave a fixed-height chart below the screen.
 - **Header.** The observing site is the primary heading, with a quiet app title above and its
   current local date, time, zone abbreviation and UTC offset below. The full IANA zone remains
   available to assistive technology, on clock hover and in the site manager. The picker uses

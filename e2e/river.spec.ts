@@ -364,6 +364,21 @@ test('minimap has readable month labels, year context and a visible viewport', a
     await page.screenshot({
       path: `test-results/screenshots/${info.project.name}-river-minimap.png`,
     });
+  await page.setViewportSize({ width: 1512, height: 350 });
+  await painted(page);
+  const sparse = await page
+    .locator('#cv')
+    .evaluate((cv) =>
+      window.riverText.filter(
+        (t) =>
+          t.left > cv.clientWidth - 96 &&
+          /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$/.test(t.text),
+      ),
+    );
+  expect(sparse.length).toBeLessThan(14);
+  expect(sparse.some((t) => t.text === 'Jan')).toBe(true);
+  for (let i = 1; i < sparse.length; i++)
+    expect(sparse[i].y - sparse[i - 1].y).toBeGreaterThanOrEqual(14);
   await zoom(page, 'Year');
   expect(await miniThumb(page)).toBeUndefined();
 });

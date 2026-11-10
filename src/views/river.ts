@@ -443,13 +443,24 @@ class RiverView implements CanvasView {
     for (let i = 0; i < N; i++) {
       drawNight(nights[i], x, y0 + i * rh, w, Math.max(1, rh + 0.35), 'h');
     }
+    let lastLabelY = -Infinity;
+    const yearLabels = nights.flatMap((n, i) => (n.m === 1 && n.d === 1 ? [y0 + i * rh + 7] : []));
     for (let i = 0; i < N; i++) {
       const n = nights[i];
       if (n.d !== 1) continue;
       const y = y0 + i * rh;
       ctx.fillStyle = n.m === 1 ? C.ink2 : C.hair;
       ctx.fillRect(x - 4, y, w + 4, n.m === 1 ? 2 : 1);
-      text(MON3[n.m - 1], W - this.MINI + 7, y + 7, 11.5, C.ink2, 'left', n.m === 1 ? 700 : 500);
+      const labelY = y + 7;
+      // Short landscape charts keep the year boundary legible without stacking month names.
+      if (
+        labelY > H - 7 ||
+        labelY - lastLabelY < 14 ||
+        (n.m !== 1 && yearLabels.some((yearY) => Math.abs(labelY - yearY) < 14))
+      )
+        continue;
+      text(MON3[n.m - 1], W - this.MINI + 7, labelY, 11.5, C.ink2, 'left', n.m === 1 ? 700 : 500);
+      lastLabelY = labelY;
     }
     ctx.fillStyle = C.select;
     ctx.globalAlpha = 0.16;
