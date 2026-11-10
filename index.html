@@ -129,8 +129,7 @@
                 ><button data-val="10" class="btn btn-outline-secondary">±10</button>
               </span>
             </div>
-            <details class="moon-settings" id="moonSettings" open>
-              <summary id="moonSettingsSummary" hidden>Moonlight: edge 0° · strict</summary>
+            <div class="moon-settings" id="moonSettings">
               <div class="moon-fields">
                 <label class="ctl" for="moonAltSel"
                   ><span class="control-label">Moon’s upper edge above</span>
@@ -151,7 +150,7 @@
                   </select>
                 </label>
               </div>
-            </details>
+            </div>
           </div>
         </div>
         <div
@@ -163,6 +162,19 @@
           <span id="siteClockCountdown"></span>
           <span id="siteClockUsable"></span>
           <span class="sr-only" id="siteClockZone"></span>
+        </div>
+        <div class="plan-actions" id="planActions">
+          <button
+            type="button"
+            class="btn btn-outline-secondary plan-trigger"
+            id="planSettingsBtn"
+            aria-haspopup="dialog"
+            aria-controls="planningDialog"
+            aria-expanded="false"
+          >
+            <span>Plan settings</span>
+            <span id="planRangeLabel">—</span>
+          </button>
         </div>
         <div class="header-actions">
           <a
@@ -456,6 +468,23 @@
       <div class="docs-shell" id="notesView" role="region" aria-label="Documentation" hidden></div>
     </div>
 
+    <div
+      class="modal planning-dialog"
+      id="planningDialog"
+      tabindex="-1"
+      aria-labelledby="planningTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="planningTitle">Plan settings</h2>
+            <button type="button" class="btn btn-outline-secondary" id="planningDone">Done</button>
+          </div>
+          <div class="modal-body" id="planningPanel"></div>
+        </div>
+      </div>
+    </div>
     <div
       class="modal site-dialog"
       id="sitePop"

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { chooseTheme } from './header-controls';
+import { chooseTheme, chooseMoon, shiftPlanningRange } from './header-controls';
 import { readPreference } from './storage';
 
 for (const width of [1512, 390]) {
@@ -58,9 +58,7 @@ for (const width of [1512, 390]) {
       await expect(sameWeekend.getByRole('listitem')).toHaveCount(4);
     }
 
-    const settings = page.locator('#moonSettingsSummary');
-    if (await settings.isVisible()) await settings.click();
-    await page.locator('#crescentSel').selectOption('0');
+    await chooseMoon(page, 'crescentSel', '0');
     await expect(december).toContainText('Same weekend');
     await expect(sameWeekend.getByRole('listitem')).toHaveCount(4);
     for (const theme of ['light', 'dark', 'observing']) {
@@ -89,8 +87,8 @@ test('Dark Weekends is saved as a view and Tonight restores a past range', async
   await page.reload();
   await expect(page.locator('#darkWeekends')).toBeVisible();
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#rangePrev').click();
-  await page.locator('#rangePrev').click();
+  await shiftPlanningRange(page, 'Prev');
+  await shiftPlanningRange(page, 'Prev');
   const cycles = page.locator('#darkWeekends').getByRole('article');
   await expect(cycles.first()).toHaveAccessibleName('Oct 2, 2024');
   await expect(cycles.last()).toHaveAccessibleName('Nov 19, 2025');

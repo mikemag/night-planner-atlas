@@ -165,7 +165,7 @@ for (const width of [320, 390]) {
       await chooseTheme(page, theme);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
       const targets = await page
-        .locator('#focusSeg button, #moreBtn, #siteSel')
+        .locator('#planSettingsBtn, #moreBtn, #siteSel')
         .evaluateAll((nodes) =>
           nodes.map((el) => {
             const r = el.getBoundingClientRect();

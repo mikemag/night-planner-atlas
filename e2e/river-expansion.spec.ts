@@ -1,3 +1,4 @@
+import { chooseFocus, chooseMoon } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import { phaseName } from '../src/model/describe';
 import { fmtClock, fmtDur } from '../src/model/format';
@@ -218,7 +219,7 @@ test('keyboard and pointer moves keep the open header anchored, including focus 
   // Preserve the header until the new annotation lanes need a little more room at the bottom.
   const expectedY = Math.max(0, Math.min(target.y - 30, available - moved.height));
   expect(Math.abs(moved.y - expectedY)).toBeLessThanOrEqual(1);
-  await page.locator('#focusSeg button[data-val="3"]').click();
+  await chooseFocus(page, 3);
   expect((await selectedRow(page)).height).toBeGreaterThan(150);
   await expect(detail(page)).toBeVisible();
   for (const which of ['first', 'last']) {
@@ -328,9 +329,9 @@ test('expanded facts stay accurate for no-window nights, clock changes and ignor
       path: `test-results/screenshots/${info.project.name}-river-expanded-clock-change.png`,
     });
   await choose('2026-10-06');
-  await page.locator('#moonAltSel').selectOption('15');
+  await chooseMoon(page, 'moonAltSel', '15');
   await expect(detail(page).locator('[data-event="Usable ends"]')).toHaveCount(1);
-  await page.locator('#crescentSel').selectOption('0.3');
+  await chooseMoon(page, 'crescentSel', '0.3');
   await expect(detail(page)).toContainText('Moon ignored');
   const value = await page.evaluate(() => window.__npa!.nights[window.__npa!.S.sel].mfMs);
   await expect(detail(page).locator('svg')).toHaveAttribute(

@@ -1,3 +1,4 @@
+import { chooseFocus, chooseMoon, shiftPlanningRange } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import { seedPersonal, readPersonal } from './storage';
 
@@ -60,9 +61,9 @@ test('reloads and planning variations reuse calculations, preserving all numeric
   await expect(page.locator('#loading')).toBeHidden();
   expect((await stats(page)).computedNights).toBe(0);
   expect(await summary(page)).toEqual(cold);
-  await page.locator('#moonAltSel').selectOption('15');
-  await page.locator('#crescentSel').selectOption('0.3');
-  await page.locator('#focusSeg button[data-val="3"]').click();
+  await chooseMoon(page, 'moonAltSel', '15');
+  await chooseMoon(page, 'crescentSel', '0.3');
+  await chooseFocus(page, 3);
   await expect.poll(async () => (await readPersonal(page)).preferences.crescent).toBe(0.3);
   const changed = await summary(page);
   await page.reload();
@@ -290,7 +291,7 @@ test('quota failures retry once and leave saved data and interaction intact', as
 test('year navigation reuses overlapping months and leap-year results', async ({ page }) => {
   await open(page);
   await cached(page, 14);
-  await page.locator('#rangeNext').click();
+  await shiftPlanningRange(page, 'Next');
   await expect(page.locator('#loading')).toBeHidden();
   expect((await stats(page)).cachedNights).toBe(61);
   expect((await stats(page)).computedNights).toBe(366);
@@ -298,7 +299,7 @@ test('year navigation reuses overlapping months and leap-year results', async ({
     true,
   );
   await cached(page, 26);
-  await page.locator('#rangePrev').click();
+  await shiftPlanningRange(page, 'Prev');
   await expect(page.locator('#loading')).toBeHidden();
   expect((await stats(page)).computedNights).toBe(0);
 });
@@ -307,7 +308,7 @@ test('clearing during computation prevents a late cache write from repopulating 
 }) => {
   await open(page);
   await cached(page, 14);
-  await page.locator('#rangeNext').click();
+  await shiftPlanningRange(page, 'Next');
   await page.locator('#siteSel').selectOption('manage');
   await page.locator('#browserDataOpen').click();
   await page.locator('#dataClearCache').click();

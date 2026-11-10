@@ -1,3 +1,4 @@
+import { chooseFocus } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import { appendFile, cp, mkdir, mkdtemp, realpath, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -70,7 +71,7 @@ test('development caches sites across refreshes and safely invalidates model and
     expect(await page.evaluate(() => window.__npa!.computation!.computedNights)).toBe(426);
     await expect.poll(async () => (await cacheEntries(page)).months).toBe(14);
     const originalGeneration = (await cacheEntries(page)).generations[0];
-    await page.locator('#focusSeg button[data-val="7"]').click();
+    await chooseFocus(page, 7);
     await expect
       .poll(() =>
         page.evaluate(

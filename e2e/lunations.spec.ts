@@ -1,4 +1,4 @@
-import { openShare } from './header-controls';
+import { openShare, chooseFocus, chooseMoon } from './header-controls';
 import { seedPersonal, readPreference } from './storage';
 import { expect, test, type Page } from '@playwright/test';
 import { fmtClock, fmtDur, nightTitle } from '../src/model/format';
@@ -368,7 +368,7 @@ test('cycle totals explain the displayed dates and refresh with the window and t
 }) => {
   await open(page);
   for (const focus of [3, 0, 7]) {
-    await page.locator(`#focusSeg button[data-val="${focus}"]`).click();
+    await chooseFocus(page, focus);
     await painted(page);
     const value = await selected(page);
     const sum = await page.evaluate(() => {
@@ -387,8 +387,8 @@ test('cycle totals explain the displayed dates and refresh with the window and t
     await total.locator('summary').press('Escape');
     await expect(total).not.toHaveAttribute('open', '');
   }
-  await page.locator('#moonAltSel').selectOption('15');
-  await page.locator('#crescentSel').selectOption('0.3');
+  await chooseMoon(page, 'moonAltSel', '15');
+  await chooseMoon(page, 'crescentSel', '0.3');
   await painted(page);
   const value = await selected(page);
   await expect(page.locator(`.lunation-heading[data-cycle="${value.k}"] strong`)).toHaveText(
@@ -404,7 +404,7 @@ test('cycle totals explain the displayed dates and refresh with the window and t
     .locator('.lunation-heading')
     .filter({ has: page.locator('.lunation-name p', { hasText: 'Partial' }) })
     .last();
-  await page.locator('#focusSeg button[data-val="0"]').click();
+  await chooseFocus(page, 0);
   await expect(partial).toContainText('Partial');
   await partial.locator('summary').click();
   await expect(partial.locator('.lunation-total p')).toContainText(/of (29|30) nights are loaded/);
@@ -415,8 +415,7 @@ test('no-dark and split-window nights retain useful inline explanations', async 
   await page.locator('#cv').press('Enter');
   await expect(page.locator('#lunationsDetail')).toContainText('No astronomical darkness');
   await expect(page.locator('#riverReadout')).toContainText('No astronomical darkness');
-  await page.locator('#moonSettingsSummary').click();
-  await page.locator('#moonAltSel').selectOption('15');
+  await chooseMoon(page, 'moonAltSel', '15');
   await page.evaluate(() => {
     const a = window.__npa!;
     const i = a.nights.findIndex((n) => n.mf.length > 1);

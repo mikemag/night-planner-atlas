@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { openAppMenu, openGuide } from './header-controls';
+import {
+  closePlanning,
+  openAppMenu,
+  openGuide,
+  openPlanning,
+  shiftPlanningRange,
+} from './header-controls';
 
 for (const width of [1512, 1100, 800, 390, 320]) {
   test(`shared header keeps its hierarchy and controls across views at ${width}px`, async ({
@@ -35,6 +41,7 @@ for (const width of [1512, 1100, 800, 390, 320]) {
         await expect(page.locator('#docsBack')).toBeVisible();
         await expect(page.locator('#docsIdentity')).toBeVisible();
       } else {
+        await openPlanning(page);
         for (const id of ['rangeCtl', 'todayBtn'])
           await expect(page.locator(`#${id}`)).toBeVisible();
         if (view === 'weekends') {
@@ -45,12 +52,12 @@ for (const width of [1512, 1100, 800, 390, 320]) {
           await expect(page.locator('.stage-head #periodLabel')).toBeVisible();
         }
         if (width <= 700) {
-          await expect(page.locator('#moonSettingsSummary')).toBeVisible();
-          await expect(page.locator('#moonAltSel')).toBeHidden();
+          await expect(page.locator('#planSettingsBtn')).toBeVisible();
+          await expect(page.locator('#planningDialog')).toBeVisible();
         } else {
-          await expect(page.locator('#moonSettingsSummary')).toBeHidden();
-          await expect(page.locator('#moonAltSel')).toBeVisible();
+          await expect(page.locator('#planSettingsBtn')).toBeHidden();
         }
+        await expect(page.locator('#moonAltSel')).toBeVisible();
         if (width === 1512 && view !== 'weekends') {
           const singleBand = await page.evaluate(() => {
             const site = document.querySelector('.brand')!.getBoundingClientRect();
@@ -82,6 +89,7 @@ for (const width of [1512, 1100, 800, 390, 320]) {
           expect(alignment.topSpread).toBeLessThanOrEqual(1);
           expect(alignment.heightSpread).toBeLessThanOrEqual(1);
         }
+        await closePlanning(page);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
       await page.evaluate(
@@ -103,34 +111,37 @@ for (const width of [1512, 1100, 800, 390, 320]) {
   });
 }
 
-test('phone Moon settings support keyboard editing, view changes and responsive focus', async ({
+test('phone Plan settings support keyboard editing, view changes and responsive focus', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
-  const summary = page.locator('#moonSettingsSummary');
-  await summary.focus();
-  await summary.press('Enter');
+  const trigger = page.locator('#planSettingsBtn');
+  await trigger.focus();
+  await trigger.press('Enter');
+  await expect(page.locator('#rangePicker')).toBeFocused();
   await expect(page.locator('#moonAltSel')).toBeVisible();
   await page.locator('#moonAltSel').selectOption('10');
   await page.locator('#crescentSel').selectOption('0.2');
-  await expect(summary).toHaveText('Moonlight: edge 10° · ignore under 20% lit');
+  await closePlanning(page);
+  await expect(trigger).toBeFocused();
   await page.getByRole('button', { name: 'Lunations', exact: true }).click();
+  await openPlanning(page);
   await expect(page.locator('#moonAltSel')).toBeVisible();
-  await summary.focus();
-  await summary.press('Space');
+  await page.keyboard.press('Escape');
+  await expect(trigger).toBeFocused();
   await page.getByRole('button', { name: 'Calendar', exact: true }).click();
   await expect(page.locator('#moonAltSel')).toBeHidden();
-  await expect(summary).toHaveText('Moonlight: edge 10° · ignore under 20% lit');
   const selected = await page.evaluate(() => window.__npa!.S.sel);
-  await summary.focus();
+  await openPlanning(page);
+  await page.locator('#moonAltSel').focus();
   await page.setViewportSize({ width: 1512, height: 920 });
   await expect(page.locator('#moonAltSel')).toBeFocused();
   await expect(page.locator('#moonAltSel')).toHaveValue('10');
   await expect(page.locator('#crescentSel')).toHaveValue('0.2');
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(summary).toBeFocused();
+  await expect(trigger).toBeFocused();
   await expect(page.locator('#moonAltSel')).toBeHidden();
   expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(selected);
 });
@@ -150,7 +161,7 @@ test('view shortcuts follow the switcher and Tonight restores the current range 
       continue;
     }
     expect(await page.evaluate(() => window.__npa!.S.view)).toBe(view);
-    await page.locator('#rangeNext').click();
+    await shiftPlanningRange(page, 'Next');
     await expect(page.locator('#loading')).toBeHidden();
     expect(await page.evaluate(() => window.__npa!.nights.some((n) => n.id === '2026-10-28'))).toBe(
       false,

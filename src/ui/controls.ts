@@ -29,6 +29,7 @@ import { initSiteEditor } from './site-editor';
 import { initRiverMinimap } from './river-minimap';
 import { initBrowserData } from './browser-data';
 import { initAppMenu } from './app-menu';
+import { initPlanningPanel } from './planning-panel';
 import { initChartLegend } from './chart-legend';
 import { closeDocs, docsOpen } from './guide';
 import { dropdownOptions } from './dropdown';
@@ -275,28 +276,11 @@ function initKeyboard(): void {
 function initHeader(): void {
   initAppMenu();
   initRangePicker();
+  initPlanningPanel();
   el('viewSeg').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button');
     if (b?.dataset.view) setView(b.dataset.view as ViewId);
   });
-  const moonSettings = el<HTMLDetailsElement>('moonSettings');
-  const phone = window.matchMedia('(max-width: 700px)');
-  const layoutMoonSettings = () => {
-    const summary = el('moonSettingsSummary');
-    const focused = moonSettings.contains(document.activeElement);
-    // Keep keyboard focus on a visible control when crossing the phone breakpoint.
-    if (phone.matches) {
-      summary.hidden = false;
-      if (focused) summary.focus({ preventScroll: true });
-      moonSettings.open = false;
-    } else {
-      moonSettings.open = true;
-      if (focused) el('moonAltSel').focus({ preventScroll: true });
-      summary.hidden = true;
-    }
-  };
-  layoutMoonSettings();
-  phone.addEventListener('change', layoutMoonSettings);
   el('focusSeg').addEventListener('click', (e) => {
     const b = (e.target as Element).closest<HTMLElement>('button');
     if (b) setFocus(Number(b.dataset.val));

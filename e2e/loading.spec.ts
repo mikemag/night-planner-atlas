@@ -1,3 +1,4 @@
+import { chooseFocus, chooseMoon } from './header-controls';
 import { expect, test } from '@playwright/test';
 
 test('controls changed during loading apply to the completed range', async ({ page }) => {
@@ -5,9 +6,9 @@ test('controls changed during loading apply to the completed range', async ({ pa
   await page.goto('./', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => !!window.__npa);
   await expect(page.locator('#loading')).toBeVisible();
-  await page.locator('#moonAltSel').selectOption('15');
-  await page.locator('#crescentSel').selectOption('0.3');
-  await page.locator('#focusSeg button[data-val="3"]').click();
+  await chooseMoon(page, 'moonAltSel', '15');
+  await chooseMoon(page, 'crescentSel', '0.3');
+  await chooseFocus(page, 3);
   await expect(page.locator('#loading')).toBeHidden();
   const result = await page.evaluate(() => {
     const app = window.__npa!;

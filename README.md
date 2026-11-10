@@ -31,6 +31,8 @@ The **Range** date button sets the dates for all four views. **Around now** show
 starting with the previous month at the site. **Calendar year** shows January through December
 of the chosen year. The arrows shift the range by a year. **Tonight** jumps to the current
 observing night and returns to Around now if that night is outside the range.
+On phones, **Plan settings** groups Range, new-moon focus and Moon thresholds. The compact
+header keeps the site, view tabs, Tonight and live status visible in portrait and landscape.
 
 All views share one visual language and Moon settings for when the Moon counts as up and whether
 to ignore a thin crescent. The charts also support new-moon focus (±N nights) and share ordered

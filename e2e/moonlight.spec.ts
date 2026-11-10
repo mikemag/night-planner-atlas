@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { createHash } from 'node:crypto';
-import { chooseTheme } from './header-controls';
+import { chooseTheme, chooseFocus, chooseMoon } from './header-controls';
 
 for (const width of [1512, 390]) {
   test(`phase/altitude wash preserves coverage in every view and theme at ${width}px @retina`, async ({
@@ -41,7 +41,6 @@ for (const width of [1512, 390]) {
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     await page.waitForFunction(() => (window.__npa?.nights.length ?? 0) > 0);
-    if (width <= 700) await page.locator('#moonSettingsSummary').click();
     const painted = () =>
       page.evaluate(
         () =>
@@ -102,7 +101,7 @@ for (const width of [1512, 390]) {
           true,
         );
       }, view);
-      await page.locator('#focusSeg button[data-val="0"]').click();
+      await chooseFocus(page, 0);
       for (const theme of ['light', 'dark', 'observing']) {
         await chooseTheme(page, theme);
         await painted();
@@ -124,12 +123,12 @@ for (const width of [1512, 390]) {
             }),
           ),
         ).toBe(true);
-        await page.locator('#moonAltSel').selectOption('5');
+        await chooseMoon(page, 'moonAltSel', '5');
         await painted();
         expect(coverage([...(await fills(false)), ...(await fills(true))])).toBe(baseline);
         expect((await fills(true)).length).toBeGreaterThan(0);
-        await page.locator('#moonAltSel').selectOption('0');
-        await page.locator('#crescentSel').selectOption('0.2');
+        await chooseMoon(page, 'moonAltSel', '0');
+        await chooseMoon(page, 'crescentSel', '0.2');
         await painted();
         expect(coverage([...(await fills(false)), ...(await fills(true))])).toBe(baseline);
         expect((await fills(true)).length).toBeGreaterThan(0);
@@ -138,7 +137,7 @@ for (const width of [1512, 390]) {
           await page.screenshot({
             path: `test-results/screenshots/${info.project.name}-moonlight-${view}-${theme}-${width}.png`,
           });
-        await page.locator('#crescentSel').selectOption('0');
+        await chooseMoon(page, 'crescentSel', '0');
         await painted();
         expect(coverage(await fills(false))).toBe(baseline);
         expect(await fills(true)).toEqual([]);

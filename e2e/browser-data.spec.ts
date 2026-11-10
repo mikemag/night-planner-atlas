@@ -1,4 +1,4 @@
-import { chooseTheme } from './header-controls';
+import { chooseTheme, chooseFocus } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { freshPersonalData } from '../src/app/personal-data';
@@ -39,7 +39,7 @@ for (const width of [1512, 390])
     await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
-    await page.locator('#focusSeg button[data-val="7"]').click();
+    await chooseFocus(page, 7);
     await expect.poll(async () => (await readPersonal(page)).preferences.focus).toBe(7);
     await openData(page);
     const downloaded = page.waitForEvent('download');

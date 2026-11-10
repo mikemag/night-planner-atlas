@@ -1,6 +1,6 @@
 import { expect, test as base } from '@playwright/test';
 import { preview, type PreviewServer } from 'vite';
-import { openAppMenu } from './header-controls';
+import { openAppMenu, chooseMoon, shiftPlanningRange } from './header-controls';
 import { readPreference } from './storage';
 
 const test = base.extend<{ origin: PreviewServer }>({
@@ -28,7 +28,7 @@ test('reopens the planner and direct Docs links offline after online setup', asy
   await expect(page.locator('#loading')).toBeHidden();
   await page.locator('#siteSel').selectOption('site:sydney-linden-observatory');
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#moonAltSel').selectOption('10');
+  await chooseMoon(page, 'moonAltSel', '10');
   await expect.poll(() => readPreference(page, 'moonAlt')).toBe(10);
 
   await openAppMenu(page);
@@ -52,7 +52,7 @@ test('reopens the planner and direct Docs links offline after online setup', asy
   await expect(fresh.locator('#offlineStatus')).toHaveText('Ready to reopen offline');
   await fresh.keyboard.press('Escape');
   const originalRange = await fresh.locator('#rangeLabel').textContent();
-  await fresh.locator('#rangeNext').click();
+  await shiftPlanningRange(fresh, 'Next');
   await expect(fresh.locator('#loading')).toBeHidden();
   await expect(fresh.locator('#rangeLabel')).not.toHaveText(originalRange!);
   for (const view of ['River', 'Lunations', 'Calendar', 'Dark Weekends']) {

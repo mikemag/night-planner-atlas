@@ -1,3 +1,4 @@
+import { shiftPlanningRange } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import { createSiteLink } from '../src/app/share-state';
 import { readPersonal } from './storage';
@@ -92,7 +93,7 @@ test('Undo keeps its remaining time through hover, keyboard focus, and a later c
   await page.clock.runFor(4_000);
 
   await page.clock.resume();
-  await page.locator('#rangeNext').click();
+  await shiftPlanningRange(page, 'Next');
   await expect(page.locator('#loading')).toBeVisible();
   await page.clock.fastForward(30_000);
   await expect(page.locator('#loading')).toBeHidden();

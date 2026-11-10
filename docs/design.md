@@ -332,18 +332,23 @@ Lunations retains its focus window and opens the night detail even if the date f
   Tonight uses a neutral button treatment, and tonight and now are marked in the chart.
   Browsing months and cycles uses scrolling,
   with the browsed period and view-specific Year/Month/Week controls inside the chart header.
-  On phones, the header stacks in the same order across all views, with Docs and More options beside the site.
-  Site, views, Range, Tonight and focus stay visible. Only the Moon thresholds fold into a
-  keyboard-operable disclosure that always summarizes their current values. Desktop exposes
-  both thresholds inline. Resizing preserves keyboard access to the threshold controls; changing
-  views preserves the disclosure's state. Header controls use larger touch targets and fit at
-  320 px without horizontal page scrolling. Docs opens its own reading shell.
+  On phones, site, views, Tonight and the clock/status stay visible. **Plan settings** shows the
+  loaded date range and opens a scrollable dialog containing Range, new-moon focus and both
+  Moon thresholds. The dialog reuses the desktop controls, applies edits immediately, traps
+  keyboard focus, and returns focus to its trigger on Done or Escape. An open Range picker
+  closes before the dialog when Escape is pressed. Rotating between phone orientations keeps
+  the dialog and its inputs intact; crossing to desktop restores the inline controls and focus.
+  Portrait stacks the shared header; short landscape screens place the view tabs beside the
+  site and Plan settings/Tonight beside the status. This compact arrangement applies through
+  700 px wide, and through 1100 px wide when the viewport is at most 500 px tall.
+  Larger touch targets fit at 320 px without horizontal page scrolling. Docs opens its own reading shell.
 - **Chart toolbar and legend.** The panel header keeps zoom controls and the browsed period;
   the active view is already identified by the shared navigation. Its view heading remains
   available to assistive technology. Explanatory sentences belong in How it works and chart help.
   River and Calendar start Year/Month at the same position with identical control sizes, and
   Calendar adds Week. Lunations shows its browsed period without an empty zoom control. Desktop
-  uses one row; phones put the period below the zoom controls, with Legend alongside the controls.
+  uses one row; phone portrait puts the period below the zoom controls, with Legend alongside
+  the controls. Landscape keeps the toolbar in one row to preserve chart space.
   All views share padding, spacing and touch targets.
   The compact inline key groups the five named sky stages and uses short Moonlight, Accepted
   moonlight and Usable dark labels. Accepted moonlight appears only with relaxed planning settings.

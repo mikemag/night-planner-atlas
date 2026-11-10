@@ -1,4 +1,4 @@
-import { openAppMenu, openShare } from './header-controls';
+import { openAppMenu, openShare, chooseFocus, chooseMoon } from './header-controls';
 import { createShareLink, createSiteLink } from '../src/app/share-state';
 import { seedPersonal, readPersonal, readSite, readPreference } from './storage';
 import { expect, test, type Browser, type Page } from '@playwright/test';
@@ -248,9 +248,9 @@ test('a site-free plan opens directly and applies settings with normal persisten
   browser,
 }) => {
   await openAuthor(page);
-  await page.locator('#moonAltSel').selectOption('10');
-  await page.locator('#crescentSel').selectOption('0.2');
-  await page.locator('#focusSeg button[data-val="3"]').click();
+  await chooseMoon(page, 'moonAltSel', '10');
+  await chooseMoon(page, 'crescentSel', '0.2');
+  await chooseFocus(page, 3);
   await openShare(page);
   await expect(page.getByLabel('Include this site', { exact: true })).not.toBeChecked();
   const link = await page.getByLabel('Share link', { exact: true }).inputValue();
@@ -299,7 +299,7 @@ test('a site-free plan opens directly and applies settings with normal persisten
       saved: { ...ownPrefs, riverZoom: 'month', focus: 3, moonAlt: 10, crescent: 0.2 },
     });
     expect(await favorites(target.page)).toEqual(ownBook);
-    await target.page.locator('#focusSeg button[data-val="0"]').click();
+    await chooseFocus(target.page, 0);
     await expect.poll(() => readPreference(target.page, 'focus')).toBe(0);
     expect(await favorites(target.page)).toEqual(ownBook);
     await target.page.reload();

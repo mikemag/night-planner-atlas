@@ -1,3 +1,4 @@
+import { chooseFocus } from './header-controls';
 import { expect, test } from '@playwright/test';
 
 for (const width of [1512, 390]) {
@@ -12,7 +13,7 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#loading')).toBeHidden();
     await page.locator('#siteSel').selectOption('site:svalbard-kjell-henriksen-observatory');
     await expect(page.locator('#loading')).toBeHidden();
-    await page.locator('#focusSeg button[data-val="0"]').click();
+    await chooseFocus(page, 0);
     expect(await page.evaluate(() => window.__npa!.ax)).toEqual({ start: 0, end: 24 });
     for (const id of ['2026-12-21', '2027-06-21']) {
       for (const view of ['river', 'calendar', 'lunations'] as const) {

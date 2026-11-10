@@ -1,3 +1,4 @@
+import { chooseFocus } from './header-controls';
 import { seedPersonal } from './storage';
 import { expect, test, type Page } from '@playwright/test';
 import { fmtClock, fmtClockS, fmtDur } from '../src/model/format';
@@ -174,8 +175,8 @@ test('River zoom and focus preserve the browsed night away from selection', asyn
   await page.locator('#scroller').evaluate((e) => {
     e.scrollTop = 150 * 20 + 7;
   });
-  await page.locator('#focusSeg button[data-val="3"]').click();
-  await page.locator('#focusSeg button[data-val="0"]').click();
+  await chooseFocus(page, 3);
+  await chooseFocus(page, 0);
   // Browsers round scrollTop to whole pixels; expanding an 8 px context row can amplify that.
   expect(Math.abs((await scroll(page)) - 3007)).toBeLessThanOrEqual(3);
   await expect(page.locator('#riverSelection')).toContainText(selection);
@@ -365,17 +366,18 @@ test('minimap has readable month labels, year context and a visible viewport', a
       path: `test-results/screenshots/${info.project.name}-river-minimap.png`,
     });
   await page.setViewportSize({ width: 1512, height: 350 });
-  await painted(page);
-  const sparse = await page
-    .locator('#cv')
-    .evaluate((cv) =>
-      window.riverText.filter(
-        (t) =>
-          t.left > cv.clientWidth - 96 &&
-          /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$/.test(t.text),
-      ),
-    );
-  expect(sparse.length).toBeLessThan(14);
+  const sparseLabels = () =>
+    page
+      .locator('#cv')
+      .evaluate((cv) =>
+        window.riverText.filter(
+          (t) =>
+            t.left > cv.clientWidth - 96 &&
+            /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$/.test(t.text),
+        ),
+      );
+  await expect.poll(async () => (await sparseLabels()).length).toBeLessThan(14);
+  const sparse = await sparseLabels();
   expect(sparse.some((t) => t.text === 'Jan')).toBe(true);
   for (let i = 1; i < sparse.length; i++)
     expect(sparse[i].y - sparse[i - 1].y).toBeGreaterThanOrEqual(14);
@@ -398,7 +400,7 @@ test('minimap viewport keeps the grab point with expansion and new-moon focus', 
     await page.evaluate((expanded) => {
       if (window.__npa!.S.riverExpanded !== expanded) window.__npa!.toggleRiverNight();
     }, expanded);
-    await page.locator(`#focusSeg button[data-val="${focus}"]`).click();
+    await chooseFocus(page, focus);
     await page.locator('#scroller').evaluate((e) => {
       e.scrollTop = 3007;
     });
@@ -462,7 +464,7 @@ for (const width of [1512, 390]) {
   }, info) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
     await openRiver(page);
-    await page.locator('#focusSeg button[data-val="3"]').click();
+    await chooseFocus(page, 3);
     const gl = width === 390 ? 56 : 70;
     const selectDate = async (id: string) => {
       await page.evaluate(
@@ -540,11 +542,11 @@ for (const width of [1512, 390]) {
       (await gutter()).find((t) => t.text === (width === 390 ? 'Jan ’27' : 'Jan 2027'))?.fontSize,
     ).toBe(11.5);
     for (const focus of ['5', '7', '10']) {
-      await page.locator(`#focusSeg button[data-val="${focus}"]`).click();
+      await chooseFocus(page, focus);
       await selectDate('2026-12-30');
       await assertReadable();
     }
-    await page.locator('#focusSeg button[data-val="0"]').click();
+    await chooseFocus(page, 0);
     await painted(page);
     labels = await gutter();
     expect(labels.some((t) => t.text === 'Jan 1')).toBe(true);
@@ -591,7 +593,7 @@ test.describe('new-moon event markers', () => {
       const eventText = `New moon: ${event.date}, ${event.year} ${event.time}`;
       const readout = page.locator('#riverReadout');
       for (const focus of ['0', '3']) {
-        await page.locator(`#focusSeg button[data-val="${focus}"]`).click();
+        await chooseFocus(page, focus);
         await page.evaluate((i) => window.__npa!.select(i, true, true), event.i);
         await painted(page);
         const geometry = await page.evaluate(

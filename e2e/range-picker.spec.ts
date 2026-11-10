@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openShare } from './header-controls';
+import { closePlanning, openPlanning, openShare } from './header-controls';
 
 const selectedNight = (page: Page) =>
   page.evaluate(() => window.__npa!.nights[window.__npa!.S.sel]?.id);
@@ -71,6 +71,7 @@ test('the range picker shares a leap year across views and in a plan link', asyn
     });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect.poll(columns).toBe(2);
+  await openPlanning(page);
   await picker.click();
   await expect(menu).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
@@ -79,6 +80,7 @@ test('the range picker shares a leap year across views and in a plan link', asyn
       path: `test-results/screenshots/${info.project.name}-calendar-year-phone.png`,
     });
   await page.keyboard.press('Escape');
+  await closePlanning(page);
   await months.last().click();
   await expect(page.locator('#periodLabel')).toHaveText('December 2028');
 
@@ -90,7 +92,7 @@ test('the range picker shares a leap year across views and in a plan link', asyn
   await page.goto('about:blank');
   await page.goto(url.href);
   await expect(page.locator('#loading')).toBeHidden();
-  await expect(picker).toContainText('Jan – Dec 2028');
+  await expect(page.locator('#planRangeLabel')).toHaveText('Jan – Dec 2028');
   expect(await selectedNight(page)).toBe('2028-12-01');
 });
 

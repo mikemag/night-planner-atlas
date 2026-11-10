@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { chooseTheme } from './header-controls';
+import { chooseTheme, chooseMoon } from './header-controls';
 
 async function open(page: Page, width: number): Promise<void> {
   await page.setViewportSize({ width, height: width > 700 ? 900 : 844 });
@@ -116,7 +116,7 @@ test('the key follows planning settings and themes while resizing safely', async
   await open(page, 1512);
   const key = page.locator('#legend');
   await expect(page.locator('#acceptedMoonKey')).toBeHidden();
-  await page.locator('#moonAltSel').selectOption('10');
+  await chooseMoon(page, 'moonAltSel', '10');
   await expect(page.locator('#acceptedMoonKey')).toBeVisible();
   await chooseTheme(page, 'observing');
   const gradient = await page.locator('#acceptedMoonSw').evaluate((el) => el.style.background);
@@ -139,9 +139,9 @@ test('the key follows planning settings and themes while resizing safely', async
   await expect(key).toBeHidden();
   await page.setViewportSize({ width: 1512, height: 900 });
   await expect(key).toBeVisible();
-  await page.locator('#moonAltSel').selectOption('0');
+  await chooseMoon(page, 'moonAltSel', '0');
   await expect(page.locator('#acceptedMoonKey')).toBeHidden();
-  await page.locator('#crescentSel').selectOption('0.2');
+  await chooseMoon(page, 'crescentSel', '0.2');
   await expect(page.locator('#acceptedMoonKey')).toBeVisible();
   if (process.env.SCREENSHOTS)
     for (const width of [1512, 390]) {

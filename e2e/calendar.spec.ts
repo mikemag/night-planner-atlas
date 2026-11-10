@@ -1,4 +1,4 @@
-import { openShare } from './header-controls';
+import { openShare, chooseFocus, chooseMoon, shiftPlanningRange } from './header-controls';
 import { seedPersonal } from './storage';
 import { expect, test, type Page } from '@playwright/test';
 import { fmtClock, fmtClockS, fmtDur, nightTitle, SUN_NAMES } from '../src/model/format';
@@ -134,7 +134,9 @@ for (const width of [1512, 390]) {
     expect(overview.height).toBeLessThanOrEqual(Math.max(546, overview.available) + 1);
     await fits(page);
     await expect(page.locator('#legend')).toBeHidden();
-    await expect(page.locator('#planningControls')).toBeVisible();
+    await expect(
+      page.locator(width <= 700 ? '#planSettingsBtn' : '#planningControls'),
+    ).toBeVisible();
     const pixels = await page.evaluate(() => {
       const a = window.__npa!,
         r = a.calendarRows,
@@ -424,7 +426,7 @@ for (const width of [1512, 390]) {
     expect((await selected(page)).id).toBe('2026-12-01');
     await expect(page.getByRole('combobox', { name: 'Month summary' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Year', exact: true }).click();
-    await page.getByRole('button', { name: 'Load range one year later', exact: true }).click();
+    await shiftPlanningRange(page, 'Next');
     await expect(page.locator('#loading')).toBeHidden();
     await expect(page.locator('#periodLabel')).toHaveText('2027–2028');
     await expect(page.locator('button[data-calendar-month^="2027-"]')).toHaveCount(4);
@@ -562,19 +564,18 @@ test('focus and thresholds retain the complete month and update the same shared 
   const before = await page.evaluate(() =>
     window.__npa!.calendarRows.blocks.map((b) => [b.y, b.h]),
   );
-  await page.locator('#focusSeg button[data-val="3"]').click();
-  await page.locator('#moonSettingsSummary').click();
-  await page.locator('#moonAltSel').selectOption('15');
-  await page.locator('#crescentSel').selectOption('0.3');
+  await chooseFocus(page, 3);
+  await chooseMoon(page, 'moonAltSel', '15');
+  await chooseMoon(page, 'crescentSel', '0.3');
   expect(
     await page.evaluate(() => window.__npa!.calendarRows.blocks.map((b) => [b.y, b.h])),
   ).toEqual(before);
   await expect(page.locator('#calendarDetail')).toBeVisible();
-  await expect(page.locator('#planningControls')).toBeVisible();
+  await expect(page.locator('#planSettingsBtn')).toBeVisible();
   await sharedDetail(page);
   await page.locator('#viewSeg button[data-view="river"]').click();
   await expect(page.locator('#calendarDetail')).toBeHidden();
-  await expect(page.locator('#planningControls')).toBeVisible();
+  await expect(page.locator('#planSettingsBtn')).toBeVisible();
   expect((await selected(page)).id).toBe('2026-10-06');
   await page.locator('#viewSeg button[data-view="calendar"]').click();
   await sharedDetail(page);
@@ -600,8 +601,7 @@ test('night details handle no-dark, split windows and daylight-saving changes', 
   await choose(page, '2026-06-20');
   await page.locator('#cv').press('Enter');
   await expect(page.locator('#calendarDetail')).toContainText('No astronomical darkness');
-  await page.locator('#moonSettingsSummary').click();
-  await page.locator('#moonAltSel').selectOption('15');
+  await chooseMoon(page, 'moonAltSel', '15');
   await page.evaluate(() => {
     const a = window.__npa!,
       i = a.nights.findIndex((n) => n.mf.length > 1);

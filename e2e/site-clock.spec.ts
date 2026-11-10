@@ -1,3 +1,4 @@
+import { chooseMoon, shiftPlanningRange } from './header-controls';
 import { expect, test } from '@playwright/test';
 import { DEFAULT_SITES } from '../src/app/default-sites';
 
@@ -42,7 +43,7 @@ for (const width of [1512, 390]) {
     await page.clock.setSystemTime(new Date(next - 14 * 60_000));
     await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
     await expect(page.locator('#siteClockCountdown')).toHaveText('14min to astronomical twilight');
-    await page.locator('#rangeNext').click();
+    await shiftPlanningRange(page, 'Next');
     await expect(page.locator('#loading')).toBeHidden();
     await expect(page.locator('#siteClockCountdown')).toHaveText('14min to astronomical twilight');
     const selection = await page.evaluate(() => window.__npa!.nights[window.__npa!.S.sel].id);
@@ -88,11 +89,14 @@ test('countdown catches up on return, changes with the site and survives midnigh
   await expect(page.locator('#siteClockCountdown')).toHaveText(/to astronomical twilight$/);
 });
 
-for (const width of [1512, 390, 320]) {
+for (const width of [1512, 390, 320, 568, 844]) {
   test(`usable status shares chart calculations and keeps its height through every transition at ${width}px`, async ({
     page,
   }, info) => {
-    await page.setViewportSize({ width, height: width === 1512 ? 920 : 844 });
+    await page.setViewportSize({
+      width,
+      height: width === 1512 ? 920 : width === 568 ? 320 : width === 844 ? 390 : 844,
+    });
     await page.clock.install({ time: new Date('2026-10-28T22:00:00Z') });
     await page.goto('./', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => !!window.__npa);
@@ -214,18 +218,18 @@ test('Moon settings immediately update shared transitions, including while brows
   await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
   const before = await page.locator('#siteClockUsable').textContent();
   const computed = await page.evaluate(() => window.__npa!.calculatedNights);
-  await page.locator('#moonAltSel').selectOption('15');
+  await chooseMoon(page, 'moonAltSel', '15');
   await expect(page.locator('#siteClockUsable')).not.toHaveText(before!);
-  await page.locator('#crescentSel').selectOption('0.3');
+  await chooseMoon(page, 'crescentSel', '0.3');
   await expect(page.locator('#siteClockUsable')).toHaveText('+ usable dark');
   expect(await page.evaluate(() => window.__npa!.calculatedNights)).toBe(computed);
-  await page.locator('#rangeNext').click();
+  await shiftPlanningRange(page, 'Next');
   await expect(page.locator('#loading')).toBeHidden();
   const browsed = await page.evaluate(() => window.__npa!.calculatedNights);
-  await page.locator('#moonAltSel').selectOption('0');
-  await page.locator('#crescentSel').selectOption('0');
+  await chooseMoon(page, 'moonAltSel', '0');
+  await chooseMoon(page, 'crescentSel', '0');
   await expect(page.locator('#siteClockUsable')).toHaveText(before!);
-  await page.locator('#crescentSel').selectOption('0.3');
+  await chooseMoon(page, 'crescentSel', '0.3');
   await expect(page.locator('#siteClockUsable')).toHaveText('+ usable dark');
   expect(await page.evaluate(() => window.__npa!.calculatedNights)).toBe(browsed);
 });

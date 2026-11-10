@@ -644,10 +644,11 @@ export function restart(): void {
       el('loading').hidden = true;
       const { spec, nights } = r;
       const last = nights[nights.length - 1];
-      el('rangeLabel').textContent =
+      const rangeLabel =
         spec.count === CALENDAR_MONTHS
           ? `Jan – Dec ${spec.y}`
           : `${MON3[spec.m - 1]} ${spec.y} – ${MON3[last.m - 1]} ${last.y}`;
+      el('rangeLabel').textContent = el('planRangeLabel').textContent = rangeLabel;
       let i = selId ? nights.findIndex((n) => n.id === selId) : -1;
       if (i < 0) i = r.tonightIdx >= 0 ? r.tonightIdx : 0;
       if (!selId || nights[i].id !== selId) {
@@ -697,8 +698,6 @@ export function syncSettingsControls(): void {
   }
   el<HTMLSelectElement>('moonAltSel').value = String(S.moonAlt);
   el<HTMLSelectElement>('crescentSel').value = String(S.crescent);
-  el('moonSettingsSummary').textContent =
-    `Moonlight: edge ${S.moonAlt}° · ${S.crescent ? `ignore under ${Math.round(S.crescent * 100)}% lit` : 'strict'}`;
   for (const b of el('viewSeg').children) {
     b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.view === S.view));
     b.classList.toggle('active', (b as HTMLElement).dataset.view === S.view);
