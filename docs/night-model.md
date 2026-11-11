@@ -372,8 +372,13 @@ it doesn't recompute positions.
 
 ## Rebuildable monthly cache
 
-The chart and live status share a bounded cache in memory of the 32 most recently used
-site-months, including partial months still being calculated. Each completed night becomes
+The chart and live status share a least-recently-used memory cache with a 32 MiB estimated
+base-payload budget and a 512-site-month ceiling, including partial months still being calculated.
+This uses the persistent cache's numerical payload estimate, not a bound on total JavaScript heap.
+Each range acquisition retains references to its memory hits before awaiting storage, so another
+consumer or disk-cache refill cannot evict nights out from under an active request. Those references
+last for the request; the displayed range also owns its nights independently of cache eviction.
+Each completed night becomes
 available before the next night is requested, so overlapping consumers calculate it
 once even when IndexedDB is unavailable. The same exact site inputs key both caches. An explicit
 cache clear invalidates this shared memory on the next acquisition as well as persistent data;

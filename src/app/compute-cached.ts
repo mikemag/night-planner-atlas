@@ -20,6 +20,7 @@ import { nightCache } from './night-cache';
 import { personal } from './personal-data';
 import { NightMemory } from './night-memory';
 import { backgroundNights } from './compute-background';
+import { pad2 } from '../model/format';
 
 const memory = new NightMemory();
 let memoryEpoch = nightCache.epoch;
@@ -62,16 +63,24 @@ export async function computeCachedNights(
     memoryEpoch = epoch;
   }
   const keys = months.map((m) => monthKey(input, m.y, m.m));
-  const needed = months.flatMap((m, i) => (memory.hasMonth(input, m.y, m.m) ? [] : [keys[i]]));
+  // Pin this request's memory hits before awaiting storage or refilling the shared LRU.
+  // Otherwise loading older disk months can evict later hits that we did not fetch.
+  const cached = new Map<string, Night>();
+  const needed = months.flatMap((m, i) => {
+    for (const [y, month, d] of nightDates({ ...m, count: 1 })) {
+      const night = memory.get(input, `${y}-${pad2(month)}-${pad2(d)}`);
+      if (night) cached.set(night.id, night);
+    }
+    return memory.hasMonth(input, m.y, m.m) ? [] : [keys[i]];
+  });
   const stored =
     eligible && needed.length ? await nightCache.get(needed) : new Map<string, unknown>();
   if (opts.isCancelled?.()) return null;
-  const cached = new Map<string, Night>(),
-    missing = new Set<string>();
+  const missing = new Set<string>();
   let sliceStart = performance.now();
   for (let i = 0; i < months.length; i++) {
     if (opts.isCancelled?.()) return null;
-    if (memory.hasMonth(input, months[i].y, months[i].m)) continue;
+    if (!needed.includes(keys[i])) continue;
     const m = months[i],
       nights = unpackMonth(stored.get(keys[i]), keys[i], m.y, m.m, tz);
     if (nights) for (const n of nights) cached.set(n.id, n);

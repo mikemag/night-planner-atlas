@@ -168,6 +168,56 @@ it.each(['memory', 'persistent'])('publishes a fully %s-cached range only once',
   );
 });
 
+it.each(['refill', 'pending read'])('pins memory hits during cache %s', async (eviction) => {
+  // Three requested months cannot all fit in this two-month memory cache. Loading the
+  // oldest month from disk must not evict the later hits out from under this request.
+  const memory = new NightMemory(2);
+  const get = memory.get.bind(memory),
+    put = memory.put.bind(memory),
+    hasMonth = memory.hasMonth.bind(memory);
+  vi.spyOn(NightMemory.prototype, 'get').mockImplementation(get);
+  vi.spyOn(NightMemory.prototype, 'put').mockImplementation(put);
+  vi.spyOn(NightMemory.prototype, 'hasMonth').mockImplementation(hasMonth);
+  const spec = { y: 2026, m: 9, count: 3 };
+  const nights = (await computeCachedNights(site, spec))!;
+  const stored = new Map(
+    rangeMonths(spec).map(({ y, m }) => {
+      const key = monthKey(site, y, m);
+      return [
+        key,
+        packMonth(
+          key,
+          nights.filter((n) => n.y === y && n.m === m),
+        ),
+      ];
+    }),
+  );
+  vi.spyOn(personal, 'status').mockReturnValue(null);
+  const read = vi.spyOn(nightCache, 'get').mockImplementation(async (keys) => {
+    if (eviction === 'pending read') {
+      // Another consumer fills memory while this range awaits its disk read.
+      await Promise.resolve();
+      for (const m of [9, 10])
+        put(
+          { ...site, elevation: 2000 },
+          nights.find((n) => n.m === m)!,
+        );
+    }
+    return new Map(keys.map((key) => [key, stored.get(key)]));
+  });
+  const compute = vi.spyOn(model, 'computeNight');
+  const onPartial = vi.fn(),
+    onStats = vi.fn();
+  const result = await computeCachedRange(site, spec, th, 15, now, { onPartial, onStats });
+  expect(read).toHaveBeenCalledWith([monthKey(site, 2026, 9)]);
+  expect(result!.nights.map((n) => n.id)).toEqual(nights.map((n) => n.id));
+  expect(compute).not.toHaveBeenCalled();
+  expect(onPartial).not.toHaveBeenCalled();
+  expect(onStats).toHaveBeenCalledWith(
+    expect.objectContaining({ cachedNights: 91, computedNights: 0 }),
+  );
+});
+
 it('reuses progressive structures and derives each arriving night once', async () => {
   const derive = vi.spyOn(model, 'deriveNight');
   const structures = vi.spyOn(rangeModel, 'buildStructures');

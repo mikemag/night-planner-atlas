@@ -604,6 +604,12 @@ available for interaction. The chart and live status share in-flight nights; cha
 ranges abandons obsolete requests after the outstanding job (one night or a solar-preparation month).
 Worker failures resume the existing main-thread slices with completed nights retained.
 
+The tab's shared memory cache also allows 32 MiB of estimated base calculation payload, up to
+512 site-months, so browsing several years can stay in memory. Active range requests retain their
+cache hits while disk reads and memory eviction run; a previously cached month cannot disappear
+mid-request and unexpectedly require full-range computation. These budgets describe cached payload,
+not total JavaScript heap or the separately retained displayed range.
+
 River becomes usable one month at a time. A solar-only pass first establishes the exact full-range
 clock axis and date/quarter alignment; its calculations are reused when completing each night.
 The selected month (or tonight's month) loads first. Remaining months fill outward, reprioritized

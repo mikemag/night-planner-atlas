@@ -312,6 +312,39 @@ test('year navigation reuses overlapping months and leap-year results', async ({
   await expect(page.locator('#loading')).toBeHidden();
   expect((await stats(page)).computedNights).toBe(0);
 });
+for (const width of [1512, 390]) {
+  test(`repeated year navigation reuses all six visited ranges at ${width}px`, async ({ page }) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });
+    await open(page);
+    await cached(page, 14);
+    for (let i = 1; i <= 5; i++) {
+      await shiftPlanningRange(page, 'Next');
+      await expect(page.locator('#loading')).toBeHidden();
+      await cached(page, 14 + 12 * i);
+    }
+    // The old 32-month memory limit made the second backward jump recalculate six
+    // months despite every requested month being present in persistent storage.
+    for (const direction of [
+      'Prev',
+      'Prev',
+      'Prev',
+      'Prev',
+      'Prev',
+      'Next',
+      'Next',
+      'Next',
+      'Prev',
+      'Prev',
+    ] as const) {
+      await shiftPlanningRange(page, direction);
+      await expect(page.locator('#loading')).toBeHidden();
+      expect((await stats(page)).computedNights).toBe(0);
+      expect((await stats(page)).cachedNights).toBeGreaterThanOrEqual(426);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  });
+}
 test('clearing during computation prevents a late cache write from repopulating it', async ({
   page,
 }) => {
