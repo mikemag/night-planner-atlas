@@ -1,13 +1,15 @@
-# Hosting the Helen preview
+# Hosting Night Planner Atlas
 
-The preview uses classic Firebase Hosting: static files on Google's CDN with managed HTTPS.
-The shared URL is <https://night-planner-atlas.web.app/>. The dedicated Google Cloud/Firebase
+Night Planner Atlas uses classic Firebase Hosting: static files on Google's CDN with managed HTTPS.
+The public address is <https://night-planner-atlas.web.app/>; no custom domain is configured.
+The dedicated Google Cloud/Firebase
 project and Hosting site ID are both `night-planner-atlas`. Billing is disabled with no linked
 billing account. The initial deployment published four static files from baseline `9bda707`
 plus this Hosting configuration on October 18, 2026.
 
-The repository stays private. Only the Vite build in `dist/` is published, excluding source
-maps. There is no GitHub integration, cloud build, cloud test run, backend, Firebase browser
+Firebase serves only the Vite build in `dist/`, excluding source maps. The AGPL source and build
+instructions are in the public [GitHub repository](https://github.com/mikemag/night-planner-atlas).
+There is no GitHub integration, cloud build, cloud test run, backend, Firebase browser
 SDK, analytics, or service-account key. All checks and builds run on the deploying laptop.
 
 Use a dedicated Firebase project on **Spark**, without linking a Cloud Billing account.
@@ -18,9 +20,9 @@ known-good rollback versions. Do not upgrade to Blaze automatically. Quotas are 
 Future Auth and Firestore work can use this project, but needs its own privacy, security-rule,
 region and cost decisions before enabling services or shipping SDKs.
 
-This is a publicly reachable preview without sign-in. The `X-Robots-Tag` response header asks
-search engines not to index it; it is not access control. The public-launch work in issue #15,
-including the Git/GitHub history privacy review, remains separate.
+The site is publicly reachable without sign-in. The current `X-Robots-Tag` response header asks
+search engines not to index it; it is not access control. Search indexing and broader release
+remain tracked in issue #15.
 
 ## Deploy and redeploy from this laptop
 
@@ -99,7 +101,7 @@ explicit project flag and preserve this Hosting config if that commit predates i
 rollback does not erase browser localStorage; future incompatible settings changes need a
 separate migration decision.
 
-## Helen's access and saved settings
+## Access and saved settings
 
 Open the shared `https://night-planner-atlas.web.app/` URL in a modern browser; no account or
 installation is needed. Use the site button to enter latitude, longitude, an IANA time zone

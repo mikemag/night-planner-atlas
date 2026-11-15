@@ -7,8 +7,8 @@ windows shift across weeks, lunar cycles, and seasons.
 
 ![River view: one row per night, clock time across](docs/images/river-month.png)
 
-It is a private prototype for now; [issues](https://github.com/mikemag/night-planner-atlas/issues)
-track where it is going.
+[Open Night Planner Atlas](https://night-planner-atlas.web.app/).
+[Issues](https://github.com/mikemag/night-planner-atlas/issues) track ongoing work.
 
 ## The views
 
@@ -77,9 +77,10 @@ You can enter an optional elevation above sea level; blank uses sea level.
 Elevation adjusts the observer position and idealized refraction, with a level horizon and no
 automatic terrain lookup.
 
-See [Hosting the Helen preview](docs/hosting.md) for local deployment, caching, rollback and
-per-browser settings behavior. Deployment publishes only the built site; the repository stays
-private.
+See [Hosting Night Planner Atlas](docs/hosting.md) for local deployment, caching, rollback and
+per-browser settings behavior. Firebase serves the built site; the
+[GitHub repository](https://github.com/mikemag/night-planner-atlas) provides its AGPL source and
+build instructions.
 
 | Command                      | What it does                                                                           |
 | ---------------------------- | -------------------------------------------------------------------------------------- |
@@ -121,12 +122,10 @@ AGENTS.md               guidance for coding agents working in this repo
 
 ## Status
 
-A working prototype with TypeScript, Vite, and local unit and browser tests.
-Work is tracked in GitHub issues. The night model has been checked
+The [planner](https://night-planner-atlas.web.app/) is built with TypeScript and Vite, with local
+unit and browser tests. Work is tracked in GitHub issues. The night model has been checked
 against USNO tables; see the measured accuracy and sampling limits in
-[the night model](docs/night-model.md#reference-verification-and-accuracy). Next up is polishing
-the River, Calendar and Lunations views and assessing usability in the
-[hosted preview](https://night-planner-atlas.web.app/). Public launch remains separate work.
+[the night model](docs/night-model.md#reference-verification-and-accuracy).
 
 ## Credits
 
@@ -157,7 +156,7 @@ In particular, the bundled time-zone boundary dataset remains ODbL 1.0. See
 The app’s Docs navigation includes **Licenses and credits**, with the scope of each grant,
 full terms readable offline, and third-party attribution.
 
-When distributing a licensed build, provide recipients with the matching corresponding source,
-including the files and build instructions needed to modify and rebuild it. The repository is
-private during the preview, so public access to the matching source must be arranged before
-publishing the licensed build. The [running instructions](#running-it) describe the build.
+The AGPL source is available in
+[mikemag/night-planner-atlas](https://github.com/mikemag/night-planner-atlas), including the files
+and [build instructions](#running-it) needed to modify and rebuild it. When distributing a
+licensed build, provide recipients with the matching corresponding source and build instructions.

@@ -2,8 +2,9 @@
 
 Night Planner Atlas is a static website for planning dark-sky nights. For any site it shows
 twilight, astronomical darkness, moonlight and usable dark night by night, across months and
-years, in several views. It is Mike's project, developed with agents. It is private for now and
-will become public.
+years, in several views. It is Mike's project, developed with agents, hosted at
+<https://night-planner-atlas.web.app/>. The existing public GitHub repository provides the AGPL
+source and build instructions.
 
 ## Orientation
 
@@ -76,7 +77,7 @@ will become public.
 
 ## Git and GitHub
 
-- The default branch is `main`, and the repository is `mikemag/night-planner-atlas` (private).
+- The default branch is `main`, and the public source repository is `mikemag/night-planner-atlas`.
 - Make small, reviewable commits whose messages say why. Don't push, force-push or change
   repository settings unless asked.
 - Comment on issues for material decisions, blockers and results, not routine progress.
