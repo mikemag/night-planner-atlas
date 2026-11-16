@@ -18,7 +18,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['*.config.{js,ts}', 'e2e/**', 'src/**/*.test.ts', 'src/**/testdata/**'],
+    files: ['*.config.{js,ts}', 'scripts/**', 'e2e/**', 'src/**/*.test.ts', 'src/**/testdata/**'],
     languageOptions: { globals: { ...globals.node } },
   },
   prettier,

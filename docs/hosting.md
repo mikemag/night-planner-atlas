@@ -65,8 +65,8 @@ at `/sw.js` use `no-cache` so browsers can discover releases. Vite's hashed `/as
 caching. The unversioned favicon caches for an hour. No catch-all rewrite is needed: views
 live at `/`, and unknown paths should return 404. Hosting deploys are atomic.
 
-After every deployment, open the printed HTTPS URL. Check River, Calendar, Lunations
-and How it works at desktop and phone widths in both themes, with no horizontal page scroll. Change
+After every deployment, open the printed HTTPS URL. Check River, Calendar, Lunations,
+Dark Weekends and Docs at desktop and phone widths in Light and Dark, with no horizontal page scroll. Change
 the site, IANA zone, optional elevation and planning controls, reload, and check persistence.
 With a browser zone different from the observing site, verify the expanded night's site-local times.
 Inspect network requests: only same-origin static files should load; site edits and view changes
@@ -104,14 +104,23 @@ separate migration decision.
 ## Access and saved settings
 
 Open the shared `https://night-planner-atlas.web.app/` URL in a modern browser; no account or
-installation is needed. Use the site button to enter latitude, longitude, an IANA time zone
-and optional elevation. All displayed times use that site's zone, including daylight saving.
+installation is needed. Choose **Manage sites…** at the bottom of the site picker to add or edit
+coordinates, an IANA time zone and optional elevation, or to reorder sites.
+All displayed times use that site's zone, including daylight saving. On phones, tap the labeled
+countdown for **Live details**, including the site's clock and zone.
 
 Settings and the observing site are saved **only in that browser on that device**. They do not
 sync between machines, browser profiles, or the `web.app` and `firebaseapp.com` hostnames.
 Use the same `web.app` bookmark consistently. Private browsing or clearing site data can
 remove settings. Coordinates stay in browser storage and calculations; there is no upload.
 The hosting provider still handles ordinary static-file requests and connection metadata.
+
+**More → Browser data → Backup and restore** exports sites, order, saved selection and preferences
+or imports a reviewed replacement. The separate recovery copy holds one previous document from
+before import, preference reset or a saved-data upgrade; it is not an edit history. Downloaded
+backups and deliberately shared site-bearing links contain site details. Share site opens Around
+now with the recipient's settings and reuses or saves the site; Share plan carries the chosen
+dates and settings and includes a site only when selected. Link data stays in the URL fragment.
 
 Open the planner online and wait for **Ready to reopen offline** in More. The same address
 then works on reload or in a new tab in the same browser while offline. Visit online again if

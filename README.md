@@ -5,7 +5,7 @@ night's twilight stages, when the Moon is up, and how much **usable dark** there
 is the part of astronomical darkness that meets your Moon settings. The views show how these
 windows shift across weeks, lunar cycles, and seasons.
 
-![River view: one row per night, clock time across](docs/images/river-month.png)
+![River Month at Seattle’s Paramount Park: September 6 expanded to show twilight, Moonrise and its usable-dark window](docs/images/river-month.png)
 
 [Open Night Planner Atlas](https://night-planner-atlas.web.app/).
 [Issues](https://github.com/mikemag/night-planner-atlas/issues) track ongoing work.
@@ -33,7 +33,8 @@ of the chosen year. The arrows shift the range by a year. **Tonight** jumps to t
 observing night and returns to Around now if that night is outside the range.
 On phones, **Plan settings** groups Range, new-moon focus and Moon thresholds. The compact
 header keeps the site, view tabs, Tonight and live status visible in portrait and landscape.
-The status uses two lines; touch charts omit the desktop hover readout to leave more room for nights.
+The next event has a labeled countdown; tap it for **Live details**, including the site's clock,
+time zone and usable-dark status. Touch charts omit the desktop hover readout.
 
 All views share one visual language and Moon settings for when the Moon counts as up and whether
 to ignore a thin crescent. The charts also support new-moon focus (±N nights) and share ordered
@@ -43,39 +44,83 @@ Week labels the boundaries between shaded regions directly. **Docs** is visible 
 with a short overview, FAQ, practical guide, worked night examples, detailed calculations,
 privacy, and a separate Licenses and credits page. The examples compare strict and relaxed Moon settings without changing the open plan.
 
-| Year at a glance (River)                        | Calendar                                           | Lunations                                           |
-| ----------------------------------------------- | -------------------------------------------------- | --------------------------------------------------- |
-| ![River, Year zoom](docs/images/river-year.png) | ![Calendar, month](docs/images/calendar-month.png) | ![Lunations, Full cycle](docs/images/lunations.png) |
+<details>
+<summary>Calendar · choose dates in a month</summary>
+
+![Calendar Month for September 2026 at Seattle’s Paramount Park, with each date’s usable hours, clock window and duration bar](docs/images/calendar-month.png)
+
+</details>
+
+<details>
+<summary>Lunations · compare full lunar cycles</summary>
+
+![Lunations at Seattle’s Paramount Park, aligning full cycles around new moon with nightly usable-hour bars and best-weekend brackets](docs/images/lunations.png)
+
+</details>
+
+<details>
+<summary>Dark Weekends · compare two-night and four-night trips</summary>
+
+![Dark Weekends at Seattle’s Paramount Park, with September 2026 expanded to compare Fri–Sat and Thu–Sun trips](docs/images/dark-weekends.png)
+
+</details>
+
+<details>
+<summary>River Year · see the seasons in Dark theme</summary>
+
+![River Year in Dark theme at Seattle’s Paramount Park, showing twilight and moonlight across the 2026 calendar year](docs/images/river-year.png)
+
+</details>
+
+These examples use the public Seattle starter site and strict Moon settings: 0° and no crescent
+exception. Open an image for its full resolution.
+
+## Sites, sharing and offline use
+
+Sun and Moon positions and site time zones are computed in the browser. Choose **Manage sites…**
+at the bottom of the site picker to add, edit, duplicate, remove or reorder saved sites. Paste
+decimal coordinates or a supported full Google Maps search link to infer an editable IANA zone
+with the bundled offline lookup. Optional elevation adjusts the observer position and idealized
+refraction, assuming a level horizon; blank uses sea level.
+
+**More → Share site** makes an invitation that opens the location in Around now with the
+recipient's settings. It reuses an existing saved site or saves a new one at the top, with Undo.
+**Welcome the recipient** adds an introduction for someone receiving a new site.
+**Share plan** preserves the selected dates, view and Moon settings, with the option to include
+the site. Anyone with a site-bearing link can read its details.
+
+Saved sites and preferences stay in this browser on this device. **More → Browser data** exports
+a backup or imports a reviewed replacement of all sites and preferences, including site order.
+It also offers one recovery copy from before an import, preference reset or saved-data upgrade;
+ordinary site edits do not create history. **More → Export to calendar** downloads a local
+`.ics` snapshot of chosen new moons, best Fri–Sat weekends and nights with usable dark.
+
+Open Atlas online and wait for **Ready to reopen offline** in More. The same address can then
+reload or open in a new tab in that browser without a connection. System, Light, Dark and
+Observing themes are saved locally; Observing is designed for a separately enabled OS red filter.
+
+See the [visitor guide](https://night-planner-atlas.web.app/?docs=using),
+[Privacy](https://night-planner-atlas.web.app/?docs=privacy) and
+[Licenses and credits](https://night-planner-atlas.web.app/?docs=licenses). Engineering references:
 
 - [docs/design.md](docs/design.md): the views, the shared visual language, and the reasoning
   behind them.
 - [docs/night-model.md](docs/night-model.md): exactly how each night is computed.
+- [docs/hosting.md](docs/hosting.md): local deployment, caching, rollback and browser storage.
+- [docs/time-zone-data.md](docs/time-zone-data.md): offline boundary-data provenance and updates.
 
 ## Running it
 
-You need Node 24.11 (see `.node-version`; `fnm` or `nvm` will pick it up) and npm.
+You need Node 24.11 (see `.node-version`) and npm. With `fnm`, select the installed 24.11 version
+using `fnm use` before running the commands below.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
 `npm run dev` serves the site at <http://localhost:5173/> with hot reload. `npm run build` writes
 the deployable static site to `dist/`, and `npm run preview` serves that build.
-
-Sun and moon positions and site time zones are computed in the browser. Named favorites stay in
-browser storage. Paste coordinates or a supported full Google Maps search link to infer an editable
-IANA zone with the bundled offline lookup. The header shows the site’s current local clock, UTC
-offset and zone. System, Light, Dark and Observing themes are saved locally. Observing is designed
-for a separately enabled OS red filter.
-
-**Share site** opens the location in Around now with the recipient’s settings. It reuses a saved
-site or saves a new one with Undo. **Share plan** preserves the selected dates, view and Moon
-settings, with the option to include the site.
-
-You can enter an optional elevation above sea level; blank uses sea level.
-Elevation adjusts the observer position and idealized refraction, with a level horizon and no
-automatic terrain lookup.
 
 See [Hosting Night Planner Atlas](docs/hosting.md) for local deployment, caching, rollback and
 per-browser settings behavior. Firebase serves the built site; the
@@ -86,10 +131,11 @@ build instructions.
 | ---------------------------- | -------------------------------------------------------------------------------------- |
 | `npm run check`              | Lint, format check, type check, unit tests and build                                   |
 | `npm run deploy`             | Run local checks and browser tests, then publish to Firebase Hosting                   |
-| `npm test`                   | Unit tests for the night model (Vitest)                                                |
+| `npm test`                   | Unit tests for calculations, settings, storage, sharing and export (Vitest)            |
 | `npm run test:e2e`           | Browser smoke tests of the built site in Chromium and WebKit (Playwright)              |
 | `npm run screenshots`        | Browser tests and Retina visual checks, saving captures to `test-results/screenshots/` |
 | `npm run screenshots:retina` | Only the Retina visual checks in a visible WebKit window                               |
+| `npm run screenshots:readme` | Build and capture the five README examples in `test-results/readme/`                   |
 | `npm run format`             | Format everything with Prettier                                                        |
 
 The first time you run the browser tests, install their browsers with
@@ -103,6 +149,12 @@ one visible WebKit window at 2× density, using the existing `@retina` cases for
 views, expanded nights, and themes. These checks require a desktop session. Keep the visual
 window active while they run; `npm run screenshots:retina` runs just that coverage.
 
+`npm run screenshots:readme` uses a separate Chromium session and production preview on port 4175.
+It fixes the clock to September 6, 2026 at 6 PM in Seattle, loads calendar year 2026 at the public
+Seattle starter site, and sets strict Moon thresholds. The capture choices are in
+`scripts/capture-readme.mjs`. Review the generated PNGs before copying them to `docs/images/`;
+the command does not overwrite the published README images or run the full browser suite.
+
 ## Layout
 
 ```text
@@ -110,12 +162,13 @@ index.html              the page (Vite entry)
 src/
   model/                the night model: time zones, nights, ranges, formatting (no DOM)
   app/                  settings, shared state, and the shell that ties views together
-  views/                River, Calendar and Lunations
+  views/                River, Calendar and Lunations canvas views
   render/               canvas surface, theme colors, drawing one night
-  ui/                   shared night details, readout, controls
+  ui/                   Dark Weekends, night details, controls and bundled Docs pages
   styles/atlas.css      theme tokens, layout, components
-public/                 files served as-is (favicon)
+public/                 favicon, license texts and downloadable time-zone data
 e2e/                    browser smoke tests
+scripts/                reproducible README capture
 docs/                   design notes, night model, screenshots
 AGENTS.md               guidance for coding agents working in this repo
 ```
@@ -131,7 +184,8 @@ against USNO tables; see the measured accuracy and sampling limits in
 
 Sun and moon positions come from [Astronomy Engine](https://github.com/cosinekitty/astronomy) by
 Don Cross (MIT). Offline time-zone lookup uses tzf-wasm (MIT), with boundary data from
-OpenStreetMap contributors via timezone-boundary-builder and tzf-dist (ODbL 1.0). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+OpenStreetMap contributors via timezone-boundary-builder and tzf-dist (ODbL 1.0).
+Bootstrap and Popper provide UI components (MIT). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## License
 

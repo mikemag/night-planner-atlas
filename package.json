@@ -22,6 +22,7 @@
     "test:e2e": "playwright test",
     "screenshots": "SCREENSHOTS=1 playwright test",
     "screenshots:retina": "SCREENSHOTS=1 playwright test --project=webkit-retina",
+    "screenshots:readme": "npm run build && node scripts/capture-readme.mjs",
     "check": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {

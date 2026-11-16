@@ -42,7 +42,7 @@ One encoding everywhere, so a night looks the same in every view and in the sing
 - **Time** is the site's local clock time, including daylight saving time. The one-hour jump on a
   clock-change night is real, and the River labels it.
 - Light, Dark and Observing are designed palettes, selected in More’s Theme group with a checkmark
-  on the current preference and saved in this browser. OS red-filter setup belongs in How it works.
+  on the current preference and saved in this browser. OS red-filter setup is in Using the planner.
   System follows the device's light/dark preference. Explicit choices apply before
   the first paint and switching palettes preserves the browsed night and selection.
   Observing uses warm neutral lightness steps designed for a separately enabled OS red-only
@@ -218,8 +218,8 @@ Friday/Saturday coloring do not appear in Month or Year.
 - **Focus and settings.** New-moon focus quiets daily summaries without removing dates. Planning
   controls share River and Lunations' header or phone Plan settings. On small
   screens, the month can scroll vertically to keep summaries readable. The pointer readout previews a
-  pointed-at night and otherwise summarizes the selection. Richer seasonal profiles and weekend
-  rankings remain in River.
+  pointed-at night and otherwise summarizes the selection. River shows seasonal patterns;
+  Lunations and Dark Weekends rank weekends.
 - **Sharing.** Month/Week, the selected evening date and expansion are reproducible through the
   existing site-optional links. Incoming plan settings become the current saved choices. Earlier links with
   month-presentation or orientation fields remain readable; new links omit the retired presentation
@@ -293,7 +293,7 @@ Lunations retains its focus window and opens the night detail even if the date f
   live-status row below the controls gives the next event a larger countdown with tabular digits,
   an explicit phase label and reserved row height. It stays in the same place across all four
   planner views, separate from the browsed period in the chart header. The full IANA zone remains
-  available to assistive technology, on clock hover and in the site manager. The picker uses
+  available to assistive technology, on desktop clock hover, in phone Live details and in the site manager. The picker uses
   site names; coordinates and elevation stay in the manager and the picker's hover description.
   Identical favorite names retain coordinate descriptions to distinguish them.
   River, Lunations, Calendar and Dark Weekends share one switcher in that order. River remains the
@@ -369,7 +369,7 @@ Lunations retains its focus window and opens the night detail even if the date f
   scrolling. Docs opens its own reading shell.
 - **Chart toolbar and legend.** The panel header keeps zoom controls and the browsed period;
   the active view is already identified by the shared navigation. Its view heading remains
-  available to assistive technology. Explanatory sentences belong in How it works and chart help.
+  available to assistive technology. View instructions belong in Using the planner and chart help.
   River and Calendar start Year/Month at the same position with identical control sizes, and
   Calendar adds Week. Lunations shows its browsed period without an empty zoom control. Desktop
   uses one row; phone portrait puts the period below the zoom controls, with Legend alongside
@@ -444,8 +444,8 @@ Lunations retains its focus window and opens the night detail even if the date f
   SVG strips use the same solar intervals, disjoint moonlight bands, opacity gradients and palette tokens as the
   charts. Deliberate example links open a temporary public-starter plan in another tab. Technical
   chapters retain upper-edge/center conventions, accuracy provenance, polar/DST and split-window
-  explanations. Complete offline code/data notices and the matching boundary dataset stay in
-  Licenses and credits. That page has direct section links for AGPL-3.0-only code, CC BY-SA 4.0
+  explanations. Complete offline code/data notices and the link to the matching boundary dataset stay in
+  Licenses and credits; the separate dataset download requires a connection. That page has direct section links for AGPL-3.0-only code, CC BY-SA 4.0
   content, CC0 numerical results, and third-party credits. Full legal texts are bundled for
   offline reading. Privacy has its own page and keeps its existing links. The sky ramp uses
   `inkOn` in every palette.
@@ -454,11 +454,12 @@ Lunations retains its focus window and opens the night detail even if the date f
   Calendar reserves the panel after its selected row; Lunations places it beneath its cycle. River
   annotates its selected row directly. On pointer devices, a fixed readout previews nights without changing selection
   and lists every separate usable window.
-- **Planning thresholds.** _Moon’s upper edge above_ (0°–15°) allows for a tree line or hills.
+- **Planning thresholds.** _Moon’s upper edge above_ (0°–15°) accepts time with a low Moon,
+  using the same cutoff in every direction rather than a terrain profile.
   The Moon counts as up while any part of its refracted disk
   clears that height; Moonrise and Moonset use the upper edge at the natural horizon.
   _Ignore a moon under_ (10–30% lit) is for people who don't mind a thin crescent. Both change
-  every number and the weekend picks, not just the drawing.
+  usable windows, totals and weekend picks; Sun/Moon events and astronomical darkness stay the same.
 - **Site.** A native dropdown switches directly between named local favorites. **Manage sites…**
   follows a native visual separator and opens an ordered management list. Each row shows a name,
   coordinates, zone and optional elevation in compact, fixed-height desktop rows. A fixed action
@@ -510,9 +511,10 @@ Lunations retains its focus window and opens the night detail even if the date f
   Unknown/damaged personal data is left untouched, and unavailable storage is explained.
   Blank elevation uses sea level; existing saved sites keep their coordinates.
   Elevation adjusts observer position and idealized refraction while assuming
-  a level horizon, with no terrain lookup. The default is Seattle. In the shared header, a reserved
-  readout (with a disclosure on phones) shows the site's current local date/time, abbreviation, UTC offset and IANA zone,
-  followed by the solar and usable-dark status. It updates at clock/countdown minutes, seconds during each countdown’s final five minutes, solar
+  a level horizon, with no terrain lookup. The default is Seattle. The shared header shows the
+  site's clock and live countdowns on desktop; phones show the next-event countdown and put the
+  clock, UTC offset, full IANA zone and solar/usable status in Live details.
+  It updates at clock/countdown minutes, seconds during each countdown’s final five minutes, solar
   and usable-window boundaries, on returning to the page and immediately on site or Moon-setting
   changes. The selected night and browsed range do not affect it. Calculations stay in the
   browser. The status reads the chart's computed nights directly and retains current nights while
