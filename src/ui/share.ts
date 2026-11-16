@@ -63,6 +63,11 @@ export async function initSharing(): Promise<void> {
   const notice = el('sharedNotice');
   const message = el('sharedNoticeText');
   const action = el<HTMLButtonElement>('shareAction');
+  const welcomeDialog = el('welcomeDialog');
+  const welcomeModal = new Modal(welcomeDialog);
+  const welcomeUndo = el<HTMLButtonElement>('welcomeUndo');
+  const welcomeStatus = el('welcomeStatus');
+  let welcomeAction: (() => Promise<void>) | null = null;
   let noticeAction: (() => Promise<void>) | null = null;
   let timeout = 0;
   let expires = false;
@@ -150,38 +155,91 @@ export async function initSharing(): Promise<void> {
   el('siteSel').addEventListener('change', () => {
     receiveToken++;
     hideNotice();
+    welcomeModal.hide();
+  });
+
+  const undoSite = async (added: AddedSite, token: number) => {
+    const result = await personal.update((draft) => {
+      if (token !== receiveToken || !undoSharedSite(draft, added)) throw new EditConflict();
+    });
+    if (token !== receiveToken) return null;
+    siteLabel();
+    return result.conflict
+      ? 'Saved sites have changed. Your current saved data was kept.'
+      : result.saved
+        ? 'Site removed from saved sites. You can keep using it for this visit.'
+        : 'The saved copy could not be updated. Changes apply only to this visit.';
+  };
+  const showWelcome = (added: AddedSite, token: number, saved: boolean) => {
+    el('welcomeSiteName').textContent = added.site.name;
+    welcomeStatus.textContent = saved
+      ? 'This location has been saved to your sites in this browser.'
+      : 'You can explore this site for this visit. Browser storage is unavailable.';
+    welcomeUndo.hidden = !saved;
+    welcomeUndo.disabled = false;
+    const undo = async () => {
+      const text = await undoSite(added, token);
+      if (text === null || welcomeAction !== undo) return;
+      welcomeStatus.textContent = text;
+      welcomeUndo.hidden = true;
+      welcomeAction = null;
+      el('welcomeExplore').focus();
+    };
+    welcomeAction = saved ? undo : null;
+    welcomeModal.show();
+  };
+  welcomeUndo.addEventListener('click', async () => {
+    const run = welcomeAction;
+    if (!run) return;
+    welcomeUndo.disabled = true;
+    try {
+      await run();
+    } catch {
+      if (welcomeAction === run) {
+        welcomeStatus.textContent = 'This change could not be saved. Try Undo again.';
+        welcomeUndo.disabled = false;
+      }
+    }
+  });
+  for (const id of ['welcomeClose', 'welcomeExplore'])
+    el(id).addEventListener('click', () => welcomeModal.hide());
+  // At the end of the document, native Tab can enter browser chrome without a focusin
+  // event for Bootstrap's focus trap. Keep both boundary transitions inside this dialog.
+  welcomeDialog.addEventListener('keydown', (event) => {
+    if (event.key !== 'Tab') return;
+    const first = el('welcomeClose');
+    const last = welcomeUndo.hidden || welcomeUndo.disabled ? el('welcomeExplore') : welcomeUndo;
+    if (document.activeElement !== (event.shiftKey ? first : last)) return;
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+  });
+  welcomeDialog.addEventListener('shown.bs.modal', () => el('welcomeExplore').focus());
+  welcomeDialog.addEventListener('hidden.bs.modal', () => {
+    welcomeAction = null;
+    el('siteSel').focus({ preventScroll: true });
   });
 
   const offerUndo = (added: AddedSite, token: number) => {
     const undo = async () => {
-      const result = await personal.update((draft) => {
-        if (token !== receiveToken || !undoSharedSite(draft, added)) throw new EditConflict();
-      });
-      if (token !== receiveToken) return;
-      siteLabel();
-      if (noticeAction !== undo) return;
-      showNotice(
-        result.conflict
-          ? 'Saved sites have changed. Your current saved data was kept.'
-          : result.saved
-            ? 'Site removed from saved sites. You can keep using it for this visit.'
-            : 'The saved copy could not be updated. Changes apply only to this visit.',
-        '',
-        null,
-        true,
-      );
+      const text = await undoSite(added, token);
+      if (text !== null && noticeAction === undo) showNotice(text, '', null, true);
     };
     showNotice(`${added.site.name} added to your sites.`, 'Undo', undo, true);
   };
-  const saveSite = async (site: Site, token: number, announce = () => true) => {
+  const saveSite = async (
+    site: Site,
+    token: number,
+    options: { welcome?: boolean; announce?: () => boolean } = {},
+  ) => {
     let kept: ReturnType<typeof keepSharedSite> | undefined;
     const result = await personal.update((draft) => {
       if (token !== receiveToken) throw new EditConflict();
       kept = keepSharedSite(draft, site);
     });
     if (token !== receiveToken || !kept) return null;
-    if (!announce()) return { site: siteRecord(kept.site), saved: result.saved };
-    if (!result.saved)
+    if (options.announce?.() === false) return { site: siteRecord(kept.site), saved: result.saved };
+    if (options.welcome && kept.added) showWelcome(kept.added, token, result.saved);
+    else if (!result.saved)
       showNotice(`Using ${kept.site.name} for this visit. Browser storage is unavailable.`);
     else if (kept.added) offerUndo(kept.added, token);
     else hideNotice();
@@ -192,11 +250,12 @@ export async function initSharing(): Promise<void> {
     const token = ++receiveToken;
     incomingHash = location.hash;
     hideNotice();
+    welcomeModal.hide();
     try {
       const shared = readSharedLink(incomingHash);
       if (!shared) return false;
       if (shared.v === 2) {
-        const saved = await saveSite(shared.site, token);
+        const saved = await saveSite(shared.site, token, { welcome: shared.welcome });
         if (!saved || token !== receiveToken) return false;
         const settings = loadSettings();
         Object.assign(S, settings, {
@@ -267,7 +326,7 @@ export async function initSharing(): Promise<void> {
         !personal.snapshot().sites.some((favorite) => sameLocation(favorite, site))
       ) {
         const save = async () => {
-          const saved = await saveSite(site, token, () => noticeAction === save);
+          const saved = await saveSite(site, token, { announce: () => noticeAction === save });
           if (!saved || token !== receiveToken) return;
           S.site = saved.site;
           siteLabel();
@@ -294,6 +353,7 @@ export async function initSharing(): Promise<void> {
   const dialog = el('shareDialog');
   const modal = new Modal(dialog);
   const include = el<HTMLInputElement>('shareIncludeSite');
+  const welcome = el<HTMLInputElement>('shareWelcome');
   const link = el<HTMLTextAreaElement>('shareLink');
   const status = el('shareStatus');
   const copy = el<HTMLButtonElement>('shareCopy');
@@ -303,7 +363,7 @@ export async function initSharing(): Promise<void> {
     el('shareSitePreview').hidden = mode === 'plan' && !include.checked;
     status.textContent = '';
     try {
-      if (mode === 'site') link.value = createSiteLink(location.href, S.site);
+      if (mode === 'site') link.value = createSiteLink(location.href, S.site, welcome.checked);
       else {
         if (!data.ready || !r) return;
         const plan: SharedPlan = {
@@ -339,12 +399,14 @@ export async function initSharing(): Promise<void> {
     if (kind === 'plan' && (!data.ready || !data.range)) return;
     mode = kind;
     include.checked = false;
+    welcome.checked = false;
     el('shareTitle').textContent = mode === 'site' ? 'Share site' : 'Share plan';
     el('shareDescription').textContent =
       mode === 'site'
         ? 'Open this site around today. New sites are saved in the recipient’s browser, with Undo.'
         : 'Open these dates, view, and Moon settings. Include the site if you want others to use this location.';
     el('shareIncludeSiteChoice').hidden = mode === 'site';
+    el('shareWelcomeChoice').hidden = mode !== 'site';
     el('shareSiteBehavior').textContent =
       mode === 'site'
         ? 'Existing saved sites are reused.'
@@ -376,6 +438,7 @@ export async function initSharing(): Promise<void> {
   el('shareBtn').addEventListener('click', () => openSharing('plan'));
   el('shareSiteBtn').addEventListener('click', () => openSharing('site'));
   include.addEventListener('change', update);
+  welcome.addEventListener('change', update);
   for (const id of ['shareClose', 'shareCancel'])
     el(id).addEventListener('click', () => modal.hide());
   dialog.addEventListener('shown.bs.modal', () => (mode === 'site' ? copy : include).focus());

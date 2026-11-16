@@ -79,9 +79,19 @@ test('Undo keeps its remaining time through hover, keyboard focus, and a later c
   page,
   baseURL,
 }) => {
+  // A locator can observe ready well after the event under parallel browser load. Pause
+  // notice time at that event, then restore activity after freezing the test clock.
+  // Otherwise those two polling gaps consume the one-second margin checked below.
+  await page.addInitScript(() => {
+    window.addEventListener('npa-ready', () => {
+      Object.defineProperty(document, 'hasFocus', { configurable: true, value: () => false });
+      window.dispatchEvent(new Event('blur'));
+    });
+  });
   await openInvitation(page, baseURL!);
   await expect(page.locator('#loading')).toBeHidden();
   await page.clock.pauseAt(NOW);
+  await activity(page, true, true);
   await page.locator('#sharedNotice').hover();
   await page.clock.runFor(60_000);
   await expect(page.locator('#sharedNotice')).toBeVisible();
@@ -98,6 +108,7 @@ test('Undo keeps its remaining time through hover, keyboard focus, and a later c
   await page.clock.fastForward(30_000);
   await expect(page.locator('#loading')).toBeHidden();
   await page.clock.pauseAt(NOW);
+  await activity(page, true, true);
   await page.clock.runFor(7_000);
   await expect(page.locator('#sharedNotice')).toBeVisible();
   await page.clock.runFor(2_000);

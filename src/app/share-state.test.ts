@@ -55,6 +55,39 @@ it('keeps malformed invitations from changing personal data or echoing coordinat
   }
 });
 
+it('makes welcome invitations opt-in and keeps the flag in the fragment', () => {
+  const site = {
+    name: '山 & Ridge + <friends>',
+    lat: 45,
+    lon: -120,
+    tz: 'America/Los_Angeles',
+  };
+  const base = 'https://example.test/?welcome=1#old';
+  const ordinary = new URL(createSiteLink(base, site));
+  expect(ordinary.search).toBe('');
+  expect(ordinary.hash).not.toContain('welcome');
+  expect(readSharedLink(ordinary.hash)).toEqual({ v: 2, site });
+  expect(createSiteLink(base, site, false)).toBe(ordinary.href);
+
+  const welcome = new URL(createSiteLink(base, site, true));
+  expect(welcome.search).toBe('');
+  expect(welcome.hash).toBe(ordinary.hash + '&welcome=1');
+  expect(readSharedLink(welcome.hash)).toEqual({ v: 2, site, welcome: true });
+  expect(readSharedPlan(welcome.hash)).toBeNull();
+  // Manually appending the flag has the same meaning as the Share site checkbox.
+  expect(readSharedLink(ordinary.hash + '&welcome=1')).toEqual(readSharedLink(welcome.hash));
+  const planLink = new URL(createShareLink(base, plan));
+  expect(readSharedPlan(planLink.hash + '&welcome=1')).toEqual(plan);
+});
+
+it.each(['', '0', 'true', '2', '1&welcome=1', '1&welcome=0'])(
+  'rejects invalid or duplicated welcome flags: %s',
+  (value) => {
+    const fragment = '#npa=2&name=Private&lat=45&lon=-120&tz=Etc/UTC&welcome=' + value;
+    expect(() => readSharedLink(fragment)).toThrow('saved settings were not changed');
+  },
+);
+
 it('preserves explicit worked-example previews through readable and original JSON links', () => {
   const preview: SharedPlan = { ...plan, preview: true };
   const url = new URL(createShareLink('https://example.test/', preview));

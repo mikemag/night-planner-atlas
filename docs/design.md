@@ -390,7 +390,13 @@ Lunations retains its focus window and opens the night detail even if the date f
   settings, automatically saves a new site at the top of the list, and offers Undo in a dismissible twelve-second
   notice. Its countdown pauses during calculations, in hidden tabs or inactive windows, and
   while the notice has keyboard focus or pointer hover. Returning to the ready, active planner
-  resumes the remaining time. Successful invitations leave an
+  resumes the remaining time. Share site also offers an unchecked **Welcome the recipient**
+  option, adding `welcome=1` to the invitation fragment. For a new site, a short welcome dialog
+  replaces the addition notice, introduces exploring dark skies at the named site, and offers
+  **Explore the skies**. A quieter save explanation and Undo remain inside the dialog. Close,
+  Escape and clicking outside also enter the planner. Already-saved sites skip the welcome.
+  Unavailable storage is explained in the dialog without claiming a save or offering Undo.
+  Successful invitations leave an
   ordinary URL so reload cannot repeat an addition after Undo. Existing locations are reused
   within 0.00001° coordinate rounding, preserving the saved name, metadata and position. A new site saved from a plan also goes first. Undo removes
   only the unchanged addition and restores saved activation only if that favorite is still active.

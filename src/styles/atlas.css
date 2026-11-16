@@ -1533,6 +1533,25 @@ kbd {
   overflow-wrap: anywhere;
 }
 
+.welcome-intro {
+  font-size: 1.125rem;
+  overflow-wrap: anywhere;
+}
+.welcome-footer {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.welcome-saved {
+  text-align: center;
+  line-height: 1.5;
+}
+.welcome-saved .btn {
+  padding: 0 4px;
+  font-size: inherit;
+  vertical-align: baseline;
+}
+
 #calendarExportEditor,
 #calendarExportHelp {
   display: grid;

@@ -848,6 +848,20 @@
           <div class="modal-body">
             <p id="shareContext" class="form-text"></p>
             <p id="shareDescription"></p>
+            <div id="shareWelcomeChoice" class="mb-3" hidden>
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  id="shareWelcome"
+                  class="form-check-input"
+                  aria-describedby="shareWelcomeHelp"
+                />
+                <label class="form-check-label" for="shareWelcome">Welcome the recipient</label>
+              </div>
+              <p id="shareWelcomeHelp" class="form-text mb-0">
+                Introduce the planner with a welcome dialog when this site is new to them.
+              </p>
+            </div>
             <div class="form-check" id="shareIncludeSiteChoice">
               <input type="checkbox" id="shareIncludeSite" class="form-check-input" /><label
                 class="form-check-label"
@@ -880,6 +894,46 @@
             <button class="btn btn-primary" id="shareCopy" type="submit">Copy link</button>
           </div>
         </form>
+      </div>
+    </div>
+    <div
+      class="modal site-dialog"
+      id="welcomeDialog"
+      tabindex="-1"
+      aria-labelledby="welcomeTitle"
+      aria-describedby="welcomeIntro welcomeDescription"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="welcomeTitle">Welcome to Night Planner Atlas</h2>
+            <button
+              class="btn-close"
+              id="welcomeClose"
+              type="button"
+              aria-label="Close welcome"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="welcomeIntro" class="welcome-intro">
+              Enjoy exploring dark skies at <strong id="welcomeSiteName"></strong>.
+            </p>
+            <p id="welcomeDescription" class="mb-0">
+              Find nights with less moonlight, compare observing windows, and select a night for
+              details.
+            </p>
+          </div>
+          <div class="modal-footer welcome-footer">
+            <button class="btn btn-primary" id="welcomeExplore" type="button">
+              Explore the skies
+            </button>
+            <div class="welcome-saved form-text">
+              <span id="welcomeStatus" role="status"></span>
+              <button class="btn btn-link" id="welcomeUndo" type="button">Undo</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div

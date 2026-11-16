@@ -29,6 +29,7 @@ export interface SharedPlan extends Omit<Settings, 'site'> {
 export interface SiteInvitation {
   v: 2;
   site: Site;
+  welcome?: true;
 }
 export type SharedLink = SharedPlan | SiteInvitation;
 
@@ -152,7 +153,9 @@ export function readSharedLink(hash: string): SharedLink | null {
       };
       if (params.get('npa') === '2') {
         if (!isSite(site) || site.name.length > 200) throw new Error(INVALID);
-        return { v: 2, site: siteRecord(site) };
+        const welcome = params.get('welcome');
+        if (welcome !== null && welcome !== '1') throw new Error(INVALID);
+        return { v: 2, site: siteRecord(site), ...(welcome === '1' ? { welcome: true } : {}) };
       }
       const preview = params.get('preview');
       if (preview !== null && preview !== '1') throw new Error(INVALID);
@@ -195,10 +198,11 @@ function linkURL(base: string, params: URLSearchParams): string {
   return url.href;
 }
 
-export function createSiteLink(base: string, site: Site): string {
+export function createSiteLink(base: string, site: Site, welcome = false): string {
   if (!isSite(site) || site.name.length > 200) throw new Error(INVALID);
   const params = new URLSearchParams({ npa: '2' });
   for (const [key, value] of Object.entries(siteRecord(site))) params.set(key, String(value));
+  if (welcome) params.set('welcome', '1');
   return linkURL(base, params);
 }
 
