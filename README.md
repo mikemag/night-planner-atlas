@@ -30,13 +30,13 @@ windows shift across weeks, lunar cycles, and seasons.
 The **Range** date button sets the dates for all four views. **Around now** shows 14 months
 starting with the previous month at the site. **Calendar year** shows January through December
 of the chosen year. The arrows shift the range by a year. **Tonight** jumps to the current
-observing night and returns to Around now if that night is outside the range.
+observing night and returns to “Around now” if that night is outside the range.
 On phones, **Plan settings** groups Range, new-moon focus and Moon thresholds. The compact
 header keeps the site, view tabs, Tonight and live status visible in portrait and landscape.
 The next event has a labeled countdown; tap it for **Live details**, including the site's clock,
 time zone and usable-dark status. Touch charts omit the desktop hover readout.
 
-**More → Read night** provides a text view with a date picker, Previous/Next night buttons,
+**Three-dot menu (⋯) → Read night** provides a text view with a date picker, Previous/Next night buttons,
 usable windows, twilight and Moon events. Times include their dates and, on clock-change nights,
 UTC offsets. Keyboard users can skip to the chart or open the selected night's text view;
 chart shortcuts work while the chart has focus.
@@ -88,19 +88,19 @@ decimal coordinates or a supported full Google Maps search link to infer an edit
 with the bundled offline lookup. Optional elevation adjusts the observer position and idealized
 refraction, assuming a level horizon; blank uses sea level.
 
-**More → Share site** makes an invitation that opens the location in Around now with the
+**Three-dot menu (⋯) → Share site** makes an invitation that opens the location in “Around now” with the
 recipient's settings. It reuses an existing saved site or saves a new one at the top, with Undo.
 **Welcome the recipient** adds an introduction for someone receiving a new site.
 **Share plan** preserves the selected dates, view and Moon settings, with the option to include
 the site. Anyone with a site-bearing link can read its details.
 
-Saved sites and preferences stay in this browser on this device. **More → Browser data** exports
+Saved sites and preferences stay in this browser on this device. **Three-dot menu (⋯) → Browser data** exports
 a backup or imports a reviewed replacement of all sites and preferences, including site order.
 It also offers one recovery copy from before an import, preference reset or saved-data upgrade;
-ordinary site edits do not create history. **More → Export to calendar** downloads a local
+ordinary site edits do not create history. **Three-dot menu (⋯) → Export to calendar** downloads a local
 `.ics` snapshot of chosen new moons, best Fri–Sat weekends and nights with usable dark.
 
-Open Atlas online and wait for **Ready to reopen offline** in More. The same address can then
+Open Atlas online and wait for **Ready to reopen offline** in the three-dot menu (⋯). The same address can then
 reload or open in a new tab in that browser without a connection. System, Light, Dark and
 Observing themes are saved locally; Observing is designed for a separately enabled OS red filter.
 
@@ -176,6 +176,11 @@ The [planner](https://night-planner-atlas.web.app/) is built with TypeScript and
 unit and browser tests. Work is tracked in GitHub issues. The night model has been checked
 against USNO tables; see the measured accuracy and sampling limits in
 [the night model](docs/night-model.md#reference-verification-and-accuracy).
+
+## Acknowledgments
+
+Night Planner Atlas is Mike Magruder’s project, developed with coding assistance from
+Anthropic’s Claude and OpenAI’s Codex. Thanks to both for helping write and refine the code.
 
 ## Credits
 

@@ -15,6 +15,26 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#loading')).toBeHidden();
     const panel = page.locator('#darkWeekends');
     await expect(panel).toBeVisible();
+    // Site selection saves asynchronously before starting its calculation.
+    await expect(panel.locator('#tripsContext')).toContainText('Australia/Sydney');
+    const helpButton = panel.getByRole('button', { name: 'How is “best” chosen?' });
+    const help = panel.getByRole('dialog', { name: 'How we choose the best weekend' });
+    await helpButton.focus();
+    await page.keyboard.press('Enter');
+    await expect(help).toBeVisible();
+    await expect(help).toBeFocused();
+    await expect(help).toContainText('most total usable dark');
+    await page.keyboard.press('Escape');
+    await expect(help).toBeHidden();
+    await expect(helpButton).toBeFocused();
+    await helpButton.click();
+    await help.getByRole('link', { name: 'More about weekend ranking' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'How we choose the best weekend' }),
+    ).toBeInViewport();
+    await page.getByRole('link', { name: 'Back to planner' }).click();
+    await expect(help).toBeHidden();
+    await expect(helpButton).toBeFocused();
     await expect(page.locator('#focusCtl')).toBeHidden();
     await expect(page.locator('#scroller')).toBeHidden();
     await expect(panel.getByLabel('New moons', { exact: true })).toHaveCount(0);
@@ -71,6 +91,15 @@ for (const width of [1512, 390]) {
         await page.screenshot({
           path: `test-results/screenshots/${info.project.name}-dark-weekends-${width}-${theme}.png`,
         });
+      await helpButton.click();
+      await expect(help).toBeInViewport();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+      if (process.env.SCREENSHOTS)
+        await page.screenshot({
+          path: `test-results/screenshots/${info.project.name}-weekend-help-${width}-${theme}.png`,
+        });
+      await help.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(helpButton).toBeFocused();
     }
     await page.getByRole('link', { name: 'Docs', exact: true }).click();
     await page.getByRole('link', { name: 'Back to planner' }).click();

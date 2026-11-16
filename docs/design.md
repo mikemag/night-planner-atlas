@@ -273,6 +273,11 @@ A fourth view compares the best Fri–Sat and Thu–Sun trips side by side for e
 loaded range. The list opens near tonight when the range contains the current date. It shares the
 site, range and Moon settings, and its results are independent of new-moon focus. Each row shows
 the exact local new moon, cycle coverage, astronomical darkness, and usable dark.
+The header’s “How is ‘best’ chosen?” button opens a keyboard- and touch-accessible explanation:
+each trip length is ranked by total usable dark with the current site and Moon settings, not by
+proximity to new moon. Exact ties favor the earlier trip. The popup links to the full explanation
+in Docs; Escape or Close returns focus to the button without moving the comparison list.
+On phones the button uses an info icon in the same header row to preserve space for the list.
 Disclosures show every eligible weekend, the gain from adding Thursday and Sunday on the same
 weekend, and the separate usable windows on each night. An amber badge marks the best dates for
 each trip length, and the summary calls out when the preferred weekend changes. Trip durations
@@ -349,6 +354,9 @@ Lunations retains its focus window and opens the night detail even if the date f
   to More. The “Theme” heading stays unchanged. Arrow keys navigate items, Escape dismisses
   the menu, and clicking outside closes it. Menu keys do not navigate the chart. Share returns
   focus to More when closed.
+  User-facing directions call it the “three-dot menu (⋯)” to match its visible icon; “More options”
+  remains its accessible name. Inline control names use bold or quotation marks so labels such
+  as “Around now” read clearly within a sentence.
   The Range date button opens a picker. Around now loads fourteen months starting with the
   previous month at the site. Calendar year takes a year from 1900 through 2100 and loads
   January through December on Show year. The arrows move either span by a year. A range change
@@ -448,7 +456,9 @@ Lunations retains its focus window and opens the night detail even if the date f
   chapters retain upper-edge/center conventions, accuracy provenance, polar/DST and split-window
   explanations. Complete offline code/data notices and the link to the matching boundary dataset stay in
   Licenses and credits; the separate dataset download requires a connection. That page has direct section links for AGPL-3.0-only code, CC BY-SA 4.0
-  content, CC0 numerical results, and third-party credits. Full legal texts are bundled for
+  content, CC0 numerical results, development acknowledgments, and third-party credits. Development
+  acknowledgments credit Claude and Codex for coding assistance, separately from bundled software
+  and data. Full legal texts are bundled for
   offline reading. Privacy has its own page and keeps its existing links. The sky ramp uses
   `inkOn` in every palette.
 - **Night details.** All three charts share ordered event annotations on the same clock axis,

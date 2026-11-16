@@ -1,3 +1,4 @@
+import Dropdown from 'bootstrap/js/dist/dropdown';
 import { S, data } from '../app/state';
 import type { ChartViewId } from '../app/settings';
 import { windowsText } from '../model/describe';
@@ -6,6 +7,7 @@ import type { Night } from '../model/night';
 import { tonightId, type NightRange } from '../model/range';
 import { darkWeekendPeriods, type ObservingTrip, type TripPeriod } from '../model/trips';
 import { el } from './dom';
+import { dropdownOptions } from './dropdown';
 
 let renderedRange: NightRange | null = null;
 let renderedKey = '';
@@ -131,6 +133,15 @@ function comparisons(period: TripPeriod, open: Set<string>): string {
 }
 
 export function initDarkWeekends(openNight: (view: ChartViewId, id: string) => void): void {
+  const trigger = el('tripHelpBtn');
+  const popup = el('tripHelp');
+  const help = new Dropdown(trigger, { ...dropdownOptions, autoClose: 'outside' });
+  trigger.addEventListener('shown.bs.dropdown', () => popup.focus({ preventScroll: true }));
+  trigger.addEventListener('hidden.bs.dropdown', () => {
+    if (popup.contains(document.activeElement)) trigger.focus({ preventScroll: true });
+  });
+  el('tripHelpClose').addEventListener('click', () => help.hide());
+  popup.querySelector('a')!.addEventListener('click', () => help.hide());
   el('tripPeriods').addEventListener('click', (event) => {
     const button = (event.target as Element).closest<HTMLButtonElement>(
       'button[data-trip-view][data-trip-night]',

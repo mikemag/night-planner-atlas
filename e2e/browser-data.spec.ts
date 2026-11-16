@@ -22,7 +22,7 @@ for (const width of [1512, 390])
     await expect(
       page.locator('#sitePop').getByRole('button', { name: /import|export/i }),
     ).toHaveCount(0);
-    await expect(page.locator('#siteStorage')).toContainText('More → Browser data');
+    await expect(page.locator('#siteStorage')).toContainText('three-dot menu (⋯) → Browser data');
     await page.locator('#siteDone').click();
     await openData(page);
     await expect(page.locator('#sitePop')).toBeHidden();

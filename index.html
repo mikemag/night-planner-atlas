@@ -529,6 +529,63 @@
             <header class="trip-header">
               <h2 id="tripsTitle" tabindex="-1">Dark weekends</h2>
               <p id="tripsContext"></p>
+              <div class="dropdown trip-help">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  id="tripHelpBtn"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  aria-controls="tripHelp"
+                  aria-haspopup="dialog"
+                  aria-label="How is “best” chosen?"
+                  title="How is “best” chosen?"
+                >
+                  <span class="trip-help-label" aria-hidden="true">How is “best” chosen?</span>
+                  <svg
+                    class="trip-help-icon"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    aria-hidden="true"
+                  >
+                    <circle cx="8" cy="8" r="6.3" />
+                    <path d="M8 7v4M8 4.5v.5" stroke-linecap="round" />
+                  </svg>
+                </button>
+                <div
+                  class="dropdown-menu legend-popover trip-help-popover"
+                  id="tripHelp"
+                  role="dialog"
+                  aria-labelledby="tripHelpTitle"
+                  tabindex="-1"
+                >
+                  <div class="legend-heading">
+                    <strong id="tripHelpTitle">How we choose the best weekend</strong>
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary btn-sm"
+                      id="tripHelpClose"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <p>
+                    “Best” is the trip with the most total usable dark at this site, using your Moon
+                    settings. We add every usable window across its nights and rank Fri–Sat and
+                    Thu–Sun separately.
+                  </p>
+                  <p>
+                    The closest weekend to new moon may not win. Expand “Compare weekends” to
+                    compare totals and nightly windows. Exact ties go to the earlier trip; displayed
+                    totals round to the minute.
+                  </p>
+                  <p><a href="?docs=calculations#best-weekends">More about weekend ranking</a></p>
+                </div>
+              </div>
             </header>
             <div class="trip-scroll" id="tripScroll">
               <div class="trip-key">

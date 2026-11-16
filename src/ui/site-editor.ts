@@ -89,7 +89,8 @@ export function initSiteEditor(): void {
     el('siteStorageNotice').textContent = message ?? '';
     el('siteStorageNotice').hidden = !message;
     el('siteStorage').textContent =
-      message ?? 'Sites stay in this browser. Backups are in More → Browser data.';
+      message ??
+      'Sites stay in this browser. Backups are in the three-dot menu (⋯) → Browser data.';
   };
   const checkDraft = (draft: PersonalData, base: Favorite | null) => {
     if (base && JSON.stringify(draft.sites.find((s) => s.id === base.id)) !== JSON.stringify(base))

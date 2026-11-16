@@ -105,6 +105,13 @@ for (const width of [1512, 390]) {
     await expect(
       page.getByRole('heading', { name: 'The Moon and usable windows' }),
     ).toBeInViewport();
+    for (const theme of ['light', 'dark']) {
+      await chooseTheme(page, theme);
+      if (process.env.SCREENSHOTS)
+        await page.screenshot({
+          path: `test-results/screenshots/${info.project.name}-docs-moon-windows-${theme}-${width}.png`,
+        });
+    }
     await page
       .getByText('Why rise/set events and altitude curves use different points', { exact: true })
       .click();
@@ -114,11 +121,42 @@ for (const width of [1512, 390]) {
     if (width === 390) await page.locator('#docsContents > summary').click();
     await page.getByRole('link', { name: 'Accuracy', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Accuracy and limits' })).toBeInViewport();
+    await page.getByText('Measured comparisons', { exact: true }).click();
+    const table = page.getByRole('table', { name: 'Measured comparisons for the current model' });
+    await expect(table).toBeVisible();
+    await table.scrollIntoViewIfNeeded();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    expect(
+      await table.evaluate((node) => {
+        const caption = node.querySelector('caption')!.getBoundingClientRect();
+        return caption.bottom <= node.querySelector('thead')!.getBoundingClientRect().top;
+      }),
+    ).toBe(true);
+    for (const theme of ['light', 'dark']) {
+      await chooseTheme(page, theme);
+      if (process.env.SCREENSHOTS)
+        await page.screenshot({
+          path: `test-results/screenshots/${info.project.name}-docs-comparisons-${theme}-${width}.png`,
+        });
+    }
     await page
       .getByText('Search windows, numerical tolerances and reference provenance', { exact: true })
       .click();
     await expect(page.locator('#referenceQueries a')).toHaveCount(15);
     await expect(page.locator('#referenceFixture')).toHaveAttribute('href', /^blob:/);
+    if (width === 390) await page.locator('#docsContents > summary').click();
+    await page.getByRole('link', { name: 'Using the planner', exact: true }).click();
+    await page.locator('#observing-mode').scrollIntoViewIfNeeded();
+    await expect(
+      page.locator('#observing-mode').getByRole('link', { name: 'Mac', exact: true }),
+    ).toBeVisible();
+    for (const theme of ['light', 'dark']) {
+      await chooseTheme(page, theme);
+      if (process.env.SCREENSHOTS)
+        await page.screenshot({
+          path: `test-results/screenshots/${info.project.name}-docs-observing-${theme}-${width}.png`,
+        });
+    }
     if (width === 390) await page.locator('#docsContents > summary').click();
     await page.getByRole('link', { name: 'Licenses and credits', exact: true }).click();
     await expect(

@@ -2,14 +2,14 @@
   <p class="guide-kicker">Night Planner Atlas · Docs</p>
   <h2 tabindex="-1">Using the planner</h2>
   <p>
-    On phones, open <strong>Plan settings</strong> to change the date range, new-moon focus or Moon
-    thresholds. Changes apply immediately; choose <strong>Done</strong> to return to the chart.
-    Site, view tabs, Tonight and the labeled live countdown stay in the header in either
-    orientation. Tap or keyboard-activate the countdown to open <strong>Live details</strong> with
-    the site's clock, time zone and usable-dark status. On touch screens, tap a night for its
-    details; the desktop hover strip is omitted.
+    On phones, open <strong>Plan settings</strong> to adjust your dates and Moon settings. Tap a
+    night for details.
   </p>
 </header>
+<p>
+  The <strong>three-dot menu (⋯)</strong> at the top right holds sharing, calendar export, browser
+  data and theme settings. Its accessible name is “More options”.
+</p>
 <section id="reading-night">
   <h3>Read a night</h3>
   <p>
@@ -102,10 +102,10 @@
   <h3 id="usingTitle">The four views</h3>
   <p>
     Open the dates under <strong>Range</strong> to choose <strong>Around now</strong> or a
-    <strong>Calendar year</strong>. Around now shows 14 months starting with the previous month at
+    <strong>Calendar year</strong>. “Around now” shows 14 months starting with the previous month at
     the site. For January through December, enter a year and choose <strong>Show year</strong>. The
     arrows move the range by a year. <strong>Tonight</strong> jumps to the site’s current observing
-    night and restores Around now if that night is outside the range.
+    night and restores “Around now” if that night is outside the range.
   </p>
   <h4 id="river">River</h4>
   <p>
@@ -126,14 +126,23 @@
   </p>
   <h4 id="dark-weekends">Dark Weekends</h4>
   <p>
-    Compare the best <strong>Fri–Sat</strong> and <strong>Thu–Sun</strong> trips for each new moon
-    in the loaded range. Expand a cycle to see what Thursday and Sunday add to the same weekend.
+    Compare <strong>Fri–Sat</strong> and <strong>Thu–Sun</strong> trips for each new moon in the
+    loaded range. “Best” means the most total usable dark with your site and Moon settings, summed
+    across all nights in the trip. Each trip length has its own winner.
+    <a href="?docs=calculations#best-weekends">See how the ranking works.</a>
+  </p>
+  <p>
+    Expand a cycle to compare weekends and see what Thursday and Sunday add to the same weekend.
     Open a weekend for its nightly windows. Use the chart buttons to open the first night of a trip.
     Sunday night includes Monday morning.
   </p>
 </section>
 <section id="planning-choices">
   <h3>Planning settings</h3>
+  <p>
+    On phones, <strong>Plan settings</strong> holds the date range, new-moon focus and Moon
+    thresholds. Changes apply immediately; choose <strong>Done</strong> to return to the chart.
+  </p>
   <ul>
     <li>
       For <strong>moon-free usable dark</strong>, keep the Moon threshold at 0° and crescent
@@ -152,61 +161,79 @@
   <p><a href="?docs=calculations#moon-windows">See how Atlas calculates usable windows.</a></p>
 </section>
 <section id="sites-and-time" aria-labelledby="sitesTitle">
-  <h3 id="sitesTitle">Sites and time</h3>
+  <h3 id="sitesTitle">Manage observing sites</h3>
   <p>
     Choose <strong>Manage sites…</strong> at the bottom of the site picker to see your saved sites.
-    Use the up/down buttons to reorder them; each move saves immediately and the picker follows the
-    same order. <strong>Edit</strong> opens a separate form. <strong>Save changes</strong> returns
-    to the list; <strong>Save &amp; use site</strong> also selects it for planning. Saving edits to
-    the site you are currently using updates its open plan.
+    Choose <strong>Use</strong> to select a site; a checkmark marks the one currently in use.
   </p>
   <p>
     <strong>Add site</strong> accepts decimal coordinates or a full Google Maps link with
     coordinates. Check the suggested time zone, especially near a boundary. Elevation is optional.
-    New sites go first. Each row has a pencil to edit, overlapping squares to duplicate (placed
-    after its source), and a trash can to remove. <strong>Use</strong> selects a site; a checkmark
-    marks the one currently in use. Removing a site leaves the current plan open. Cancel edit
-    returns to the list, and Done closes the manager. Leaving a changed draft asks you to confirm
-    discarding it; moves already saved remain saved.
+    New sites go first.
+  </p>
+  <ul>
+    <li><strong>Pencil:</strong> edit the site in a separate form.</li>
+    <li><strong>Overlapping squares:</strong> duplicate the site, placing the copy after it.</li>
+    <li><strong>Trash can:</strong> remove the site. The current plan stays open.</li>
+    <li>
+      <strong>Up/down arrows:</strong> reorder sites. Each move saves immediately and updates the
+      picker’s order.
+    </li>
+  </ul>
+  <p>
+    After editing, <strong>Save changes</strong> returns to the list;
+    <strong>Save &amp; use site</strong> also selects the site for planning. Saving edits to your
+    current site updates its open plan. “Cancel edit” returns to the list, and “Done” closes the
+    manager. Atlas asks before discarding unsaved edits; moves already saved remain saved.
+  </p>
+</section>
+<section id="site-clock">
+  <h3>Site clock and live countdown</h3>
+  <p>
+    The countdown follows conditions now at your site, even while you browse other dates. It shows
+    the next twilight or sunrise/sunset event, or the start or end of usable dark—whichever comes
+    first. All times use the site’s clock, including daylight saving time.
   </p>
   <p>
-    Times use the observing site’s clock, including daylight saving. The desktop header clock shows
-    the current time there as you browse past or future nights. The countdown always follows now at
-    that site and highlights the next solar transition or usable-dark start/end, whichever happens
-    first. A later event stays secondary on desktop and remains available in Live details on phones.
-    It shows minutes for longer waits and minutes and seconds in the final five minutes. Those
-    seconds count toward a calculated event, not a guarantee of second-level accuracy. On phones,
-    activate the countdown to open <strong>Live details</strong> for the clock and full status.
+    On desktop, the header shows the site’s current time, with any later event beside the countdown.
+    On phones, tap or keyboard-activate the countdown to open <strong>Live details</strong> for the
+    clock, time zone and full status. The site, view tabs, “Tonight” and countdown stay in the
+    header in portrait and landscape.
+  </p>
+  <p>
+    The countdown shows seconds in the final five minutes. These count toward a calculated event;
+    actual conditions may differ.
   </p>
 </section>
 <section id="sharing">
   <h3>Sharing and browser data</h3>
   <ul>
     <li>
-      <strong>More → Share site</strong> makes an invitation that opens your location in Around now
-      with the recipient’s settings. It reuses a saved site in its existing position or saves a new
-      one at the top of their list, with <strong>Undo</strong>. Choose
+      <strong>Three-dot menu (⋯) → Share site</strong> makes an invitation that opens your location
+      in “Around now” with the recipient’s settings. It reuses a saved site in its existing position
+      or saves a new one at the top of their list, with <strong>Undo</strong>. Choose
       <strong>Welcome the recipient</strong> to introduce the planner with a welcome dialog instead
       of the addition notice. People who already have the site saved go straight to the planner.
     </li>
     <li>
-      <strong>More → Share plan</strong> links to the selected range, view, and Moon settings. Those
-      settings become the recipient’s current choices. Choose <strong>Include this site</strong> if
-      they should use your location. A new site has a <strong>Save site</strong> offer, which saves
-      it at the top of the list. Recipients can dismiss the offer and continue using the plan.
+      <strong>Three-dot menu (⋯) → Share plan</strong> links to the selected range, view, and Moon
+      settings. Those settings become the recipient’s current choices. Choose
+      <strong>Include this site</strong> if they should use your location. A new site has a
+      <strong>Save site</strong> offer, which saves it at the top of the list. Recipients can
+      dismiss the offer and continue using the plan.
     </li>
     <li>
-      <strong>More → Browser data → Backup and restore</strong> exports or imports all sites, their
-      order, the saved selection and preferences. Import previews a replacement of the entire saved
-      document; it does not add sites to your existing list. Export includes temporary changes when
-      saving is unavailable, but never an open edit draft.
+      <strong>Three-dot menu (⋯) → Browser data → Backup and restore</strong> exports or imports all
+      sites, their order, the saved selection and preferences. Import previews a replacement of the
+      entire saved document; it does not add sites to your existing list. Export includes temporary
+      changes when saving is unavailable, but never an open edit draft.
     </li>
   </ul>
   <p>
     <strong>Recovery copy</strong> offers one local copy kept before import, preference reset or a
     saved-data format upgrade. Ordinary edits and moves do not create history. A later qualifying
     operation replaces the copy, and clearing browser data removes it. Download a copy to keep it
-    outside the browser; use Import sites and preferences to review and restore it.
+    outside the browser; use “Import sites and preferences” to review and restore it.
   </p>
   <p>
     <strong>Maintenance</strong> clears rebuildable calculations, resets preferences while keeping
@@ -215,12 +242,13 @@
   <p><a href="?docs=privacy#privacy-credits">Read about site details in links and backups.</a></p>
 </section>
 <section id="keyboard">
-  <h3>Keyboard and observing mode</h3>
+  <h3>Keyboard shortcuts</h3>
   <p>
-    <strong>More → Read night…</strong> provides the selected night's windows, Sun and Moon events,
-    settings and time zone as text. Use Previous night, Next night or Evening date to choose a
-    different night without canvas gestures. Dates identify the evening; times include the date and,
-    on clock-change nights, the UTC offset. Done returns to the planner with that night selected.
+    <strong>Three-dot menu (⋯) → Read night…</strong> provides the selected night's windows, Sun and
+    Moon events, settings and time zone as text. Use “Previous night”, “Next night” or “Evening
+    date” to choose a different night without canvas gestures. Dates identify the evening; times
+    include the date and, on clock-change nights, the UTC offset. “Done” returns to the planner with
+    that night selected.
   </p>
   <p>
     Tab reveals <strong>Skip to chart</strong> and <strong>Read selected night</strong> shortcuts.
@@ -256,13 +284,13 @@
       <dd>River, Lunations, Calendar, Docs, Dark Weekends</dd>
     </div>
   </dl>
-  <details class="guide-detail">
-    <summary id="observing-mode">Set up Observing mode with a red filter</summary>
-    <p>
-      Choose <strong>More → Theme → Observing</strong> and enable your device’s red color filter.
-      Apple has setup instructions for
-      <a href="https://support.apple.com/guide/mac-help/mchl11ddd4b3/mac">Mac</a> and
-      <a href="https://support.apple.com/guide/iphone/iph3e2e1fb0/ios">iPhone</a>.
-    </p>
-  </details>
+</section>
+<section id="observing-mode">
+  <h3>Observing mode and a red filter</h3>
+  <p>
+    Choose <strong>Three-dot menu (⋯) → Theme → Observing</strong> and enable your device’s red
+    color filter. Apple has setup instructions for
+    <a href="https://support.apple.com/guide/mac-help/mchl11ddd4b3/mac">Mac</a> and
+    <a href="https://support.apple.com/guide/iphone/iph3e2e1fb0/ios">iPhone</a>.
+  </p>
 </section>

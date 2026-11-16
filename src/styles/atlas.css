@@ -1354,6 +1354,9 @@ button.lunation-pick:hover {
 .guide-detail[open] summary {
   margin-bottom: 12px;
 }
+.guide-detail + h4 {
+  margin-top: 24px;
+}
 .guide-page p + p {
   margin-top: 12px;
 }
@@ -1422,11 +1425,14 @@ kbd {
 }
 .guide-table {
   width: 100%;
+  min-width: 32rem;
   border-collapse: collapse;
   font-size: 13px;
   line-height: 1.5;
 }
 .guide-table caption {
+  caption-side: top;
+  color: var(--ink);
   text-align: left;
   font-weight: 650;
   margin-bottom: 8px;
@@ -2447,7 +2453,20 @@ kbd {
   border-bottom: 1px solid var(--hair);
 }
 .trip-header {
+  position: relative;
   padding-block: 12px;
+  padding-right: 190px;
+}
+.trip-help {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+}
+.trip-help-popover p + p {
+  margin-top: 12px;
+}
+.trip-help-icon {
+  display: none;
 }
 .trip-key {
   display: flex;
@@ -2654,6 +2673,25 @@ kbd {
   .trip-view .trip-note,
   .trip-view .trip-empty {
     padding-inline: 10px;
+  }
+  .trip-header {
+    padding-right: 52px;
+  }
+  .trip-help {
+    right: 10px;
+  }
+  #tripHelpBtn {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+  }
+  .trip-help-label {
+    display: none;
+  }
+  .trip-help-icon {
+    display: block;
   }
   .trip-summary {
     grid-template-columns: repeat(2, minmax(0, 10rem));
