@@ -342,7 +342,9 @@ Lunations retains its focus window and opens the night detail even if the date f
   The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
   An upper-right, unboxed **More options (⋯)** button with vertically centered dots opens a
-  Bootstrap dropdown with sharing, calendar export, Browser data and theme controls. System, Light, Dark and Observing
+  Bootstrap dropdown with sharing, calendar export, Browser data, theme controls and a
+  **Report a problem on GitHub** link. The report link opens GitHub's new-issue page in a new tab;
+  the Docs overview also links there and explains that issues are public. System, Light, Dark and Observing
   appear together with a checkmark on the current preference. Choosing a theme dismisses the menu and returns focus
   to More. The “Theme” heading stays unchanged. Arrow keys navigate items, Escape dismisses
   the menu, and clicking outside closes it. Menu keys do not navigate the chart. Share returns

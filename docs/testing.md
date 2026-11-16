@@ -102,6 +102,13 @@ Seattle starter site, and sets strict Moon thresholds. The capture choices are i
 copying them to `docs/images/`; the command does not overwrite the published README images or
 run the full browser suite.
 
+`npm run screenshots:social` builds the app and captures a 1200×630 sharing card using the public
+Seattle starter site, September 2026 River Month, strict Moon settings and a fixed clock. It uses
+a fresh Chromium context and its own preview on port 4176, then writes
+`test-results/social-preview.png`. Review that image before copying it to `public/social-preview.png`
+and rebuilding. The card is composed in HTML/CSS from the actual chart; it contains no personal
+saved sites and needs no image-generation or graphics dependency.
+
 ## Debugging and measuring
 
 Both runners default to two workers to bound laptop load. Failure screenshots are automatic.

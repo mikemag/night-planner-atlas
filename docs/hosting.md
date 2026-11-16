@@ -20,9 +20,10 @@ known-good rollback versions. Do not upgrade to Blaze automatically. Quotas are 
 Future Auth and Firestore work can use this project, but needs its own privacy, security-rule,
 region and cost decisions before enabling services or shipping SDKs.
 
-The site is publicly reachable without sign-in. The current `X-Robots-Tag` response header asks
-search engines not to index it; it is not access control. Search indexing and broader release
-remain tracked in issue #15.
+The site is publicly reachable without sign-in and allows search indexing. Public launch and
+the indexing decision are recorded in issue #15. The HTML includes Open Graph and large-image
+card metadata, with a same-origin 1200×630 PNG preview. All shared links use this general preview
+of the public Seattle starter site; metadata never includes a visitor's saved or shared site.
 
 ## Deploy and redeploy from this laptop
 
@@ -65,7 +66,7 @@ or another active CLI project. Do not run `firebase init`, which can overwrite t
 
 `firebase.json` publishes only `dist/`. The HTML at `/` and `/index.html` and the service worker
 at `/sw.js` use `no-cache` so browsers can discover releases. Vite's hashed `/assets/` files use a year of immutable
-caching. The unversioned favicon caches for an hour. No catch-all rewrite is needed: views
+caching. The unversioned favicon and social-preview image cache for an hour. No catch-all rewrite is needed: views
 live at `/`, and unknown paths should return 404. Hosting deploys are atomic.
 
 After every deployment, open the printed HTTPS URL. Check River, Calendar, Lunations,

@@ -199,6 +199,14 @@ test('Theme remains usable across phone resizing and in a short viewport', async
   await expect(observing).toBeFocused();
   await expect(observing).toBeInViewport({ ratio: 1 });
   await page.keyboard.press('ArrowDown');
-  await expect(observing).toBeFocused();
+  const report = page.getByRole('menuitem', { name: 'Report a problem on GitHub ↗', exact: true });
+  await expect(report).toBeFocused();
+  await expect(report).toBeInViewport({ ratio: 1 });
+  await expect(report).toHaveAttribute(
+    'href',
+    'https://github.com/mikemag/night-planner-atlas/issues/new',
+  );
+  await page.keyboard.press('ArrowDown');
+  await expect(report).toBeFocused();
   await page.keyboard.press('Escape');
 });

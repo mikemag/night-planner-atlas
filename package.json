@@ -28,6 +28,7 @@
     "screenshots": "SCREENSHOTS=1 playwright test --grep @retina",
     "screenshots:retina": "SCREENSHOTS=1 RETINA=1 playwright test --project=webkit-retina",
     "screenshots:readme": "npm run build && node scripts/capture-readme.mjs",
+    "screenshots:social": "npm run build && node scripts/capture-social.mjs",
     "check": "npm run lint && npm run format:check && npm test && npm run build",
     "check:full": "npm run check && npm run test:audit && npm run test:e2e"
   },
