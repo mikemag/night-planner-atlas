@@ -3,7 +3,7 @@ import { noUsableDarkReason, phaseName } from '../model/describe';
 import { fmtClock, fmtDur, nightTitle, SUN_NAMES } from '../model/format';
 import { SUN_EVENTS, solarCrossings, wallH, type Night } from '../model/night';
 import { layoutBoundaryLabels } from '../render/boundary-labels';
-import { ctx, size, text, tw } from '../render/surface';
+import { size, text, tw } from '../render/surface';
 import { C } from '../render/colors';
 import { drawNight, hourTicks, moonGlyph } from '../render/night-draw';
 import { el } from './dom';
@@ -339,7 +339,4 @@ export function drawNightDetail(n: Night, y: number): void {
   }
   drawNight(n, g.x0, sky, g.cw, NIGHT_DETAIL_BAND, 'h');
   moonGlyph(n, g.moonX, sky + NIGHT_DETAIL_BAND / 2, 7);
-  ctx.fillStyle = C.select;
-  ctx.fillRect(1, y, 2, NIGHT_DETAIL_HEIGHT);
-  ctx.fillRect(size.W - 3, y, 2, NIGHT_DETAIL_HEIGHT);
 }

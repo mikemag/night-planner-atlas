@@ -536,7 +536,9 @@ Lunations retains its focus window and opens the night detail even if the date f
   Calendar and Docs respectively, 5 opens Dark Weekends, Esc
   collapses an expanded River/Lunations night or Calendar expansion. Enter/Space toggles the selected
   River Month, Calendar Month/Week or Lunations night when the chart has focus. Lunations uses Up/Down for cycles and
-  Left/Right for displayed nights. The chart and minimap retain a visible focus outline.
+  Left/Right for displayed nights. The chart and minimap retain a visible focus outline. The chart
+  outline sits above row headings and expanded details so it stays continuous around the viewport;
+  each expanded Calendar or Lunations panel draws its selection border once around the whole panel.
   All three charts' selected-night summaries include the local zone, full windows and usable duration;
   pointer previews do not update that live announcement. Site dialogs contain their keyboard
   navigation and return focus to their opener on closing. Muted date/control text keeps

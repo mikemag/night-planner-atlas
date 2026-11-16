@@ -712,8 +712,15 @@ input {
   height: 3px;
   border-radius: 1px;
 }
+.chart-viewport {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
 .scroller {
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
@@ -726,6 +733,15 @@ input {
   display: block;
 }
 .scroller canvas:focus-visible {
+  outline: none;
+}
+/* Keep keyboard focus above the headings and details layered over the canvas. */
+.chart-viewport:has(canvas:focus-visible)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
   outline: 3px solid var(--accent);
   outline-offset: -3px;
 }
@@ -1506,7 +1522,7 @@ kbd {
 }
 @media (forced-colors: active) {
   :focus-visible,
-  .scroller canvas:focus-visible,
+  .chart-viewport:has(canvas:focus-visible)::after,
   .river-minimap-access:focus-visible {
     outline-color: Highlight;
   }

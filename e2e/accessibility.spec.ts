@@ -121,9 +121,11 @@ test('River keyboard tasks include visible focus, minimap browsing and contained
   await page.locator('#cv').focus();
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('#riverSelection')).toContainText('Times in America/Los_Angeles.');
-  expect(await page.locator('#cv').evaluate((el) => getComputedStyle(el).outlineStyle)).toBe(
-    'solid',
-  );
+  expect(
+    await page
+      .locator('#chartViewport')
+      .evaluate((el) => getComputedStyle(el, '::after').outlineStyle),
+  ).toBe('solid');
   await page.keyboard.press('Enter');
   await expect(page.locator('#cv')).toHaveAttribute('aria-expanded', 'true');
   const selected = await page.evaluate(() => window.__npa!.S.sel);
@@ -192,9 +194,11 @@ test('forced colors and reduced motion retain visible chart focus and readable e
   await page.locator('#cv').focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#riverDetail')).toBeVisible();
-  expect(await page.locator('#cv').evaluate((el) => getComputedStyle(el).outlineStyle)).toBe(
-    'solid',
-  );
+  expect(
+    await page
+      .locator('#chartViewport')
+      .evaluate((el) => getComputedStyle(el, '::after').outlineStyle),
+  ).toBe('solid');
   await expect(page.locator('#riverSelection')).toContainText('usable dark');
   await openCurrentSiteEditor(page);
   await expect(page.getByLabel('Coordinates or full Google Maps link')).toBeVisible();

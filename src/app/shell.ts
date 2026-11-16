@@ -459,6 +459,7 @@ export function setView(view: ViewId): void {
         : 'Night planner chart. Arrow keys move between nights; Enter or Space expands the selected night in River Month; Escape collapses it.',
   );
   scroller.hidden = !v;
+  el('chartViewport').hidden = !v;
   if (view !== 'river') {
     cv.removeAttribute('role');
     cv.removeAttribute('aria-expanded');
