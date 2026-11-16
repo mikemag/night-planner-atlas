@@ -49,21 +49,26 @@ export function nextSolarPhase(nights: readonly Night[], now: number): NextSolar
   return next;
 }
 
-/** Elapsed time, rounded up to minutes; never show zero before the transition. */
+export const COUNTDOWN_SECONDS_WINDOW = 5 * MS_M;
+
+/** Elapsed time, rounded up; seconds in the final five minutes, never zero before a boundary. */
 export function formatCountdown(remaining: number): string {
-  if (remaining < MS_M) return '<1min';
+  if (remaining <= COUNTDOWN_SECONDS_WINDOW) {
+    const seconds = Math.max(1, Math.ceil(remaining / 1000));
+    return `${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s`;
+  }
   const minutes = Math.ceil(remaining / MS_M);
   const days = Math.floor(minutes / 1440);
   const hours = Math.floor((minutes % 1440) / 60);
   const mins = minutes % 60;
-  const duration = [days && `${days}d`, hours && `${hours}h`, mins && `${mins}min`]
+  const duration = [days && `${days}d`, hours && `${hours}h`, mins && `${mins}m`]
     .filter(Boolean)
     .join(' ');
   return duration;
 }
 
 export function formatPhaseCountdown(next: NextSolarPhase, now: number): string {
-  return `${formatCountdown(next.at - now)} to ${next.name}`;
+  return `${formatCountdown(next.at - now)} until ${next.name}`;
 }
 
 export interface NightStatus {
@@ -74,6 +79,19 @@ export interface NightStatus {
   usablePending: boolean;
   /** End of uninterrupted coverage, not necessarily a real transition. */
   through: number;
+}
+
+/** Promote the nearest known boundary; exact ties retain the combined solar/usable wording. */
+export function nextLiveTransition(status: NightStatus | null) {
+  const solar = status?.solar;
+  const usable = status?.usable;
+  if (usable?.at != null && (!solar || usable.at < solar.at))
+    return {
+      kind: 'usable' as const,
+      at: usable.at,
+      name: usable.active ? 'usable dark ends' : 'usable dark',
+    };
+  return solar ? { kind: 'solar' as const, at: solar.at, name: solar.name } : null;
 }
 
 /** Use the very same derived windows as the views, joining them across observing-date boundaries. */
@@ -129,14 +147,14 @@ export function formatNightStatus(status: NightStatus | null, now: number, finis
       ? ''
       : 'Finding usable dark…'
     : usable.active
-      ? `Usable dark now${usable.at == null ? '' : `, ${formatCountdown(usable.at - now)} left`}`
+      ? `Usable dark now${usable.at == null ? '' : `, ends in ${formatCountdown(usable.at - now)}`}`
       : `usable dark in ${formatCountdown(usable.at! - now)}`;
   let combined: 'start' | 'end' | '' = '';
   if (solar && usable?.at === solar.at) {
     if (usable.active) {
       combined = 'end';
       phase = 'Usable dark now';
-      dark = `${formatCountdown(solar.at - now)} left, until ${solar.name}`;
+      dark = `${formatCountdown(solar.at - now)} until ${solar.name}`;
     } else {
       combined = 'start';
       dark = '+ usable dark';
@@ -145,13 +163,16 @@ export function formatNightStatus(status: NightStatus | null, now: number, finis
   return { phase, dark, combined, active: usable?.active ?? false };
 }
 
-/** Wake for both countdowns, phase/window transitions and wall-clock minutes. */
+/** Wake at displayed changes and exact boundaries, using event-relative elapsed time. */
 export function nextClockTick(status: NightStatus | null, now: number): number {
   let delay = MS_M - (now % MS_M);
   for (const at of [status?.solar?.at, status?.usable?.at]) {
     if (at == null || at <= now) continue;
     const remaining = at - now;
-    delay = Math.min(delay, remaining, (remaining % MS_M || MS_M) + 1);
+    const step = remaining <= COUNTDOWN_SECONDS_WINDOW ? 1000 : MS_M;
+    delay = Math.min(delay, remaining, remaining % step || step);
+    if (remaining > COUNTDOWN_SECONDS_WINDOW)
+      delay = Math.min(delay, remaining - COUNTDOWN_SECONDS_WINDOW);
   }
   return Math.max(1, delay);
 }

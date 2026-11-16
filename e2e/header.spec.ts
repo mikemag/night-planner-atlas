@@ -32,7 +32,7 @@ for (const width of [1512, 1100, 800, 390, 320]) {
       else await page.locator(trigger).click();
       if (view !== 'notes') {
         await expect(page.locator(trigger)).toHaveAttribute('aria-pressed', 'true');
-        for (const id of ['siteSel', 'siteClockTime', 'viewSeg', 'moreBtn'])
+        for (const id of ['siteSel', 'siteClockPrimary', 'viewSeg', 'moreBtn'])
           await expect(page.locator(`#${id}`)).toBeVisible();
       }
       await expect(page.locator('#appMenu')).toBeHidden();

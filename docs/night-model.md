@@ -69,6 +69,14 @@ independently of the browsed range. It performs no separate solar search. The la
 twilight, civil dusk begins nautical twilight, nautical dusk begins astronomical twilight,
 and astronomical dusk begins astronomical darkness; dawn reverses those stages toward daylight.
 Elapsed UTC milliseconds determine the countdown, including across midnight and clock changes.
+Each solar or usable countdown rounds up to minutes for waits longer than five minutes, adding
+hours/days as needed and using “m” for minutes in every presentation. At exactly five minutes it switches to minutes and two-digit seconds,
+rounded up to the next second, never displaying zero before the boundary. The timer wakes at
+the next displayed change, the five-minute cutoff, the exact event instant or a wall-clock minute,
+whichever comes first. Return from a background tab recomputes from the actual instant; ticks
+never accumulate elapsed time. Seconds describe time to a calculated boundary, not observational
+accuracy. Only the live-status DOM updates on second ticks; charts and screen-reader live regions
+do not update on that cadence.
 This does not change any observing-night calculations or their golden records.
 
 ## Astronomical darkness
@@ -154,7 +162,12 @@ continue through noon join across that boundary, including polar nights and cloc
 only uninterrupted astronomical darkness can extend the usable search beyond the current date.
 A boundary at the end of loaded coverage stays unknown until the following
 night is available; it is never presented as a real usable-dark ending. Solar and usable
-countdowns combine only when their unrounded instants are identical. Threshold changes reuse
+countdowns combine only when their unrounded instants are identical. The prominent countdown
+selects the earlier known solar or usable boundary by its exact instant, retaining the later
+boundary as secondary text. Exact ties use the combined solar/usable wording. Unknown usable
+ends are not candidates. At a boundary, the status is read again before choosing the next target,
+including starts and endings in split usable windows. “Usable dark now” is separate from the
+countdown; a shared dawn reads “2h until astronomical twilight”, without “left”. Threshold changes reuse
 the precomputed Moon crossings and the same `deriveNight` function as the views.
 
 Current nights remain available while another year is browsed. If the current night or a needed

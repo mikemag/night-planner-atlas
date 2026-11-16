@@ -2,12 +2,14 @@ import { expect, it } from 'vitest';
 import { Observer } from 'astronomy-engine';
 import { computeNight, deriveNight, solarCrossings, type Site } from './night';
 import {
+  formatCountdown,
   formatPhaseCountdown,
   formatSiteClock,
   nextSolarPhase,
   nightStatus,
   formatNightStatus,
   nextClockTick,
+  nextLiveTransition,
 } from './site-clock';
 import { nightDates } from './range';
 import { MS_D, MS_M, TimeZone } from './time';
@@ -129,22 +131,22 @@ it('combines shared starts and ends, keeping distinct boundaries separate even i
   n.mf = [[a, b]];
   const before = a - 14 * MS_M;
   expect(formatNightStatus(nightStatus([n], before), before)).toEqual({
-    phase: '14min to astronomical darkness',
+    phase: '14m until astronomical darkness',
     dark: '+ usable dark',
     combined: 'start',
     active: false,
   });
   expect(formatNightStatus(nightStatus([n], b - 2 * 60 * MS_M), b - 2 * 60 * MS_M)).toEqual({
     phase: 'Usable dark now',
-    dark: '2h left, until astronomical twilight',
+    dark: '2h until astronomical twilight',
     combined: 'end',
     active: true,
   });
   n.mf = [[a + 10_000, b]];
   const near = a - 13 * MS_M - 30_000;
   expect(formatNightStatus(nightStatus([n], near), near)).toMatchObject({
-    phase: '14min to astronomical darkness',
-    dark: 'usable dark in 14min',
+    phase: '14m until astronomical darkness',
+    dark: 'usable dark in 14m',
     combined: '',
   });
 });
@@ -155,14 +157,14 @@ it('tracks delayed starts, separate endings, gaps and exact window boundaries', 
     b = n.ev.astroDawn!;
   n.mf = [[a + 60 * MS_M, b - 2 * 60 * MS_M]];
   expect(formatNightStatus(nightStatus([n], a - 14 * MS_M), a - 14 * MS_M)).toMatchObject({
-    phase: '14min to astronomical darkness',
-    dark: 'usable dark in 1h 14min',
+    phase: '14m until astronomical darkness',
+    dark: 'usable dark in 1h 14m',
     combined: '',
     active: false,
   });
   expect(formatNightStatus(nightStatus([n], b - 4 * 60 * MS_M), b - 4 * 60 * MS_M)).toMatchObject({
-    phase: '4h to astronomical twilight',
-    dark: 'Usable dark now, 2h left',
+    phase: '4h until astronomical twilight',
+    dark: 'Usable dark now, ends in 2h',
     combined: '',
     active: true,
   });
@@ -251,20 +253,84 @@ it('joins usable windows across noon and never reports the end of coverage as a 
 it('formats elapsed countdowns without zero, including a repeated local hour', () => {
   const next = { event: 'astroDawn' as const, name: 'astronomical twilight', at: 0 };
   for (const [remaining, duration] of [
-    [1, '<1min'],
-    [59_999, '<1min'],
-    [60_000, '1min'],
-    [60_001, '2min'],
-    [14 * MS_M, '14min'],
+    [1, '0m 01s'],
+    [999, '0m 01s'],
+    [1000, '0m 01s'],
+    [1001, '0m 02s'],
+    [59_999, '1m 00s'],
+    [60_000, '1m 00s'],
+    [60_001, '1m 01s'],
+    [5 * MS_M, '5m 00s'],
+    [5 * MS_M + 1, '6m'],
+    [14 * MS_M, '14m'],
     [60 * MS_M, '1h'],
-    [74 * MS_M, '1h 14min'],
-    [2 * MS_D + 74 * MS_M, '2d 1h 14min'],
+    [74 * MS_M, '1h 14m'],
+    [2 * MS_D + 74 * MS_M, '2d 1h 14m'],
   ] as const)
-    expect(formatPhaseCountdown(next, -remaining)).toBe(`${duration} to astronomical twilight`);
+    expect(formatPhaseCountdown(next, -remaining)).toBe(`${duration} until astronomical twilight`);
   expect(
     formatPhaseCountdown(
       { ...next, at: Date.parse('2026-11-01T09:45:00Z') },
       Date.parse('2026-11-01T08:45:00Z'),
     ),
-  ).toBe('1h to astronomical twilight');
+  ).toBe('1h until astronomical twilight');
+});
+
+it('wakes at the seconds cutoff, each displayed second and the exact boundary', () => {
+  const now = Date.parse('2026-11-01T08:59:58.123Z');
+  const status = (remaining: number, usableRemaining?: number) => ({
+    solar: { event: 'astroDawn' as const, name: 'astronomical twilight', at: now + remaining },
+    usable: usableRemaining == null ? null : { active: true, at: now + usableRemaining },
+    usablePending: false,
+    through: now + MS_D,
+  });
+  expect(nextClockTick(status(5 * MS_M + 123), now)).toBe(123);
+  expect(nextClockTick(status(5 * MS_M), now)).toBe(1000);
+  expect(nextClockTick(status(30_123), now)).toBe(123);
+  expect(nextClockTick(status(30_000), now)).toBe(1000);
+  expect(nextClockTick(status(123), now)).toBe(123);
+  expect(nextClockTick(status(60 * MS_M, 12_345), now)).toBe(345);
+  const cutoff = now + 5 * MS_M;
+  for (let t = now; t < cutoff; t += nextClockTick({ ...status(cutoff - now), usable: null }, t)) {
+    const remaining = cutoff - t;
+    expect(formatCountdown(remaining)).not.toContain('0m 00s');
+    expect(nextClockTick(status(cutoff - now), t)).toBeGreaterThan(0);
+  }
+});
+
+it('promotes the nearest exact boundary through delayed starts, split windows and shared dawn', () => {
+  const n = night();
+  const a = n.ev.astroDusk!,
+    b = n.ev.astroDawn!;
+  n.mf = [
+    [a + 60 * MS_M, a + 90 * MS_M],
+    [a + 120 * MS_M, b],
+  ];
+  const next = (now: number) => nextLiveTransition(nightStatus([n], now));
+  expect(next(a - MS_M)).toEqual({ kind: 'solar', at: a, name: 'astronomical darkness' });
+  expect(next(a)).toEqual({ kind: 'usable', at: a + 60 * MS_M, name: 'usable dark' });
+  expect(next(a + 60 * MS_M)).toEqual({
+    kind: 'usable',
+    at: a + 90 * MS_M,
+    name: 'usable dark ends',
+  });
+  expect(next(a + 90 * MS_M)).toEqual({ kind: 'usable', at: a + 120 * MS_M, name: 'usable dark' });
+  expect(next(a + 120 * MS_M)).toEqual({ kind: 'solar', at: b, name: 'astronomical twilight' });
+  expect(next(b)).toMatchObject({ kind: 'solar', at: n.ev.nauticalDawn });
+
+  // Equal rounded minutes do not make a tie; only equal event instants combine.
+  const status = {
+    solar: { event: 'astroDusk' as const, at: a, name: 'astronomical darkness' },
+    usable: { active: false, at: a - 1 },
+    usablePending: false,
+    through: n.nextNoon,
+  };
+  expect(nextLiveTransition(status)?.kind).toBe('usable');
+  expect(nextLiveTransition({ ...status, usable: { active: false, at: a } })?.kind).toBe('solar');
+  expect(nextLiveTransition({ ...status, solar: null })?.kind).toBe('usable');
+  expect(nextLiveTransition({ ...status, usable: { active: true, at: null } })?.kind).toBe('solar');
+  expect(
+    nextLiveTransition({ ...status, solar: null, usable: { active: true, at: null } }),
+  ).toBeNull();
+  expect(nextLiveTransition(null)).toBeNull();
 });

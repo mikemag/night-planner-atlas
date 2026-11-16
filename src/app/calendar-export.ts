@@ -206,7 +206,7 @@ export function makeCalendarRecords(
       const notes = [
         ...(event.kind === 'moons' && !event.night ? [] : [moonSettingsText(settings)]),
         ...(event.kind === 'nights'
-          ? [`Filter: more than ${minimumMinutes} min usable dark in total.`]
+          ? [`Filter: more than ${minimumMinutes}m usable dark in total.`]
           : []),
         `Export dates: ${dates.from} through ${dates.through} · Atlas model ${COMPUTE_REVISION}`,
         includeSite

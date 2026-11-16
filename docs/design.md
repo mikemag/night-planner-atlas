@@ -277,7 +277,8 @@ Disclosures show every eligible weekend, the gain from adding Thursday and Sunda
 weekend, and the separate usable windows on each night. An amber badge marks the best dates for
 each trip length, and the summary calls out when the preferred weekend changes. Trip durations
 use green bars, matching usable duration elsewhere. Comparison rows and cards keep a compact
-width on desktop. On phones the cycle heading stacks above the two side-by-side picks.
+width on desktop. The bounded 56rem panel is centered on wide screens and remains fluid on phones,
+with comparisons scrolling inside it. On phones the cycle heading stacks above the two side-by-side picks.
 Chart buttons on a pick or an expanded weekend open the first night of the chosen trip. River
 and Calendar open Month from Year for the jump without saving a different zoom preference.
 Lunations retains its focus window and opens the night detail even if the date falls outside it.
@@ -288,8 +289,10 @@ Lunations retains its focus window and opens the night detail even if the date f
   around phone cutouts and the home indicator. Nights, lunar cycles and weekend comparisons
   scroll inside the remaining panel space; rotating the phone does not force a second page
   scrollbar or leave a fixed-height chart below the screen.
-- **Header.** The observing site is the primary heading, with a quiet app title above and its
-  current local date, time, zone abbreviation and UTC offset below. The full IANA zone remains
+- **Header.** The observing site sits beneath a distinct but restrained 16 px, bold app title. A shared
+  live-status row below the controls gives the next event a larger countdown with tabular digits,
+  an explicit phase label and reserved row height. It stays in the same place across all four
+  planner views, separate from the browsed period in the chart header. The full IANA zone remains
   available to assistive technology, on clock hover and in the site manager. The picker uses
   site names; coordinates and elevation stay in the manager and the picker's hover description.
   Identical favorite names retain coordinate descriptions to distinguish them.
@@ -302,25 +305,40 @@ Lunations retains its focus window and opens the night detail even if the date f
   thresholds share one horizontal band. Related controls stay together and wrap as groups when
   space runs out. The site block has a bounded width so it cannot push every other control away.
   Desktop control faces share a 30 px height and top edge; small labels align with the app title,
-  while the site clock, next-phase countdown and usable-dark status share a full-width line below the control band.
-  The countdown follows the next solar phase (civil, nautical or astronomical twilight,
-  astronomical darkness, or daylight), using the site's location and elevation. It shows elapsed
-  minutes, adding hours/days for longer waits and showing “<1min” just before a transition.
+  with a left-aligned status row beginning directly under the site picker: current site time and
+  zone, “Usable dark now” when active, then the prominent next-event countdown and any later event
+  in smaller text. Middle dots separate the
+  neighboring segments; they stay grouped rather than spreading across the header. Shared events
+  use one countdown, omitting a redundant usable-start segment. Intermediate desktop widths reserve
+  two lines for wrapping.
+  The prominent countdown follows the closest known event: the next solar phase (civil, nautical
+  or astronomical twilight, astronomical darkness, or daylight), usable dark starting, or usable dark
+  ending. Ordering uses exact instants, not rounded display values. It switches targets at each boundary;
+  when events differ, the later event stays secondary. It shows elapsed
+  minutes as “m”, matching the chart durations and calendar export, and adds hours/days for longer waits. In the final five minutes it switches to minutes
+  and seconds (for example, “4m 59s”). Both solar and usable countdowns round up, so they never
+  show zero before a boundary. Seconds indicate time to a calculated event, not second-level
+  observational accuracy. Updates use the actual instant, including on returning to the page;
+  seconds update only the status DOM, without repainting charts or live screen-reader announcements.
   Usable dark follows the same windows and Moon settings as the charts. Before a window, its
-  readout says “usable dark in …”; inside one, “Usable dark now, … left” has a small green marker.
+  secondary readout says “usable dark in …”; when that start is closest, the primary reads
+  “1h 46m until usable dark”. Inside a window, “Usable dark now” has a small green marker.
+  A separate ending reads “14m until usable dark ends” when it becomes the next event.
   The usable countdown stops at the end of the current observing night's astronomical darkness;
   it never skips ahead to another night's window. Without a remaining usable window, only the
   solar countdown is shown; the usable segment and its separator are empty.
-  Shared starts read “14min to astronomical darkness + usable dark.” When a usable window ends
-  at dawn, the readout combines them as “Usable dark now · 2h left, until astronomical twilight.”
+  Shared starts read “14m until astronomical darkness + usable dark.” When a usable window ends
+  at dawn, the readout combines them as “Usable dark now · 2h until astronomical twilight.”
   Combining requires identical event instants, not merely the same rounded minute. Adjacent
   usable windows are joined across observing-date boundaries, so noon alone cannot end a window.
-  Phones reserve two lines: local date/time and zone abbreviation plus usable-dark status on
-  the first, and the next solar phase/countdown on the second. Compact durations use “m” for
-  minutes, and the usable-dark status follows the current Moon settings. The full wording,
-  UTC offset and IANA zone remain available to assistive technology.
-  Both lines retain their height while loading and when the usable segment is empty, so phase
-  changes and shared/separate transitions cannot move the chart.
+  Phones reserve one compact row for the labeled next-event countdown, using “m” for minutes. The
+  countdown and its chevron form a single **Live details** button aligned with the site picker’s
+  left edge. Its digits start at that edge, without a padded duration column. Activating it opens a
+  keyboard- and touch-operable disclosure with the site-local date/time, UTC offset, full IANA
+  zone and complete solar/usable status, including combined wording when their instants coincide.
+  Escape or an outside tap closes it; opening it does not change the chart height. The primary
+  countdown keeps the complete event label, and the selected site remains visible above it.
+  The row retains its height through loading, phase changes and empty usable status.
   The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
   An upper-right, unboxed **More options (⋯)** button with vertically centered dots opens a
@@ -337,7 +355,7 @@ Lunations retains its focus window and opens the night detail even if the date f
   Tonight uses a neutral button treatment, and tonight and now are marked in the chart.
   Browsing months and cycles uses scrolling,
   with the browsed period and view-specific Year/Month/Week controls inside the chart header.
-  On phones, site, views, Tonight and the clock/status stay visible. **Plan settings** shows the
+  On phones, site, views, Tonight and the labeled live countdown stay visible. **Plan settings** shows the
   loaded date range and opens a scrollable dialog containing Range, new-moon focus and both
   Moon thresholds. The dialog reuses the desktop controls, applies edits immediately, traps
   keyboard focus, and returns focus to its trigger on Done or Escape. An open Range picker
@@ -469,9 +487,9 @@ Lunations retains its focus window and opens the night detail even if the date f
   Unknown/damaged personal data is left untouched, and unavailable storage is explained.
   Blank elevation uses sea level; existing saved sites keep their coordinates.
   Elevation adjusts observer position and idealized refraction while assuming
-  a level horizon, with no terrain lookup. The default is Seattle. Beside the location, a reserved
-  readout shows the site's current local date/time, abbreviation, UTC offset and IANA zone,
-  followed by the solar and usable-dark status. It updates at clock/countdown minutes, solar
+  a level horizon, with no terrain lookup. The default is Seattle. In the shared header, a reserved
+  readout (with a disclosure on phones) shows the site's current local date/time, abbreviation, UTC offset and IANA zone,
+  followed by the solar and usable-dark status. It updates at clock/countdown minutes, seconds during each countdown’s final five minutes, solar
   and usable-window boundaries, on returning to the page and immediately on site or Moon-setting
   changes. The selected night and browsed range do not affect it. Calculations stay in the
   browser. The status reads the chart's computed nights directly and retains current nights while

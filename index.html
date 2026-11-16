@@ -154,22 +154,38 @@
           </div>
         </div>
         <div
-          class="site-clock"
+          class="site-clock dropdown"
           id="siteClock"
-          aria-label="Current time, next phase and usable dark at the site"
+          aria-label="Current time and next solar or usable-dark transition at the site"
         >
-          <div class="site-clock-full">
+          <div class="site-clock-summary">
+            <span id="siteClockDesktopTime"></span>
+            <span id="siteClockDesktopUsable"></span>
+            <span class="sr-only" id="siteClockDesktopZone"></span>
+          </div>
+          <span class="site-clock-primary" id="siteClockPrimary">
+            <span class="site-clock-duration" id="siteClockDuration"></span>
+            <span class="site-clock-event" id="siteClockEvent">Finding next phase…</span>
+            <span class="site-clock-shared" id="siteClockShared"></span>
+          </span>
+          <button
+            type="button"
+            class="btn site-clock-toggle dropdown-toggle"
+            id="siteClockToggle"
+            data-bs-toggle="dropdown"
+            aria-label="Live details"
+            aria-describedby="siteClockPrimary"
+            aria-controls="siteClockDetails"
+            aria-expanded="false"
+          ></button>
+          <div class="site-clock-full dropdown-menu" id="siteClockDetails">
+            <strong class="site-clock-detail-heading">Now at the observing site</strong>
             <span id="siteClockTime"></span>
             <span id="siteClockCountdown"></span>
             <span id="siteClockUsable"></span>
-            <span class="sr-only" id="siteClockZone"></span>
+            <span id="siteClockZone"></span>
           </div>
-          <div class="site-clock-compact" aria-hidden="true">
-            <div>
-              <span id="siteClockCompactTime"></span><span id="siteClockCompactUsable"></span>
-            </div>
-            <div id="siteClockCompactPhase"></div>
-          </div>
+          <span id="siteClockSecondary"></span>
         </div>
         <div class="plan-actions" id="planActions">
           <button
