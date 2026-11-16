@@ -455,9 +455,11 @@ Lunations retains its focus window and opens the night detail even if the date f
   every number and the weekend picks, not just the drawing.
 - **Site.** A native dropdown switches directly between named local favorites. **Manage sites…**
   follows a native visual separator and opens an ordered management list. Each row shows a name,
-  coordinates, zone, optional elevation and a Currently using marker where applicable. Explicit
-  Edit, Use site and Move up/down buttons work with keyboard and touch; a More disclosure contains
-  Duplicate and Remove. Reordering saves immediately, keeps focus on the moved control and never
+  coordinates, zone and optional elevation in compact, fixed-height desktop rows. A fixed action
+  strip contains Use, a pencil for Edit, overlapping squares for Duplicate, up/down arrows and a
+  trash can for Remove. Every icon has an accessible label and tooltip. The currently used site
+  shows a checkmark in the Use slot, keeping action positions and row height stable. Long names
+  and metadata truncate with full text in their tooltips. Reordering saves immediately, keeps focus on the moved control and never
   switches the observing site, starts a zone lookup or resets the edit draft. The list and picker
   use the same order. New manually added or shared sites go first; duplicates go immediately after
   their source (or first if the source was removed while editing). Existing shared locations stay
@@ -565,12 +567,10 @@ applies it, dismisses the menu and returns focus to More. The heading stays “T
 System remains checked while its effective Bootstrap light/dark mode follows the device.
 
 Site management, sharing and Browser data use scrollable Bootstrap modals. Browser data opened
-from More closes with Done and restores focus to More. The manager has explicit Export sites and
-preferences and Import sites and preferences actions. Export downloads the current list without
-including an open edit draft. Import opens the same Browser data flow, suspending the manager and
-returning to its preserved draft and import trigger on Back to sites. A completed import can make
-that draft stale; ordinary record conflict checks still apply. Modal transitions wait for the
-previous dialog to close, keeping one modal and backdrop at a time. Native fields retain local
+from More closes with Done and restores focus to More. Import and export live only in Browser data
+because they include all sites and preferences. The manager's footer points to that location,
+without a second entry point or a transition between dialogs. Export downloads the current list
+without including an open edit draft. Native fields retain local
 validation, offline IANA lookup and browser-only persistence.
 
 ### View and model choices

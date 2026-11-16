@@ -570,7 +570,9 @@
                 <h3 id="siteListTitle">Saved sites</h3>
                 <button class="btn btn-primary" type="button" id="siteAdd">Add site</button>
               </div>
-              <p>Move sites into your preferred order. Moves save immediately.</p>
+              <p class="site-list-hint">
+                Move sites into your preferred order. Moves save immediately.
+              </p>
               <div id="siteUnsaved" class="site-unsaved" hidden>
                 <p id="siteUnsavedName"></p>
                 <button class="btn btn-outline-secondary" id="siteSaveCurrent" type="button">
@@ -694,23 +696,10 @@
               </div>
             </form>
           </div>
-          <div class="site-manager-status">
-            <p id="siteStorage" role="status"></p>
-            <p id="siteActionStatus" role="status"></p>
-          </div>
           <div class="modal-footer site-manager-footer">
-            <div class="site-backup-actions">
-              <p>
-                Backup files contain all sites, their order and preferences, including coordinates.
-              </p>
-              <div class="dialog-actions">
-                <button class="btn btn-outline-secondary" type="button" id="siteExport">
-                  Export sites and preferences
-                </button>
-                <button class="btn btn-outline-secondary" type="button" id="siteImport">
-                  Import sites and preferences…
-                </button>
-              </div>
+            <div class="site-manager-status">
+              <p id="siteStorage" role="status"></p>
+              <p id="siteActionStatus" role="status"></p>
             </div>
             <button class="btn btn-outline-secondary" type="button" id="siteDone">Done</button>
           </div>

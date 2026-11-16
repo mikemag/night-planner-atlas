@@ -23,13 +23,7 @@ export async function siteAction(
   id: string,
   action: 'duplicate' | 'remove',
 ): Promise<void> {
-  const row = page.locator(`[data-site-id="${id}"]`);
-  if (
-    !(await row.locator('details').getAttribute('open')) &&
-    !(await row.locator('[data-action="duplicate"]').isVisible())
-  )
-    await row.locator('summary').click();
-  await row.locator(`[data-action="${action}"]`).click();
+  await page.locator(`[data-site-id="${id}"] [data-action="${action}"]`).click();
 }
 
 export async function discardSiteDraft(page: Page): Promise<void> {

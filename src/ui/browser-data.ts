@@ -12,14 +12,13 @@ import { useSavedPlan } from './share';
 import { CACHE_BUDGET, nightCache } from '../app/night-cache';
 import { downloadFile } from './download';
 import { closeAppMenu } from './app-menu';
-import type { SiteManager } from './site-editor';
 
 function download(contents: string, name: string): void {
   downloadFile(contents, name, 'application/json');
 }
 
 /** Deliberate, separately labeled controls for personal data; cache controls live alongside. */
-export function initBrowserData(sites: SiteManager): void {
+export function initBrowserData(): void {
   const dialog = el('browserData');
   const modal = new Modal(dialog);
   const status = el('browserDataStatus');
@@ -27,7 +26,6 @@ export function initBrowserData(sites: SiteManager): void {
   const review = el('dataReview');
   let imported: PersonalData | null = null;
   let baseDocument = '';
-  let fromSites = false;
   let fileAttempt = 0;
   let replacing = false;
   const refresh = () => {
@@ -54,36 +52,26 @@ export function initBrowserData(sites: SiteManager): void {
       ? `${info.months} cached site-months · approximately ${(info.bytes / 1024 / 1024).toFixed(1)} MiB of ${CACHE_BUDGET / 1024 / 1024} MiB. Calculations can be rebuilt.`
       : 'Calculation caching is unavailable. Nights are still computed on this device.';
   };
-  const open = (manager: boolean) => {
-    fromSites = manager;
+  el('browserDataOpen').addEventListener('click', () => {
     refresh();
     imported = null;
     fileAttempt++;
     status.textContent = personal.status() ?? '';
     review.hidden = true;
-    el('browserDataDone').textContent = manager ? 'Back to sites' : 'Done';
-    if (manager) sites.suspend(() => modal.show());
-    else {
-      closeAppMenu();
-      modal.show();
-    }
+    closeAppMenu();
+    modal.show();
     void refreshCache();
-  };
-  el('browserDataOpen').addEventListener('click', () => open(false));
-  el('siteImport').addEventListener('click', () => open(true));
+  });
   for (const id of ['browserDataClose', 'browserDataDone'])
     el(id).addEventListener('click', () => modal.hide());
-  dialog.addEventListener('shown.bs.modal', () =>
-    el(fromSites ? 'dataImport' : 'dataExport').focus(),
-  );
+  dialog.addEventListener('shown.bs.modal', () => el('dataExport').focus());
   dialog.addEventListener('hide.bs.modal', (event) => {
     if (replacing) event.preventDefault();
   });
   dialog.addEventListener('hidden.bs.modal', () => {
     imported = null;
     fileAttempt++;
-    if (fromSites) sites.resume(el('siteImport'));
-    else el('moreBtn').focus({ preventScroll: true });
+    el('moreBtn').focus({ preventScroll: true });
   });
   personal.subscribe(refresh);
   el('dataClearCache').addEventListener('click', async () => {
@@ -99,11 +87,6 @@ export function initBrowserData(sites: SiteManager): void {
   const exportCurrent = () =>
     download(JSON.stringify(personal.snapshot(), null, 2), 'night-planner-atlas-personal.json');
   el('dataExport').addEventListener('click', exportCurrent);
-  el('siteExport').addEventListener('click', () => {
-    exportCurrent();
-    el('siteActionStatus').textContent =
-      'Exported the current list, order and preferences. An open site-edit draft is not included.';
-  });
   el('dataBackup').addEventListener('click', () => {
     const raw = personal.stored(true);
     if (raw) download(raw, 'night-planner-atlas-recovery.json');

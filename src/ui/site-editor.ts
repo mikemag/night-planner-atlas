@@ -8,13 +8,21 @@ import { isSite, parseSiteInput, type Coordinates } from '../model/site-input';
 import { el } from './dom';
 import { bindSiteZone } from './site-zone';
 
-export interface SiteManager {
-  suspend: (open: () => void) => void;
-  resume: (focus: HTMLElement) => void;
-}
+const icon = (paths: string) =>
+  `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`;
+const actionIcons = {
+  edit: icon('<path d="m16 3 5 5-13 13H3v-5Z M13 6l5 5"/>'),
+  duplicate: icon(
+    '<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
+  ),
+  up: icon('<path d="M12 19V5m-6 6 6-6 6 6"/>'),
+  down: icon('<path d="M12 5v14m-6-6 6 6 6-6"/>'),
+  remove: icon('<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>'),
+};
+const currentIcon = icon('<path d="m5 12 4 4L19 6"/>');
 
 /** List operations save independently; the form owns one isolated, conflict-checked draft. */
-export function initSiteEditor(): SiteManager {
+export function initSiteEditor(): void {
   const picker = el<HTMLSelectElement>('siteSel');
   const dialog = el('sitePop');
   const modal = new Modal(dialog, { backdrop: 'static' });
@@ -49,9 +57,7 @@ export function initSiteEditor(): SiteManager {
   let saveAttempt = 0;
   let initialFields = '';
   let committing = false;
-  let suspended = false;
   let allowClose = false;
-  let onShown: (() => void) | null = null;
   let leave: (() => void) | null = null;
   let leaveFocus: HTMLElement | null = null;
   let editOpener: HTMLElement | null = null;
@@ -83,7 +89,7 @@ export function initSiteEditor(): SiteManager {
     el('siteStorageNotice').textContent = message ?? '';
     el('siteStorageNotice').hidden = !message;
     el('siteStorage').textContent =
-      message ?? 'Sites and preferences stay in this browser. No account is needed.';
+      message ?? 'Sites stay in this browser. Backups are in More → Browser data.';
   };
   const checkDraft = (draft: PersonalData, base: Favorite | null) => {
     if (base && JSON.stringify(draft.sites.find((s) => s.id === base.id)) !== JSON.stringify(base))
@@ -236,22 +242,35 @@ export function initSiteEditor(): SiteManager {
         row = document.createElement('li');
         row.className = 'site-row';
         row.dataset.siteId = site.id;
-        row.innerHTML = `<div class="site-row-info"><strong class="site-row-name"></strong><span class="site-current" hidden>Currently using</span><span class="site-row-location"></span><span class="site-row-zone"></span></div>
-          <div class="site-row-actions"><button type="button" class="btn btn-outline-secondary" data-action="edit">Edit</button><button type="button" class="btn btn-outline-secondary" data-action="use">Use site</button><button type="button" class="btn btn-outline-secondary site-move" data-action="up">↑</button><button type="button" class="btn btn-outline-secondary site-move" data-action="down">↓</button><details class="site-row-more"><summary>More</summary><div class="dialog-actions"><button type="button" class="btn btn-outline-secondary" data-action="duplicate">Duplicate</button><button type="button" class="btn btn-outline-secondary" data-action="remove">Remove…</button></div></details></div>`;
+        row.innerHTML = `<div class="site-row-info"><strong class="site-row-name"></strong><span class="site-row-meta"></span></div>
+          <div class="site-row-actions"><button type="button" class="btn btn-outline-secondary site-use" data-action="use">Use</button>${Object.entries(
+            actionIcons,
+          )
+            .map(
+              ([action, svg]) =>
+                `<button type="button" class="btn btn-outline-secondary site-action" data-action="${action}">${svg}</button>`,
+            )
+            .join('')}</div>`;
         rows.set(site.id, row);
       }
       row.querySelector('.site-row-name')!.textContent = site.name;
-      row.querySelector('.site-row-location')!.textContent = coordinatesCaption(site);
-      row.querySelector('.site-row-zone')!.textContent = site.tz;
-      row.querySelector<HTMLElement>('.site-current')!.hidden = site.id !== active?.id;
-      row.querySelector<HTMLElement>('[data-action="use"]')!.hidden = site.id === active?.id;
-      row.querySelector('summary')!.setAttribute('aria-label', `More actions for ${site.name}`);
+      row.querySelector<HTMLElement>('.site-row-name')!.title = site.name;
+      const metadata = `${coordinatesCaption(site)} · ${site.tz}`;
+      const caption = row.querySelector<HTMLElement>('.site-row-meta')!;
+      caption.textContent = caption.title = metadata;
+      const current = site.id === active?.id;
+      const useButton = row.querySelector<HTMLElement>('[data-action="use"]')!;
+      useButton.innerHTML = current ? currentIcon : 'Use';
+      useButton.setAttribute('aria-disabled', String(current));
+      useButton.classList.toggle('site-current', current);
       for (const button of row.querySelectorAll<HTMLElement>('[data-action]')) {
         const action = button.dataset.action!;
         const label =
-          action === 'up' || action === 'down'
-            ? `Move ${site.name} ${action}`
-            : `${action === 'use' ? 'Use' : action[0].toUpperCase() + action.slice(1)} ${site.name}`;
+          action === 'use' && current
+            ? `Currently using ${site.name}`
+            : action === 'up' || action === 'down'
+              ? `Move ${site.name} ${action}`
+              : `${action === 'use' ? 'Use' : action[0].toUpperCase() + action.slice(1)} ${site.name}`;
         button.setAttribute('aria-label', label);
         button.title = label;
         if (action === 'up' || action === 'down')
@@ -260,7 +279,7 @@ export function initSiteEditor(): SiteManager {
             String(action === 'up' ? index === 0 : index === book.sites.length - 1),
           );
       }
-      // Only move DOM nodes when order actually changes; preserve focused controls and open actions.
+      // Only move DOM nodes when order actually changes; preserve focused controls.
       if (list.children[index] !== row) list.insertBefore(row, list.children[index] ?? null);
     });
     if (focused) focus(focused);
@@ -346,19 +365,13 @@ export function initSiteEditor(): SiteManager {
     },
     true,
   );
-  dialog.addEventListener('shown.bs.modal', () => {
-    if (onShown) {
-      const callback = onShown;
-      onShown = null;
-      callback();
-    } else el('siteAdd').focus();
-  });
+  dialog.addEventListener('shown.bs.modal', () => el('siteAdd').focus());
   dialog.addEventListener('hide.bs.modal', (event) => {
     if (committing) {
       event.preventDefault();
       return;
     }
-    if (!suspended && !allowClose && dirty()) {
+    if (!allowClose && dirty()) {
       event.preventDefault();
       requestLeave(() => {
         allowClose = true;
@@ -370,10 +383,8 @@ export function initSiteEditor(): SiteManager {
   });
   dialog.addEventListener('hidden.bs.modal', () => {
     allowClose = false;
-    if (!suspended) {
-      finishEdit();
-      picker.focus({ preventScroll: true });
-    }
+    finishEdit();
+    picker.focus({ preventScroll: true });
   });
   el('siteAdd').addEventListener('click', () =>
     requestLeave(() => fill(null, null, el('siteAdd'))),
@@ -563,17 +574,4 @@ export function initSiteEditor(): SiteManager {
     if (activate) modal.hide();
     else focus(rows.get(id)?.querySelector<HTMLElement>('[data-action="edit"]') ?? null);
   });
-  return {
-    suspend(open) {
-      if (committing) return;
-      suspended = true;
-      dialog.addEventListener('hidden.bs.modal', open, { once: true });
-      modal.hide();
-    },
-    resume(target) {
-      suspended = false;
-      onShown = () => focus(target);
-      modal.show();
-    },
-  };
 }

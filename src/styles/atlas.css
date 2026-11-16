@@ -2609,7 +2609,7 @@ kbd {
 
 /* The list and its edit draft have independent actions and save boundaries. */
 .site-manager {
-  --bs-modal-width: 1000px;
+  --bs-modal-width: 960px;
 }
 .site-manager h3,
 #browserData h3 {
@@ -2631,6 +2631,12 @@ kbd {
   gap: 16px;
   min-width: 0;
 }
+.site-library {
+  gap: 10px;
+}
+.site-dialog .site-list-hint {
+  font-size: 0.8rem;
+}
 .site-list-heading {
   display: flex;
   align-items: center;
@@ -2638,68 +2644,75 @@ kbd {
   gap: 12px;
 }
 .site-list {
-  display: grid;
-  gap: 10px;
   list-style: none;
   padding: 0;
   margin: 0;
-}
-.site-row {
   border: 1px solid var(--hair-2);
   border-radius: 6px;
-  padding: 12px;
+}
+.site-row {
+  padding: 7px 10px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+.site-row + .site-row {
+  border-top: 1px solid var(--hair-2);
 }
 .site-row-info {
-  flex: 1 1 240px;
   min-width: 0;
   display: grid;
-  gap: 2px;
-  overflow-wrap: anywhere;
+  gap: 1px;
+}
+.site-row-name,
+.site-row-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .site-row-name {
+  font-size: 0.875rem;
   font-weight: 650;
+  line-height: 1.4;
 }
-.site-row-location,
-.site-row-zone,
-.site-current {
-  font-size: 0.8rem;
+.site-row-meta {
+  font-size: 0.75rem;
+  line-height: 1.4;
   color: var(--ink-2);
 }
-.site-current {
+.site-row-actions .site-current {
   color: var(--ink);
-  font-weight: 650;
+  border-color: transparent;
+  background: transparent;
 }
 .site-row-actions {
   display: flex;
-  align-items: start;
-  flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
+  gap: 3px;
 }
-.site-row-actions .btn,
-.site-row-more summary {
-  font-size: 0.875rem;
-  min-height: 36px;
+.site-row-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  flex: none;
+  font-size: 0.8125rem;
+  border-color: transparent;
 }
-.site-move {
-  min-width: 36px;
+.site-row-actions .btn:hover,
+.site-row-actions .btn:focus-visible {
+  border-color: var(--hair-2);
 }
-.site-move[aria-disabled='true'] {
+.site-row-actions .site-use {
+  width: 40px;
+  margin-right: 3px;
+}
+.site-action[aria-disabled='true'] {
   opacity: 0.4;
-}
-.site-row-more summary {
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.site-row-more[open] {
-  flex-basis: 100%;
-}
-.site-row-more .dialog-actions {
-  margin-top: 6px;
 }
 .site-unsaved {
   display: grid;
@@ -2712,21 +2725,18 @@ kbd {
   padding: 12px 16px 0;
 }
 .site-manager-status {
-  padding: 8px 16px;
-  border-top: 1px solid var(--hair-2);
-}
-.site-manager-footer {
-  align-items: end;
-  justify-content: space-between;
-}
-.site-backup-actions {
   flex: 1;
   min-width: 0;
-  display: grid;
-  gap: 8px;
 }
-.site-backup-actions .btn {
-  font-size: 0.875rem;
+.site-dialog .site-manager-status p {
+  font-size: 0.75rem;
+}
+#siteActionStatus:empty {
+  display: none;
+}
+.site-manager-footer {
+  align-items: center;
+  justify-content: space-between;
 }
 #browserData .data-controls + .data-controls {
   border-top: 1px solid var(--hair-2);
@@ -2739,12 +2749,25 @@ kbd {
   .site-editing .site-library {
     display: none;
   }
-  .site-manager .btn,
-  .site-row-more summary {
+  .site-manager .btn {
     min-height: 44px;
   }
-  .site-move {
-    min-width: 44px;
+  .site-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 8px 10px;
+  }
+  .site-row-actions .btn {
+    width: 40px;
+    height: 44px;
+  }
+  .site-row-actions {
+    justify-content: flex-start;
+    gap: 0;
+  }
+  .site-row-actions .site-use {
+    width: 40px;
+    margin-right: 0;
   }
   .site-manager-footer {
     display: grid;
@@ -2753,23 +2776,6 @@ kbd {
   }
   .site-manager-footer > * {
     margin: 0;
-  }
-  .site-editing .site-backup-actions > p {
-    display: none;
-  }
-  .site-backup-actions .dialog-actions {
-    gap: 4px;
-  }
-  .site-backup-actions .btn {
-    padding: 4px 8px;
-    font-size: 0.8125rem;
-    min-height: 44px;
-  }
-}
-
-@media (min-width: 900px) {
-  .site-manager:not(.site-editing) .site-row {
-    grid-template-columns: minmax(0, 1fr) auto;
   }
 }
 

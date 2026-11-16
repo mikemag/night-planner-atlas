@@ -1,4 +1,4 @@
-import { openCurrentSiteEditor, openSites, editSite, discardSiteDraft } from './site-controls';
+import { openCurrentSiteEditor, openSites, editSite } from './site-controls';
 import { chooseTheme, chooseFocus, openAppMenu } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -11,25 +11,29 @@ async function openData(page: Page) {
   await expect(page.getByRole('dialog', { name: 'Browser data', exact: true })).toBeVisible();
 }
 for (const width of [1512, 390])
-  test(`Browser data returns to the same unsaved site draft at ${width}px`, async ({ page }) => {
+  test(`backup controls live in Browser data and return to More at ${width}px`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 844 });
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     const before = await readPersonal(page);
-    await openCurrentSiteEditor(page);
-    await page.locator('#siteName').fill('Keep this unsaved draft');
-    await page.locator('#siteImport').click();
+    await openSites(page);
+    await expect(
+      page.locator('#sitePop').getByRole('button', { name: /import|export/i }),
+    ).toHaveCount(0);
+    await expect(page.locator('#siteStorage')).toContainText('More → Browser data');
+    await page.locator('#siteDone').click();
+    await openData(page);
     await expect(page.locator('#sitePop')).toBeHidden();
     await expect(page.locator('.modal.show')).toHaveCount(1);
     await expect(page.locator('.modal-backdrop')).toHaveCount(1);
+    await expect(page.locator('#dataExport')).toBeVisible();
+    await expect(page.locator('#dataImport')).toBeVisible();
     await page.locator('#browserDataDone').click();
-    await expect(page.locator('#sitePop')).toBeVisible();
-    await expect(page.locator('#siteName')).toHaveValue('Keep this unsaved draft');
-    await expect(page.locator('#siteImport')).toBeFocused();
-    await expect(page.locator('.modal.show')).toHaveCount(1);
-    await expect(page.locator('.modal-backdrop')).toHaveCount(1);
-    await discardSiteDraft(page);
-    await page.locator('#siteDone').click();
+    await expect(page.locator('#moreBtn')).toBeFocused();
+    await expect(page.locator('#sitePop')).toBeHidden();
+    await expect(page.locator('.modal.show')).toHaveCount(0);
     await expect(page.locator('.modal-backdrop')).toHaveCount(0);
     expect(await readPersonal(page)).toEqual(before);
   });
@@ -208,29 +212,33 @@ test('reordering makes an import preview stale without creating recovery history
   await other.close();
 });
 
-test('import from management keeps a suspended draft and detects replacement of its record', async ({
+test('import in another tab preserves a site draft and detects replacement of its record', async ({
   page,
+  context,
 }) => {
+  await seedPersonal(page);
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
+  const other = await context.newPage();
+  await other.goto('./');
+  await expect(other.locator('#loading')).toBeHidden();
   await openCurrentSiteEditor(page);
   await page.locator('#siteName').fill('Preserve my draft');
-  await page.locator('#siteImport').click();
-  await expect(page.locator('#browserData')).toBeVisible();
+  await openData(other);
   const replacement = freshPersonalData();
   replacement.sites[0].name = 'Name from import';
   replacement.sites.reverse();
-  await page.locator('#dataFile').setInputFiles({
+  await other.locator('#dataFile').setInputFiles({
     name: 'replacement.json',
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(replacement)),
   });
-  await page.locator('#dataConfirmImport').click();
-  await expect(page.locator('#dataReview')).toBeHidden();
-  await page.locator('#browserDataDone').click();
+  await other.locator('#dataConfirmImport').click();
+  await expect(other.locator('#dataReview')).toBeHidden();
   await expect(page.locator('#siteName')).toHaveValue('Preserve my draft');
   await expect(page.locator('#siteDraftConflict')).toBeVisible();
   await page.locator('#siteSave').click();
   await expect(page.locator('#siteName')).toHaveValue('Preserve my draft');
   expect((await readPersonal(page)).sites).toEqual(replacement.sites);
+  await other.close();
 });

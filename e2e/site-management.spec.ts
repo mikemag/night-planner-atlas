@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { DEFAULT_SITES } from '../src/app/default-sites';
 import { openSites, editSite, siteAction, discardSiteDraft } from './site-controls';
-import { chooseTheme } from './header-controls';
+import { chooseTheme, openAppMenu } from './header-controls';
 import { readPersonal, seedPersonal } from './storage';
 
 const seattle = DEFAULT_SITES[0];
@@ -208,13 +208,62 @@ test('failed reorders keep the saved document and export the temporary order', a
   await page.locator(`[data-site-id="${edinburgh.id}"] [data-action="up"]`).click();
   await expect(page.locator('#siteStorage')).toContainText('temporary');
   expect(await readPersonal(page)).toEqual(saved);
+  await page.locator('#siteDone').click();
+  await openAppMenu(page);
+  await page.getByRole('menuitem', { name: 'Browser data…', exact: true }).click();
+  await expect(page.locator('#dataTemporary')).toContainText('temporary');
   const download = page.waitForEvent('download');
-  await page.locator('#siteExport').click();
+  await page.locator('#dataExport').click();
   const { readFile } = await import('node:fs/promises');
   const exported = JSON.parse(await readFile((await (await download).path())!, 'utf8'));
   expect(exported.sites[0].id).toBe(edinburgh.id);
   expect(exported.active).toEqual(saved.active);
 });
+
+for (const width of [1512, 390, 320]) {
+  test(`site actions stay compact and in place when the current site changes at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('./');
+    await expect(page.locator('#loading')).toBeHidden();
+    await openSites(page);
+    const row = page.locator(`[data-site-id="${edinburgh.id}"]`);
+    const buttons = row.locator('[data-action]');
+    await expect(buttons).toHaveCount(6);
+    await expect(row.locator('details')).toHaveCount(0);
+    for (const name of ['Use', 'Edit', 'Duplicate', 'Remove'])
+      await expect(
+        row.getByRole('button', { name: `${name} ${edinburgh.name}`, exact: true }),
+      ).toBeVisible();
+    const geometry = () =>
+      row.evaluate((element) => {
+        const bounds = element.getBoundingClientRect();
+        return {
+          height: bounds.height,
+          actions: [...element.querySelectorAll('button')].map((button) => {
+            const rect = button.getBoundingClientRect();
+            return { x: rect.x - bounds.x, y: rect.y - bounds.y, width: rect.width };
+          }),
+        };
+      });
+    const before = await geometry();
+    expect(before.height).toBeLessThan(width > 700 ? 64 : 104);
+    for (let i = 1; i < before.actions.length; i++) {
+      const previous = before.actions[i - 1];
+      expect(before.actions[i].x - previous.x - previous.width).toBeLessThanOrEqual(6);
+    }
+    await row.getByRole('button', { name: `Use ${edinburgh.name}`, exact: true }).click();
+    await expect(page.locator('#sitePop')).toBeHidden();
+    await expect(page.locator('#loading')).toBeHidden();
+    await openSites(page);
+    await expect(
+      row.getByRole('button', { name: `Currently using ${edinburgh.name}`, exact: true }),
+    ).toHaveAttribute('aria-disabled', 'true');
+    expect(await geometry()).toEqual(before);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+  });
+}
 
 test('switching after a discard prompt reads the latest target record', async ({
   page,
