@@ -1,15 +1,24 @@
 import { defineConfig, devices } from '@playwright/test';
+import { UI_SPECS } from './e2e/suites';
 
 const PORT = 4174;
+const suite = process.env.NPA_E2E_SUITE;
+if (suite && !['ui', 'integration'].includes(suite)) throw new Error(`Unknown E2E suite: ${suite}`);
 
 export default defineConfig({
   testDir: 'e2e',
+  testMatch: suite === 'ui' ? UI_SPECS : '**/*.spec.ts',
+  testIgnore: suite === 'integration' ? UI_SPECS : [],
   fullyParallel: true,
+  workers: 2,
+  globalSetup: './e2e/global-setup.ts',
   reporter: 'list',
   use: {
     baseURL: `http://localhost:${PORT}/`,
     viewport: { width: 1512, height: 920 },
-    trace: 'retain-on-failure',
+    // Opt in with --trace=retain-on-failure when diagnosing a failure.
+    trace: 'off',
+    screenshot: 'only-on-failure',
   },
   projects: [
     {
@@ -22,6 +31,9 @@ export default defineConfig({
     },
     {
       name: 'chromium-dark',
+      // Repeat only cases whose initial dark palette adds coverage or a curated capture.
+      // Tests that cycle through all themes already cover those palettes in both engines.
+      grep: /@dark\b/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1512, height: 920 },
@@ -38,7 +50,7 @@ export default defineConfig({
         colorScheme: 'light',
       },
     },
-    ...(process.env.SCREENSHOTS
+    ...(process.env.RETINA
       ? [
           {
             name: 'webkit-retina',

@@ -293,7 +293,8 @@ Neither the fixture tolerances nor the calculations predict local terrain or wea
 
 ### Crossing audit
 
-`sampling.test.ts` checks **all 365 nights of 2026 at all three reference sites**, at 0°, 5°, 10° and 15°.
+`sampling.audit.test.ts`, run with `npm run test:audit`, checks **all 365 nights of 2026 at all
+three reference sites**, at 0°, 5°, 10° and 15°.
 It independently evaluates the geometric upper-limb ephemeris at one-minute intervals, applies
 refraction, finds crossing brackets, and bisects them. Every crossing found by this scan appears
 in Atlas, with **less than one second** of timing difference at every threshold. This isolates

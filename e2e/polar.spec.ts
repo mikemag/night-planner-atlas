@@ -1,6 +1,6 @@
 import { openSites, siteAction } from './site-controls';
 import { chooseFocus } from './header-controls';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './ui-test';
 
 for (const width of [1512, 390]) {
   test(`polar daylight and winter twilight remain readable in every view at ${width}px`, async ({

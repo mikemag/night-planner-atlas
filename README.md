@@ -132,33 +132,25 @@ per-browser settings behavior. Firebase serves the built site; the
 [GitHub repository](https://github.com/mikemag/night-planner-atlas) provides its AGPL source and
 build instructions.
 
-| Command                      | What it does                                                                           |
-| ---------------------------- | -------------------------------------------------------------------------------------- |
-| `npm run check`              | Lint, format check, type check, unit tests and build                                   |
-| `npm run deploy`             | Run local checks and browser tests, then publish to Firebase Hosting                   |
-| `npm test`                   | Unit tests for calculations, settings, storage, sharing and export (Vitest)            |
-| `npm run test:e2e`           | Browser smoke tests of the built site in Chromium and WebKit (Playwright)              |
-| `npm run screenshots`        | Browser tests and Retina visual checks, saving captures to `test-results/screenshots/` |
-| `npm run screenshots:retina` | Only the Retina visual checks in a visible WebKit window                               |
-| `npm run screenshots:readme` | Build and capture the five README examples in `test-results/readme/`                   |
-| `npm run format`             | Format everything with Prettier                                                        |
+| Command                        | What it does                                                                      |
+| ------------------------------ | --------------------------------------------------------------------------------- |
+| `npm run check`                | Lint, format check, regular unit tests and build (including the type check)       |
+| `npm run check:full`           | Check, exhaustive model audits and all browser tests                              |
+| `npm run deploy`               | Run the full gate, then publish to Firebase Hosting                               |
+| `npm test`                     | Regular unit tests, including golden records and independent numerical references |
+| `npm run test:audit`           | Exhaustive full-year lunar sampling and polar solar audits                        |
+| `npm run test:all`             | Both regular unit tests and numerical audits                                      |
+| `npm run test:e2e:smoke`       | Small cold-start browser suite: views, selection and site switching               |
+| `npm run test:e2e:ui`          | Visual and interaction regressions with prepared calculation data                 |
+| `npm run test:e2e:integration` | Cold-start, storage, sharing, offline and computation integration tests           |
+| `npm run test:e2e`             | Full browser regression suite (UI and integration)                                |
+| `npm run screenshots`          | Curated headless view/theme captures in `test-results/screenshots/`               |
+| `npm run screenshots:retina`   | Optional Retina visual checks in a visible WebKit window                          |
+| `npm run screenshots:readme`   | Build and capture the five README examples in `test-results/readme/`              |
+| `npm run format`               | Format everything with Prettier                                                   |
 
-The first time you run the browser tests, install their browsers with
-`npx playwright install chromium webkit`. All checks run locally; GitHub does not run tests on
-pushes or pull requests. Browser tests build and start their own preview server on port 4174 and
-fail if that port is already occupied, so they cannot accidentally test a different server.
-
-Functional WebKit tests use standard pixel density: headless Retina WebKit on macOS can throttle
-startup timers enough to trip otherwise healthy readiness checks. Screenshot runs also include
-one visible WebKit window at 2× density, using the existing `@retina` cases for desktop/phone
-views, expanded nights, and themes. These checks require a desktop session. Keep the visual
-window active while they run; `npm run screenshots:retina` runs just that coverage.
-
-`npm run screenshots:readme` uses a separate Chromium session and production preview on port 4175.
-It fixes the clock to September 6, 2026 at 6 PM in Seattle, loads calendar year 2026 at the public
-Seattle starter site, and sets strict Moon thresholds. The capture choices are in
-`scripts/capture-readme.mjs`. Review the generated PNGs before copying them to `docs/images/`;
-the command does not overwrite the published README images or run the full browser suite.
+See [Testing Atlas](docs/testing.md) for browser setup, choosing checks, theme coverage,
+screenshots, debugging and timing runs.
 
 ## Layout
 
@@ -172,7 +164,7 @@ src/
   ui/                   Dark Weekends, night details, controls and bundled Docs pages
   styles/atlas.css      theme tokens, layout, components
 public/                 favicon, license texts and downloadable time-zone data
-e2e/                    browser smoke tests
+e2e/                    browser UI and integration regression tests
 scripts/                reproducible README capture
 docs/                   design notes, night model, screenshots
 AGENTS.md               guidance for coding agents working in this repo

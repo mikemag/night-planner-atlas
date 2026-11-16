@@ -1,5 +1,6 @@
 import { chooseTheme, openAppMenu } from './header-controls';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './ui-test';
+import { readPreference } from './storage';
 
 for (const width of [1512, 390]) {
   test(`themes preserve the expanded night and browsed position at ${width}px @retina`, async ({
@@ -56,14 +57,28 @@ for (const width of [1512, 390]) {
     expect(levels.every((level, i) => i === 0 || levels[i - 1] > level)).toBe(true);
     await page.emulateMedia({ colorScheme: 'light' });
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'observing');
+    // Preferences save asynchronously under a Web Lock; persistence must finish before reload.
+    await expect.poll(() => readPreference(page, 'theme')).toBe('observing');
     await page.reload();
     await expect(page.locator('#themeMenuLabel')).toHaveText('Theme');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'observing');
+    await expect(page.locator('#loading')).toBeHidden();
+    const beforeSystem = await state();
     await chooseTheme(page, 'system');
-    await page.emulateMedia({ colorScheme: 'dark' });
-    await expect
-      .poll(() => page.locator('body').evaluate((el) => getComputedStyle(el).backgroundColor))
-      .toBe('rgb(7, 9, 14)');
+    // Cover both System branches here instead of repeating this whole theme cycle
+    // in a second Chromium project. Page/detail colors must follow the OS without moving the chart.
+    for (const colorScheme of ['dark', 'light'] as const) {
+      await page.emulateMedia({ colorScheme });
+      await expect
+        .poll(() => page.locator('body').evaluate((el) => getComputedStyle(el).backgroundColor))
+        .toBe(colorScheme === 'dark' ? 'rgb(7, 9, 14)' : 'rgb(233, 237, 242)');
+      await expect
+        .poll(() =>
+          page.locator('#riverDetail').evaluate((el) => getComputedStyle(el).backgroundColor),
+        )
+        .toBe(colorScheme === 'dark' ? 'rgb(13, 17, 24)' : 'rgb(247, 248, 250)');
+      await expect.poll(state).toEqual(beforeSystem);
+    }
   });
 }
 

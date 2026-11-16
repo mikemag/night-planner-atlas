@@ -84,7 +84,21 @@ export default defineConfig({
     rolldownOptions: { output: { banner: codeNotice, comments: { legal: true } } },
   },
   test: {
-    include: ['src/**/*.test.ts'],
     environment: 'node',
+    maxWorkers: 2,
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['src/**/*.test.ts'],
+          exclude: ['src/**/*.audit.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: { name: 'audit', include: ['src/**/*.audit.test.ts'] },
+      },
+    ],
   },
 });

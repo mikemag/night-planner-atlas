@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './ui-test';
 import {
   closePlanning,
   openAppMenu,
@@ -137,6 +137,10 @@ test('phone Plan settings support keyboard editing, view changes and responsive 
   await openPlanning(page);
   await page.locator('#moonAltSel').focus();
   await page.setViewportSize({ width: 1512, height: 920 });
+  // Focus is already on this field in the phone dialog. Wait for the responsive move
+  // and modal close before resizing back; a focus-only check can pass on the old layout.
+  await expect(page.locator('#planningDialog')).toBeHidden();
+  await expect(trigger).toBeHidden();
   await expect(page.locator('#moonAltSel')).toBeFocused();
   await expect(page.locator('#moonAltSel')).toHaveValue('10');
   await expect(page.locator('#crescentSel')).toHaveValue('0.2');

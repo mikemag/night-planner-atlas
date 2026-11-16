@@ -46,17 +46,20 @@ npm ci
 npm run deploy
 ```
 
-`npm run deploy` runs `npm run check`, then `npm run test:e2e`, then
+`npm run deploy` runs `npm run check:full` (regular checks, numerical audits and all browser tests), then
 `firebase deploy --only hosting --project night-planner-atlas`, stopping on any failure.
 For visual review before publishing, run these individual steps instead:
 
 ```bash
-npm run check && npm run screenshots && firebase deploy --only hosting --project night-planner-atlas
+npm run check:full && npm run screenshots
+# Inspect the captures before publishing:
+firebase deploy --only hosting --project night-planner-atlas
 ```
 
-`npm run screenshots` runs the full local
-Playwright suite, builds its own production preview on port 4174, and refuses an existing
-server. `npm run test:e2e` can replace it when screenshots are unnecessary. Do not alter
+`npm run screenshots` captures the curated view/theme cases headlessly. It builds its own
+production preview on port 4174 and refuses an existing server. It supplements the full gate;
+it does not replace the integration tests or numerical audits. Omit the capture step when
+screenshots are unnecessary. Do not alter
 `dist/` between checks and deployment. The explicit project flag avoids deploying to AllSky
 or another active CLI project. Do not run `firebase init`, which can overwrite the config.
 

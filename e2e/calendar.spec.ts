@@ -1,6 +1,6 @@
 import { openShare, chooseFocus, chooseMoon, shiftPlanningRange } from './header-controls';
 import { seedPersonal } from './storage';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, coldTest, type Page } from './ui-test';
 import { fmtClock, fmtClockS, fmtDur, nightTitle, SUN_NAMES } from '../src/model/format';
 import { SUN_EVENTS } from '../src/model/night';
 
@@ -113,7 +113,7 @@ async function sharedDetail(page: Page) {
 }
 
 for (const width of [1512, 390]) {
-  test(`a six-row month keeps readable cells at ${width}px with inset duration bars and inline detail @retina`, async ({
+  test(`a six-row month keeps readable cells at ${width}px with inset duration bars and inline detail @retina @dark`, async ({
     page,
   }, info) => {
     const errors: string[] = [];
@@ -269,7 +269,7 @@ test('Month defaults with Year / Month / Week order and ignores the retired pref
 });
 
 for (const width of [1512, 390]) {
-  test(`Week fits all seven nights on one sunset-to-sunrise clock at ${width}px @retina`, async ({
+  test(`Week fits all seven nights on one sunset-to-sunrise clock at ${width}px @retina @dark`, async ({
     page,
   }, info) => {
     await open(page, width);
@@ -369,7 +369,7 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#calendarDetail')).toBeVisible();
     expect((await selected(page)).id).toBe('2026-10-09');
   });
-  test(`Year keeps all loaded months accessible with keyboard month choosers at ${width}px @retina`, async ({
+  test(`Year keeps all loaded months accessible with keyboard month choosers at ${width}px @retina @dark`, async ({
     page,
   }, info) => {
     await open(page, width, 'windows', 'year');
@@ -756,54 +756,55 @@ for (const width of [1512, 390]) {
   });
 }
 
-test('a Year chosen during loading publishes all loaded months with one ready event', async ({
-  page,
-}) => {
-  await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      'npa:personal',
-      JSON.stringify({
-        version: 1,
-        revision: 0,
-        starterVersion: 1,
-        sites: [],
-        active: {
-          site: {
-            name: 'Seattle',
-            lat: 47.74028262343255,
-            lon: -122.31984159452988,
-            tz: 'America/Los_Angeles',
-            elevation: 122,
+coldTest(
+  'a Year chosen during loading publishes all loaded months with one ready event',
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'npa:personal',
+        JSON.stringify({
+          version: 1,
+          revision: 0,
+          starterVersion: 1,
+          sites: [],
+          active: {
+            site: {
+              name: 'Seattle',
+              lat: 47.74028262343255,
+              lon: -122.31984159452988,
+              tz: 'America/Los_Angeles',
+              elevation: 122,
+            },
           },
+          preferences: { view: 'calendar' },
+        }),
+      );
+      document.addEventListener(
+        'click',
+        (event) => {
+          if ((event.target as Element).closest('button[data-option="calZoom"][data-val="year"]'))
+            document.documentElement.dataset.wantsCalendarYear = '1';
         },
-        preferences: { view: 'calendar' },
-      }),
-    );
-    document.addEventListener(
-      'click',
-      (event) => {
-        if ((event.target as Element).closest('button[data-option="calZoom"][data-val="year"]'))
-          document.documentElement.dataset.wantsCalendarYear = '1';
-      },
-      true,
-    );
-    window.addEventListener('npa-ready', () => {
-      if (document.documentElement.dataset.wantsCalendarYear === '1') {
-        const root = document.documentElement;
-        root.dataset.calendarReadyMonths =
-          (root.dataset.calendarReadyMonths ? root.dataset.calendarReadyMonths + ',' : '') +
-          document.querySelectorAll('button[data-calendar-month]').length;
-      }
+        true,
+      );
+      window.addEventListener('npa-ready', () => {
+        if (document.documentElement.dataset.wantsCalendarYear === '1') {
+          const root = document.documentElement;
+          root.dataset.calendarReadyMonths =
+            (root.dataset.calendarReadyMonths ? root.dataset.calendarReadyMonths + ',' : '') +
+            document.querySelectorAll('button[data-calendar-month]').length;
+        }
+      });
     });
-  });
-  await page.goto('./', { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => !!window.__npa);
-  await page.getByRole('button', { name: 'Year', exact: true }).click();
-  await expect(page.locator('#loading')).toBeHidden();
-  await expect(page.locator('button[data-calendar-month]')).toHaveCount(14);
-  await expect(page.locator('html')).toHaveAttribute('data-calendar-ready-months', '14');
-});
+    await page.goto('./', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => !!window.__npa);
+    await page.getByRole('button', { name: 'Year', exact: true }).click();
+    await expect(page.locator('#loading')).toBeHidden();
+    await expect(page.locator('button[data-calendar-month]')).toHaveCount(14);
+    await expect(page.locator('html')).toHaveAttribute('data-calendar-ready-months', '14');
+  },
+);
 
 test('a long observing-site name keeps the complete phone month inside the viewport', async ({
   page,
@@ -889,7 +890,7 @@ async function captureCalendarInk(page: Page) {
 }
 
 for (const width of [1512, 390]) {
-  test(`closed Calendar selection remains outlined across period changes at ${width}px`, async ({
+  test(`closed Calendar selection remains outlined across period changes at ${width}px @dark`, async ({
     page,
   }) => {
     await captureCalendarInk(page);

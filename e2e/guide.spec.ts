@@ -1,5 +1,5 @@
 import { chooseTheme, openGuide } from './header-controls';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './ui-test';
 
 for (const width of [1512, 390]) {
   test(`Docs navigation, examples and offline reference work at ${width}px`, async ({

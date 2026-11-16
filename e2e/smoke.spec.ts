@@ -47,7 +47,7 @@ async function canvasColors(page: Page): Promise<number> {
 const insDate = (page: Page) => page.locator('#riverSelection');
 
 for (const view of VIEWS) {
-  test(`${view.tab} view renders @retina`, async ({ page }, info) => {
+  test(`${view.tab} view renders @smoke @retina @dark`, async ({ page }, info) => {
     const errors = await open(page);
     if (view.id === 'notes') await openGuide(page);
     else await page.getByRole('button', { name: view.tab, exact: true }).click();
@@ -68,7 +68,7 @@ for (const view of VIEWS) {
   });
 }
 
-test('keys and Tonight move the selection', async ({ page }) => {
+test('keys and Tonight move the selection @smoke', async ({ page }) => {
   const errors = await open(page);
   await page.locator('#cv').focus();
   await page.keyboard.press('ArrowRight');
@@ -80,7 +80,7 @@ test('keys and Tonight move the selection', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('clicking a night on the canvas selects it', async ({ page }) => {
+test('clicking a night on the canvas selects it @smoke', async ({ page }) => {
   const errors = await open(page);
   // River, Month zoom: 30 px axis band, then 20 px rows; tonight opens as the fourth row, so the
   // eighth row down is four nights later.
@@ -90,7 +90,7 @@ test('clicking a night on the canvas selects it', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('a new site recomputes every night', async ({ page }) => {
+test('a new site recomputes every night @smoke', async ({ page }) => {
   const errors = await open(page);
   await openCurrentSiteEditor(page);
   await page.locator('#siteName').fill('Edinburgh');
@@ -117,7 +117,7 @@ test('an unknown time zone is refused with a message', async ({ page }) => {
   await expect(page.locator('#siteSel option:checked')).toContainText('Seattle');
 });
 
-test('the page follows the system color scheme', async ({ page }, info) => {
+test('the page follows the system color scheme @dark', async ({ page }, info) => {
   await open(page);
   const bg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   const dark = info.project.use.colorScheme === 'dark';

@@ -1,7 +1,9 @@
 import { chooseFocus, chooseMoon } from './header-controls';
 import { expect, test } from '@playwright/test';
 
-test('a delayed stylesheet supplies valid colors before the first chart draw', async ({ page }) => {
+test('a delayed stylesheet supplies valid colors before the first chart draw @dark', async ({
+  page,
+}) => {
   await page.clock.setFixedTime(new Date('2026-10-28T22:00:00Z'));
   await page.addInitScript(() => {
     const add = CanvasGradient.prototype.addColorStop;

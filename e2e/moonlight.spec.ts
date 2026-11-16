@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './ui-test';
 import { createHash } from 'node:crypto';
 import { chooseTheme, chooseFocus, chooseMoon } from './header-controls';
 

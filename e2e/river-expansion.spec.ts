@@ -1,5 +1,5 @@
 import { chooseFocus, chooseMoon } from './header-controls';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './ui-test';
 import { phaseName } from '../src/model/describe';
 import { fmtClock, fmtDur } from '../src/model/format';
 
@@ -47,7 +47,7 @@ async function selectedRow(page: Page) {
 }
 
 for (const width of [1512, 390]) {
-  test(`Month expands key facts, toggles, and preserves compact Year at ${width}px @retina`, async ({
+  test(`Month expands key facts, toggles, and preserves compact Year at ${width}px @retina @dark`, async ({
     page,
   }, info) => {
     const errors: string[] = [];

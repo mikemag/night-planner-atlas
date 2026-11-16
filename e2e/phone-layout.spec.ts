@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './ui-test';
 import { chooseTheme, closePlanning, openPlanning } from './header-controls';
 import { seedPersonal } from './storage';
 import { DEFAULT_SITES } from '../src/app/default-sites';

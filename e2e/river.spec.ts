@@ -1,6 +1,6 @@
 import { chooseFocus } from './header-controls';
 import { seedPersonal } from './storage';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './ui-test';
 import { fmtClock, fmtClockS, fmtDur } from '../src/model/format';
 
 interface PaintedText {
@@ -555,7 +555,7 @@ test.describe('new-moon event markers', () => {
   test.use({ timezoneId: 'Asia/Tokyo' });
 
   for (const width of [1512, 390]) {
-    test(`event labels, glyphs and Year ticks stay distinct at ${width}px`, async ({
+    test(`event labels, glyphs and Year ticks stay distinct at ${width}px @dark`, async ({
       page,
     }, info) => {
       await page.setViewportSize({ width, height: width === 390 ? 844 : 920 });

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './ui-test';
 import { chooseTheme, chooseMoon } from './header-controls';
 
 async function open(page: Page, width: number): Promise<void> {

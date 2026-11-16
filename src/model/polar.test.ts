@@ -120,29 +120,6 @@ describe('polar observing nights', () => {
       else expect(Math.abs(n.ev[event]! - ref)).toBeLessThan(30_000);
     }
   });
-
-  it('classifies solar stages through polar seasons, including one-sided event days', () => {
-    for (const lat of [KHO.lat, 85, -85, 90, -90]) {
-      for (let day = 1; day <= 365; day++) {
-        const date = new Date(Date.UTC(2026, 0, day));
-        const n = night(
-          { ...KHO, lat, lon: 0, tz: 'Etc/UTC' },
-          date.getUTCMonth() + 1,
-          date.getUTCDate(),
-        );
-        for (let t = n.noon; t < n.nextNoon; t += 30 * MS_M) {
-          const altitude = sunAltitude(t, lat, 0);
-          BANDS.forEach((band, i) => {
-            if (Math.abs(altitude - TARGETS[i]) < 0.02) return;
-            const inside = n.sunBelow[band].some(([a, b]) => t >= a && t < b);
-            expect(inside, `${lat}° ${n.id} ${band} ${new Date(t).toISOString()}`).toBe(
-              altitude < TARGETS[i],
-            );
-          });
-        }
-      }
-    }
-  }, 30_000);
 });
 
 // USNO UTC annual tables, retrieved 2026-10-31, sea level, minute-rounded.

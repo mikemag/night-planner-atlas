@@ -19,7 +19,7 @@ const SITES: Site[] = [
 ];
 
 /**
- * Separate numerical audit, not an independent ephemeris: one-minute sampling finds
+ * Exhaustive numerical audit, not an independent ephemeris: one-minute sampling finds
  * crossings (including pairs a ten-minute scan could miss), then bisection refines them.
  * This isolates interpolation error from the horizon definitions in reference.test.ts.
  */

@@ -32,19 +32,49 @@ source and build instructions.
 
 ## Checking changes
 
+- See [Testing Atlas](docs/testing.md) for setup, suite details, screenshots and debugging.
 - Use Node 24.11 from `.node-version`. `npm run dev` serves the site at <http://localhost:5173/>.
-- `npm run check` runs lint, the format check, the type check, the unit tests and the build. Run
-  it before every commit. Tests run locally; there is no GitHub CI workflow.
+- `npm run check` runs lint, the format check, the regular unit tests and the production build
+  (which includes the type check). Run it before every commit. Tests run locally; there is no
+  GitHub CI workflow. `npm run check:full` adds the exhaustive model audits and all browser tests;
+  deployment runs this full gate.
+- Scope browser verification to the change. For a local UI change, run the affected spec files,
+  for example `npm run test:e2e:ui -- e2e/calendar.spec.ts`. Selected tests run in Chromium and
+  WebKit, with an extra dark Chromium pass only for cases tagged `@dark`. Shared styling, themes
+  or rendering changes need the complete `npm run test:e2e:ui` suite. State, saved-data, sharing,
+  offline, loading, cache and worker changes need `npm run test:e2e:integration` plus the affected
+  UI files. `npm run test:e2e:smoke` is a small
+  cold-start check of views, selection and site switching, not a replacement for relevant specs.
+- `npm test` keeps the golden records, independent references and focused edge cases in the normal
+  development loop. `npm run test:audit` retains the full-year lunar sampling and polar solar
+  sweeps. Run the audits and all browser tests when changing the night model, time calculations
+  or astronomy dependency, and before releases. `npm run test:all` runs both unit suites.
 - The unit tests pin the night model two ways. Golden files in `src/model/testdata/`, first
   captured from the original prototype, must match exactly. Sun events must also agree with an
   independent solar model to within 30 s. After an intentional change to the model, regenerate the
   golden files with `npx vitest run -u` and explain the diff in the commit.
-- `npm run test:e2e` runs the Playwright smoke tests against the production build in Chromium
-  (light and dark) and WebKit. `npm run screenshots` also saves every view to
-  `test-results/screenshots/`, which is the quickest way to look at a change at full resolution.
+- `npm run test:e2e` runs the full browser regression suite against a fresh production build.
+  Visual tests reuse real calculation data prepared from that build once per run; each test still
+  has isolated storage and state. Loading, exact cold-start counts, cache, offline and privacy
+  integration tests must use the ordinary Playwright `test` (or `coldTest`), not the prepared
+  `ui-test` fixture. Keep the warm/cold equality check in `e2e/ui-fixture.spec.ts`. Both browser
+  engines retain every scenario. Add `@dark` only when the initial dark system preference adds
+  a meaningful assertion or a curated visual capture. Cases that cycle through all themes
+  already cover those palettes in both engines; do not repeat them in the dark project. Keep
+  both system-preference branches explicit inside theme-switching tests.
+- `npm run screenshots` captures the curated view/expansion/theme cases headlessly, not the whole
+  regression suite. For a particular file's captures, use e.g.
+  `SCREENSHOTS=1 npx playwright test e2e/calendar.spec.ts`. Images go to
+  `test-results/screenshots/`. Inspect the relevant images; generating them is not a visual review.
+  `npm run screenshots:retina` is an optional visible 2× WebKit run and needs an active desktop;
+  do not use it for unattended or locked-laptop checks.
 - Look at what you changed in both light and dark themes. Check desktop size (about 1500×900) and
   phone width (about 390 px, with no horizontal page scroll). Type checks and unit tests are not
   UI checks.
+- Both runners default to two workers to bound laptop load. Tests save a screenshot on failure;
+  use `--trace=retain-on-failure` on a focused browser rerun when a trace is needed. Do not enable
+  tracing or run the whole screenshot/browser matrix for every small UI edit. After the relevant
+  checks pass, repeat or broaden them only for a new change, failure or unresolved concern.
 - The app exposes `window.__npa` (state and actions) and dispatches `npa-ready` on `window` once
   nights are computed; tests use them, plus Playwright's clock to fix "now". Settings persist in
   localStorage under `npa:` keys.

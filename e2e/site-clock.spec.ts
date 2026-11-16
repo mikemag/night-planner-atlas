@@ -1,5 +1,5 @@
 import { chooseMoon, chooseTheme, shiftPlanningRange } from './header-controls';
-import { expect, test } from '@playwright/test';
+import { expect, test, coldTest } from './ui-test';
 import { DEFAULT_SITES } from '../src/app/default-sites';
 import { seedPersonal } from './storage';
 
@@ -96,112 +96,115 @@ test('countdown catches up on return, changes with the site and survives midnigh
 });
 
 for (const width of [1512, 390, 320, 568, 844]) {
-  test(`usable status shares chart calculations and keeps its height through every transition at ${width}px`, async ({
-    page,
-  }, info) => {
-    await page.setViewportSize({
-      width,
-      height: width === 1512 ? 920 : width === 568 ? 320 : width === 844 ? 390 : 844,
-    });
-    await page.clock.install({ time: new Date('2026-10-28T22:00:00Z') });
-    await page.goto('./', { waitUntil: 'domcontentloaded' });
-    await page.waitForFunction(() => !!window.__npa);
-    const height = await page
-      .locator('.topbar')
-      .evaluate((el) => el.getBoundingClientRect().height);
-    await expect(page.locator('#loading')).toBeHidden();
-    const cases = await page.evaluate(() => {
-      const app = window.__npa!;
-      const nights = app.nights.filter((n) => n.noon > Date.now() && n.mf.length === 1);
-      return {
-        together: nights.find(
-          (n) => n.mf[0][0] === n.ev.astroDusk && n.mf[0][1] === n.ev.astroDawn,
-        )!,
-        delayed: nights.find((n) => n.mf[0][0] > n.ev.astroDusk! + 20 * 60_000)!,
-        earlyEnd: nights.find((n) => n.mf[0][1] < n.ev.astroDawn! - 20 * 60_000)!,
-        calculated: app.calculatedNights,
-        total: app.nights.length,
-      };
-    });
-    expect(cases.calculated).toBe(cases.total);
-    for (const [name, time] of [
-      ['together', cases.together.ev.astroDusk! - 14 * 60_000],
-      ['active', cases.together.ev.astroDawn! - 2 * 60 * 60_000],
-      ['delayed', cases.delayed.ev.astroDusk! - 14 * 60_000],
-      ['early-end', cases.earlyEnd.mf[0][1] - 14 * 60_000],
-    ] as const) {
-      await page.clock.setSystemTime(new Date(time));
-      await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-      if (width === 1512) {
-        await expect(page.locator('#siteClockDesktopTime')).toBeVisible();
-        const clock = (await page.locator('#siteClockDesktopTime').boundingBox())!;
-        const site = (await page.locator('#siteSel').boundingBox())!;
-        expect(clock.x).toBe(site.x);
-        expect(clock.y).toBeGreaterThan(site.y + site.height);
-        await expect(page.locator('#siteClockPrimary')).not.toContainText('Now at site');
-        const usable = page.locator('#siteClockDesktopUsable');
-        if (name === 'together' || name === 'delayed') await expect(usable).toBeHidden();
-        else {
-          await expect(usable).toBeVisible();
-          const statusBounds = (await usable.boundingBox())!;
-          const countdown = (await page.locator('#siteClockPrimary').boundingBox())!;
-          expect(statusBounds.x - clock.x - clock.width).toBeLessThanOrEqual(16);
-          expect(countdown.x - statusBounds.x - statusBounds.width).toBeLessThanOrEqual(16);
-          await expect(usable).toHaveText('Usable dark now');
+  coldTest(
+    `usable status shares chart calculations and keeps its height through every transition at ${width}px`,
+    async ({ page }, info) => {
+      await page.setViewportSize({
+        width,
+        height: width === 1512 ? 920 : width === 568 ? 320 : width === 844 ? 390 : 844,
+      });
+      await page.clock.install({ time: new Date('2026-10-28T22:00:00Z') });
+      await page.goto('./', { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => !!window.__npa);
+      const height = await page
+        .locator('.topbar')
+        .evaluate((el) => el.getBoundingClientRect().height);
+      await expect(page.locator('#loading')).toBeHidden();
+      const cases = await page.evaluate(() => {
+        const app = window.__npa!;
+        const nights = app.nights.filter((n) => n.noon > Date.now() && n.mf.length === 1);
+        return {
+          together: nights.find(
+            (n) => n.mf[0][0] === n.ev.astroDusk && n.mf[0][1] === n.ev.astroDawn,
+          )!,
+          delayed: nights.find((n) => n.mf[0][0] > n.ev.astroDusk! + 20 * 60_000)!,
+          earlyEnd: nights.find((n) => n.mf[0][1] < n.ev.astroDawn! - 20 * 60_000)!,
+          calculated: app.calculatedNights,
+          total: app.nights.length,
+        };
+      });
+      expect(cases.calculated).toBe(cases.total);
+      for (const [name, time] of [
+        ['together', cases.together.ev.astroDusk! - 14 * 60_000],
+        ['active', cases.together.ev.astroDawn! - 2 * 60 * 60_000],
+        ['delayed', cases.delayed.ev.astroDusk! - 14 * 60_000],
+        ['early-end', cases.earlyEnd.mf[0][1] - 14 * 60_000],
+      ] as const) {
+        await page.clock.setSystemTime(new Date(time));
+        await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+        if (width === 1512) {
+          await expect(page.locator('#siteClockDesktopTime')).toBeVisible();
+          const clock = (await page.locator('#siteClockDesktopTime').boundingBox())!;
+          const site = (await page.locator('#siteSel').boundingBox())!;
+          expect(clock.x).toBe(site.x);
+          expect(clock.y).toBeGreaterThan(site.y + site.height);
+          await expect(page.locator('#siteClockPrimary')).not.toContainText('Now at site');
+          const usable = page.locator('#siteClockDesktopUsable');
+          if (name === 'together' || name === 'delayed') await expect(usable).toBeHidden();
+          else {
+            await expect(usable).toBeVisible();
+            const statusBounds = (await usable.boundingBox())!;
+            const countdown = (await page.locator('#siteClockPrimary').boundingBox())!;
+            expect(statusBounds.x - clock.x - clock.width).toBeLessThanOrEqual(16);
+            expect(countdown.x - statusBounds.x - statusBounds.width).toBeLessThanOrEqual(16);
+            await expect(usable).toHaveText('Usable dark now');
+          }
         }
+        if (name === 'together') {
+          await expect(page.locator('#siteClockCountdown')).toHaveText(
+            '14m until astronomical darkness',
+          );
+          await expect(page.locator('#siteClockUsable')).toHaveText('+ usable dark');
+          await expect(page.locator('#siteClock')).toHaveAttribute('data-combined', 'start');
+        } else if (name === 'active') {
+          await expect(page.locator('#siteClockCountdown')).toHaveText('Usable dark now');
+          await expect(page.locator('#siteClockUsable')).toHaveText(
+            '2h until astronomical twilight',
+          );
+          await expect(page.locator('#siteClockCountdown')).toHaveClass(/usable-now/);
+          await expect(page.locator('#siteClockEvent')).toHaveText('until astronomical twilight');
+          await expect(page.locator('#siteClockSecondary')).toBeEmpty();
+        } else if (name === 'delayed') {
+          await expect(page.locator('#siteClockUsable')).toHaveText(/^usable dark in /);
+          await expect(page.locator('#siteClock')).toHaveAttribute('data-combined', '');
+        } else {
+          await expect(page.locator('#siteClockUsable')).toHaveText('Usable dark now, ends in 14m');
+          await expect(page.locator('#siteClockUsable')).toHaveClass(/usable-now/);
+          await expect(page.locator('#siteClockDuration')).toHaveText('14m');
+          await expect(page.locator('#siteClockEvent')).toHaveText('until usable dark ends');
+          await expect(page.locator('#siteClockSecondary')).toHaveText(
+            /until astronomical twilight$/,
+          );
+        }
+        expect(
+          await page.locator('.topbar').evaluate((el) => el.getBoundingClientRect().height),
+        ).toBe(height);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+        await expect(page.locator('#siteClockEvent')).toHaveText(/^until /);
+        const fits = await page.locator('#siteClock').evaluate((el) => {
+          const primary = el.querySelector('#siteClockPrimary')!.getBoundingClientRect();
+          const toggle = el.querySelector('#siteClockToggle')!.getBoundingClientRect();
+          return primary.right <= (toggle.width ? toggle.right : el.getBoundingClientRect().right);
+        });
+        expect(fits).toBe(true);
+        if (process.env.SCREENSHOTS)
+          await page.screenshot({
+            path: `test-results/screenshots/${info.project.name}-usable-status-${name}-${width}.png`,
+          });
       }
-      if (name === 'together') {
-        await expect(page.locator('#siteClockCountdown')).toHaveText(
-          '14m until astronomical darkness',
-        );
-        await expect(page.locator('#siteClockUsable')).toHaveText('+ usable dark');
-        await expect(page.locator('#siteClock')).toHaveAttribute('data-combined', 'start');
-      } else if (name === 'active') {
-        await expect(page.locator('#siteClockCountdown')).toHaveText('Usable dark now');
-        await expect(page.locator('#siteClockUsable')).toHaveText('2h until astronomical twilight');
-        await expect(page.locator('#siteClockCountdown')).toHaveClass(/usable-now/);
-        await expect(page.locator('#siteClockEvent')).toHaveText('until astronomical twilight');
-        await expect(page.locator('#siteClockSecondary')).toBeEmpty();
-      } else if (name === 'delayed') {
-        await expect(page.locator('#siteClockUsable')).toHaveText(/^usable dark in /);
-        await expect(page.locator('#siteClock')).toHaveAttribute('data-combined', '');
-      } else {
-        await expect(page.locator('#siteClockUsable')).toHaveText('Usable dark now, ends in 14m');
-        await expect(page.locator('#siteClockUsable')).toHaveClass(/usable-now/);
-        await expect(page.locator('#siteClockDuration')).toHaveText('14m');
-        await expect(page.locator('#siteClockEvent')).toHaveText('until usable dark ends');
-        await expect(page.locator('#siteClockSecondary')).toHaveText(
-          /until astronomical twilight$/,
-        );
-      }
+      await page.clock.fastForward(14 * 60_000);
+      await expect(page.locator('#siteClockUsable')).not.toHaveClass(/usable-now/);
+      await expect(page.locator('#siteClockUsable')).toBeEmpty();
       expect(
         await page.locator('.topbar').evaluate((el) => el.getBoundingClientRect().height),
       ).toBe(height);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
-      await expect(page.locator('#siteClockEvent')).toHaveText(/^until /);
-      const fits = await page.locator('#siteClock').evaluate((el) => {
-        const primary = el.querySelector('#siteClockPrimary')!.getBoundingClientRect();
-        const toggle = el.querySelector('#siteClockToggle')!.getBoundingClientRect();
-        return primary.right <= (toggle.width ? toggle.right : el.getBoundingClientRect().right);
-      });
-      expect(fits).toBe(true);
+      expect(await page.evaluate(() => window.__npa!.calculatedNights)).toBe(cases.calculated);
       if (process.env.SCREENSHOTS)
         await page.screenshot({
-          path: `test-results/screenshots/${info.project.name}-usable-status-${name}-${width}.png`,
+          path: `test-results/screenshots/${info.project.name}-usable-status-ended-${width}.png`,
         });
-    }
-    await page.clock.fastForward(14 * 60_000);
-    await expect(page.locator('#siteClockUsable')).not.toHaveClass(/usable-now/);
-    await expect(page.locator('#siteClockUsable')).toBeEmpty();
-    expect(await page.locator('.topbar').evaluate((el) => el.getBoundingClientRect().height)).toBe(
-      height,
-    );
-    expect(await page.evaluate(() => window.__npa!.calculatedNights)).toBe(cases.calculated);
-    if (process.env.SCREENSHOTS)
-      await page.screenshot({
-        path: `test-results/screenshots/${info.project.name}-usable-status-ended-${width}.png`,
-      });
-  });
+    },
+  );
 }
 
 test('usable countdown stays within tonight and resumes for the next night at noon', async ({
@@ -269,40 +272,41 @@ for (const [time, monthDays, expected] of [
   ['2026-10-29T22:00:00Z', 31, /^usable dark in /],
   ['2026-12-01T08:00:00Z', 30, ''],
 ] as const) {
-  test(`a historical plan loads only the needed live month and reuses it later at ${time}`, async ({
-    page,
-  }) => {
-    await page.clock.setFixedTime(new Date(time));
-    const { name, lat, lon, tz, elevation } = DEFAULT_SITES[0];
-    const site = { name, lat, lon, tz, elevation };
-    const plan = {
-      v: 1,
-      view: 'river',
-      riverZoom: 'month',
-      calZoom: 'month',
-      calOrient: 'v',
-      focus: 0,
-      moonAlt: 0,
-      crescent: 0,
-      start: '2020-01',
-      night: null,
-      expanded: false,
-      site,
-    };
-    await page.goto('./#npa=' + encodeURIComponent(JSON.stringify(plan)));
-    await expect(page.locator('#loading')).toBeHidden();
-    await expect(page.locator('#siteClockUsable')).toHaveText(expected);
-    const computed = await page.evaluate(() => window.__npa!.calculatedNights);
-    const historical = await page.evaluate(() => window.__npa!.nights.length);
-    expect(computed).toBe(historical + monthDays);
-    await page.getByRole('button', { name: 'Tonight', exact: true }).click();
-    await expect(page.locator('#loading')).toBeHidden();
-    const current = await page.evaluate(() => ({
-      count: window.__npa!.nights.length,
-      total: window.__npa!.calculatedNights,
-    }));
-    expect(current.total - computed).toBe(current.count - monthDays);
-  });
+  coldTest(
+    `a historical plan loads only the needed live month and reuses it later at ${time}`,
+    async ({ page }) => {
+      await page.clock.setFixedTime(new Date(time));
+      const { name, lat, lon, tz, elevation } = DEFAULT_SITES[0];
+      const site = { name, lat, lon, tz, elevation };
+      const plan = {
+        v: 1,
+        view: 'river',
+        riverZoom: 'month',
+        calZoom: 'month',
+        calOrient: 'v',
+        focus: 0,
+        moonAlt: 0,
+        crescent: 0,
+        start: '2020-01',
+        night: null,
+        expanded: false,
+        site,
+      };
+      await page.goto('./#npa=' + encodeURIComponent(JSON.stringify(plan)));
+      await expect(page.locator('#loading')).toBeHidden();
+      await expect(page.locator('#siteClockUsable')).toHaveText(expected);
+      const computed = await page.evaluate(() => window.__npa!.calculatedNights);
+      const historical = await page.evaluate(() => window.__npa!.nights.length);
+      expect(computed).toBe(historical + monthDays);
+      await page.getByRole('button', { name: 'Tonight', exact: true }).click();
+      await expect(page.locator('#loading')).toBeHidden();
+      const current = await page.evaluate(() => ({
+        count: window.__npa!.nights.length,
+        total: window.__npa!.calculatedNights,
+      }));
+      expect(current.total - computed).toBe(current.count - monthDays);
+    },
+  );
 }
 
 test('seconds tick quietly without repainting the chart and live details support keyboard dismissal', async ({

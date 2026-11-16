@@ -1,6 +1,6 @@
 import { openShare, chooseFocus, chooseMoon } from './header-controls';
 import { seedPersonal, readPreference } from './storage';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './ui-test';
 import { fmtClock, fmtDur, nightTitle } from '../src/model/format';
 
 async function painted(page: Page) {
@@ -120,7 +120,7 @@ test('Full cycle covers every night once, restores formerly missing dates, and i
 });
 
 for (const width of [1512, 390]) {
-  test(`Lunations shows readable cycles and an ordered inline night at ${width}px @retina`, async ({
+  test(`Lunations shows readable cycles and an ordered inline night at ${width}px @retina @dark`, async ({
     page,
   }, info) => {
     const errors: string[] = [];

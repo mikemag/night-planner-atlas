@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './ui-test';
 import { chooseTheme, chooseMoon, shiftPlanningRange } from './header-controls';
 import { readPreference } from './storage';
 

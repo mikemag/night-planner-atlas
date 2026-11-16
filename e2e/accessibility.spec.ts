@@ -1,6 +1,6 @@
 import { openCurrentSiteEditor } from './site-controls';
 import { chooseTheme, openGuide, openShare } from './header-controls';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './ui-test';
 
 function contrast(foreground: string, background: string): number {
   const luminance = (css: string) => {
@@ -74,7 +74,7 @@ for (const width of [1512, 390]) {
   });
 }
 
-test('the sharing checkbox visibly distinguishes checked and unchecked in forced colors', async ({
+test('the sharing checkbox visibly distinguishes checked and unchecked in forced colors @dark', async ({
   page,
   browserName,
 }, info) => {
@@ -183,7 +183,7 @@ for (const width of [320, 390]) {
   });
 }
 
-test('forced colors and reduced motion retain visible chart focus and readable expanded facts', async ({
+test('forced colors and reduced motion retain visible chart focus and readable expanded facts @dark', async ({
   page,
   browserName,
 }) => {
