@@ -2,7 +2,7 @@ import { atlas } from '../app/state';
 import type { Axis } from '../model/range';
 import { fmtClockS } from '../model/format';
 import { STEP, sunBandAt, wallH, type Night } from '../model/night';
-import { C } from './colors';
+import { C, inkOn } from './colors';
 import { moonlightBands, moonlightStops } from './moonlight';
 import { ctx, snap, text, tw } from './surface';
 
@@ -127,6 +127,21 @@ export function drawNight(
   }
   ctx.globalAlpha = 1;
   if (opt.labels && n.mfH.length) {
+    // Accepted moonlight can be too bright for white text. Keep time labels on dark sky.
+    const label = (
+      value: string,
+      x: number,
+      y: number,
+      px: number,
+      align: CanvasTextAlign,
+      weight: number,
+    ) => {
+      const width = tw(value, px, weight);
+      const left = align === 'right' ? x - width : align === 'center' ? x - width / 2 : x;
+      ctx.fillStyle = C.dark;
+      ctx.fillRect(left - 2, y - px / 2 - 2, width + 4, px + 4);
+      text(value, x, y, px, inkOn(C.dark), align, weight);
+    };
     const weight = opt.labelWeight ?? 600;
     const px = opt.labelSize ?? 10.5;
     for (const [a, b] of n.mfH) {
@@ -135,12 +150,12 @@ export function drawNight(
       if (o === 'h') {
         if (p1 - p0 < tw(fmtClockS(a), px, weight) + tw(fmtClockS(b), px, weight) + 18) continue;
         const cy = opt.labelY != null ? opt.labelY : y + h / 2 - 1;
-        text(fmtClockS(a), x + p0 + 5, cy, px, '#ffffff', 'left', weight);
-        text(fmtClockS(b), x + p1 - 5, cy, px, '#ffffff', 'right', weight);
+        label(fmtClockS(a), x + p0 + 5, cy, px, 'left', weight);
+        label(fmtClockS(b), x + p1 - 5, cy, px, 'right', weight);
       } else {
         if (p1 - p0 < 34 || w < 36) continue;
-        text(fmtClockS(a), x + w / 2 + 1, y + p0 + 8, 10, '#ffffff', 'center', 600);
-        text(fmtClockS(b), x + w / 2 + 1, y + p1 - 8, 10, '#ffffff', 'center', 600);
+        label(fmtClockS(a), x + w / 2 + 1, y + p0 + 8, 10, 'center', 600);
+        label(fmtClockS(b), x + w / 2 + 1, y + p1 - 8, 10, 'center', 600);
       }
     }
   }

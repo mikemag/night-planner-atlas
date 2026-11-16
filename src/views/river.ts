@@ -362,7 +362,7 @@ class RiverView implements CanvasView {
       ctx.fillStyle = C.select;
       roundRect(cx - wv / 2, top - 22, wv, 18, 4);
       ctx.fill();
-      text(s, cx, top - 12.5, 11, '#fff', 'center', 650);
+      text(s, cx, top - 12.5, 11, inkOn(C.select), 'center', 650);
     }
     if (this.MINI) this.drawMini(st);
   }

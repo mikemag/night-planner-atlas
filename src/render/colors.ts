@@ -106,7 +106,8 @@ export function inkOn(hex: string): string {
   const luminance = (r: number, g: number, b: number) =>
     0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
   const light = luminance(r, g, b);
-  return (light + 0.05) / (luminance(17, 23, 38) + 0.05) > 1.05 / (light + 0.05)
-    ? '#111726'
-    : '#ffffff';
+  const darkContrast = (light + 0.05) / (luminance(17, 23, 38) + 0.05);
+  const whiteContrast = 1.05 / (light + 0.05);
+  if (Math.max(darkContrast, whiteContrast) < 4.5) return '#000000';
+  return darkContrast > whiteContrast ? '#111726' : '#ffffff';
 }

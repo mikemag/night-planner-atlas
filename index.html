@@ -34,6 +34,7 @@
   </head>
   <body>
     <div class="app" id="app">
+      <button class="focus-shortcut btn btn-outline-secondary" id="skipChart">Skip to chart</button>
       <header class="topbar">
         <div class="header-flow">
           <div class="brand">
@@ -243,6 +244,9 @@
               <button class="dropdown-item" id="calendarExportBtn" role="menuitem" disabled>
                 Export to calendar…
               </button>
+              <button class="dropdown-item" id="readNightMenu" role="menuitem" disabled>
+                Read night…
+              </button>
               <div class="dropdown-divider" role="separator"></div>
               <button class="dropdown-item" id="browserDataOpen" role="menuitem">
                 Browser data…
@@ -415,6 +419,9 @@
             </div>
           </div>
           <div class="scroller" id="scroller">
+            <button class="focus-shortcut btn btn-outline-secondary" id="readNight" disabled>
+              Read selected night
+            </button>
             <canvas
               id="cv"
               tabindex="0"
@@ -459,7 +466,13 @@
               aria-label="Expanded Lunations night"
               hidden
             ></section>
-            <div class="sr-only" id="riverSelection" role="status" aria-live="polite"></div>
+            <div
+              class="sr-only"
+              id="riverSelection"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            ></div>
             <section
               class="river-detail"
               id="riverDetail"
@@ -476,7 +489,7 @@
           ></div>
           <section class="trip-view" id="darkWeekends" aria-labelledby="tripsTitle" hidden>
             <header class="trip-header">
-              <h2 id="tripsTitle">Dark weekends</h2>
+              <h2 id="tripsTitle" tabindex="-1">Dark weekends</h2>
               <p id="tripsContext"></p>
             </header>
             <div class="trip-scroll" id="tripScroll">
@@ -497,6 +510,41 @@
         </section>
       </div>
       <div class="docs-shell" id="notesView" role="region" aria-label="Documentation" hidden></div>
+    </div>
+
+    <div
+      class="modal"
+      id="nightReader"
+      tabindex="-1"
+      aria-labelledby="nightReaderTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="nightReaderTitle" tabindex="-1">Read night</h2>
+            <button class="btn btn-outline-secondary ms-auto" id="nightReaderDone">Done</button>
+          </div>
+          <div class="modal-body night-reader">
+            <p id="nightReaderSite"></p>
+            <form id="nightReaderForm">
+              <label for="nightReaderDate">Evening date</label>
+              <div class="night-reader-date">
+                <input class="form-control" id="nightReaderDate" type="date" required />
+                <button class="btn btn-outline-secondary" type="submit">Go to night</button>
+              </div>
+            </form>
+            <div class="night-reader-navigation" role="group" aria-label="Choose a night">
+              <button class="btn btn-outline-secondary" id="nightReaderPrevious">
+                Previous night
+              </button>
+              <button class="btn btn-outline-secondary" id="nightReaderNext">Next night</button>
+            </div>
+            <p id="nightReaderStatus" role="status" aria-atomic="true"></p>
+            <div id="nightReaderFacts"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div

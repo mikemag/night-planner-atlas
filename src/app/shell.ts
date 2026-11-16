@@ -117,7 +117,7 @@ export function draw(): void {
       }
       const expandable =
         v === lunations || (v === calendar ? S.calZoom !== 'year' : S.riverZoom === 'month');
-      cv.setAttribute('role', expandable ? 'button' : 'img');
+      cv.setAttribute('role', expandable || v === calendar ? 'button' : 'img');
       if (expandable)
         cv.setAttribute(
           'aria-expanded',
@@ -442,12 +442,14 @@ export function setView(view: ViewId): void {
   const v = canvasView(view);
   el('riverMinimap').hidden = view !== 'river';
   cv.setAttribute('aria-describedby', 'chartHelp riverSelection');
+  el('skipChart').textContent = view === 'weekends' ? 'Skip to dark weekends' : 'Skip to chart';
   el('chartHelp').textContent =
-    view === 'calendar'
+    'Use Read selected night for date controls and all times in text. ' +
+    (view === 'calendar'
       ? 'Each date is the evening of its night. Muted dates belong to neighboring months; unloaded dates cannot be selected. Left and Right select nights; Up and Down move a week. In Month and Week, Enter or Space toggles the night timeline and Escape closes it. In Year, activate a month or press Enter on the selected night to open Month. New-moon labels mark the event’s local calendar date.'
       : view === 'lunations'
         ? 'Time runs from evening at the top to morning at the bottom of each cycle. Left and Right select displayed nights; Up and Down move between lunar cycles at the same offset. Enter or Space toggles the selected night’s horizontal timeline; Escape collapses it. Wider phone windows pan horizontally inside the chart.'
-        : 'Arrow keys select nights and weeks. In River Month, Enter or Space toggles the selected night’s boundary times. Use the selected-night summary for the site-local windows; pointer previews do not change selection.';
+        : 'Arrow keys select nights and weeks. In River Month, Enter or Space toggles the selected night’s boundary times. Use the selected-night summary for the site-local windows; pointer previews do not change selection.');
   cv.setAttribute(
     'aria-label',
     view === 'calendar'
@@ -617,6 +619,7 @@ export function applySite(site: Site): void {
 function syncLoading(): void {
   const progressive = data.progressive && S.view === 'river';
   const loading = el('loading');
+  loading.setAttribute('aria-live', progressive ? 'off' : 'polite');
   loading.classList.toggle('progressive', progressive);
   const parent = el(progressive ? 'periodLoading' : 'stage');
   if (loading.parentElement !== parent) parent.append(loading);

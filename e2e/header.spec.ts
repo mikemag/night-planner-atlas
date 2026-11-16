@@ -154,10 +154,11 @@ test('view shortcuts follow the switcher and Tonight restores the current range 
   await expect(page.locator('#loading')).toBeHidden();
   const range = await page.locator('#rangeLabel').textContent();
   for (const [index, view] of ['river', 'lunations', 'calendar', 'notes', 'weekends'].entries()) {
-    await page.locator('#moreBtn').focus();
+    await page.locator('#cv').focus();
     await page.keyboard.press(String(index + 1));
     if (view === 'notes') {
       await expect(page.locator('#notesView')).toBeVisible();
+      await page.getByRole('link', { name: 'Back to planner' }).click();
       continue;
     }
     expect(await page.evaluate(() => window.__npa!.S.view)).toBe(view);

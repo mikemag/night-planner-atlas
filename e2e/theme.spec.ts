@@ -143,6 +143,8 @@ for (const width of [1512, 390]) {
     await page.keyboard.press('ArrowDown');
     await expect(page.locator('#calendarExportBtn')).toBeFocused();
     await page.keyboard.press('ArrowDown');
+    await expect(page.locator('#readNightMenu')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
     await expect(page.locator('#browserDataOpen')).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(page.getByRole('menuitemradio', { name: 'System', exact: true })).toBeFocused();
@@ -178,7 +180,7 @@ test('Theme remains usable across phone resizing and in a short viewport', async
   }
   await page.setViewportSize({ width: 390, height: 300 });
   await page.locator('#shareBtn').focus();
-  for (let step = 0; step < 6; step++) await page.keyboard.press('ArrowDown');
+  for (let step = 0; step < 7; step++) await page.keyboard.press('ArrowDown');
   await expect(observing).toBeFocused();
   await expect(observing).toBeInViewport({ ratio: 1 });
   await page.keyboard.press('ArrowDown');

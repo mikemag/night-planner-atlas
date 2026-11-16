@@ -146,7 +146,7 @@ test('welcome Undo removes only the addition and reload does not reimport it', a
   await expect(page.locator('#welcomeDialog')).toBeHidden();
   await expect(page.locator('#sharedNotice')).toBeHidden();
   expect((await readPersonal(page)).sites).toEqual([ownSite]);
-  expect(await page.evaluate(() => window.__npa!.S.site.name)).toBe(ownSite.name);
+  await expect.poll(() => page.evaluate(() => window.__npa?.S.site.name)).toBe(ownSite.name);
 });
 
 for (const dismiss of ['Escape', 'Close', 'backdrop']) {

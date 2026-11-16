@@ -70,6 +70,7 @@ for (const view of VIEWS) {
 
 test('keys and Tonight move the selection', async ({ page }) => {
   const errors = await open(page);
+  await page.locator('#cv').focus();
   await page.keyboard.press('ArrowRight');
   await expect(insDate(page)).toContainText('Thu Sep 24 → Fri Sep 25');
   await page.keyboard.press('ArrowDown');

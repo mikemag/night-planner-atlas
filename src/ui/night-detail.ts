@@ -230,6 +230,24 @@ export function annotationChart(n: Night, g: DetailGeometry): SVGSVGElement {
   const note = svgElement('text', { x: g.width / 2, y: 173, class: 'river-detail-note' });
   note.textContent = notes.join(' · ');
   svg.appendChild(note);
+  svg.setAttribute(
+    'aria-label',
+    [
+      `${nightTitle(n)}, ${n.y}. Times in ${S.site.tz}`,
+      svg.getAttribute('aria-label'),
+      n.mf.length
+        ? n.mfH
+            .map(
+              ([a, b], i) =>
+                `Usable ${fmtClock(a)} to ${fmtClock(b)}, ${fmtDur(n.mf[i][1] - n.mf[i][0])}`,
+            )
+            .join('; ')
+        : noUsableDarkReason(n),
+      ...notes,
+    ]
+      .filter(Boolean)
+      .join('. '),
+  );
   return svg;
 }
 

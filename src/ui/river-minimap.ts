@@ -42,6 +42,7 @@ export function initRiverMinimap(): void {
 export function updateRiverMinimap(): void {
   const nav = el('riverMinimap');
   nav.hidden = S.view !== 'river' || S.riverZoom !== 'month' || !river.MINI || !viewReady();
+  el('riverMinimapHelp').hidden = nav.hidden;
   if (nav.hidden) {
     if (document.activeElement === nav) cv.focus({ preventScroll: true });
     return;

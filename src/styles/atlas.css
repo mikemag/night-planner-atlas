@@ -1220,6 +1220,49 @@ button.lunation-pick:hover {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+.focus-shortcut:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.focus-shortcut:focus {
+  position: fixed;
+  top: 4px;
+  left: 4px;
+  z-index: 10;
+  background: var(--raised);
+  padding: 8px 12px;
+}
+.night-reader {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.night-reader-date,
+.night-reader-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 14px;
+}
+.night-reader-date input {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+#nightReaderFacts h3 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 650;
+  line-height: inherit;
+}
+#nightReaderFacts p {
+  margin: 2px 0 16px;
+}
+#nightReaderStatus {
+  font-weight: 650;
+}
 
 /* Shared reading typography and calculation diagrams. */
 .guide-page {
@@ -2035,6 +2078,8 @@ kbd {
 .docs-open #docsLink,
 .docs-open #shareBtn,
 .docs-open #shareSiteBtn,
+.docs-open #readNightMenu,
+.docs-open #skipChart,
 .docs-open #shareBtn + .dropdown-divider {
   display: none;
 }

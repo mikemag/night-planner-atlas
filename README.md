@@ -36,6 +36,11 @@ header keeps the site, view tabs, Tonight and live status visible in portrait an
 The next event has a labeled countdown; tap it for **Live details**, including the site's clock,
 time zone and usable-dark status. Touch charts omit the desktop hover readout.
 
+**More → Read night** provides a text view with a date picker, Previous/Next night buttons,
+usable windows, twilight and Moon events. Times include their dates and, on clock-change nights,
+UTC offsets. Keyboard users can skip to the chart or open the selected night's text view;
+chart shortcuts work while the chart has focus.
+
 All views share one visual language and Moon settings for when the Moon counts as up and whether
 to ignore a thin crescent. The charts also support new-moon focus (±N nights) and share ordered
 boundary times and separate usable windows in expanded nights.

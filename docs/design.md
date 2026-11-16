@@ -532,15 +532,33 @@ Lunations retains its focus window and opens the night detail even if the date f
   | Quito, Astronomical Observatory       |   2,823 m | [UNESCO–IAU Portal to the Heritage of Astronomy](https://web.astronomicalheritage.net/index.php/show-entity?identity=113&idsubentity=1), also the source for its coordinates                        |
   | Svalbard, Kjell Henriksen Observatory |     520 m | [KHO's practical information](https://kho.unis.no/Information.html), also the source for its coordinates                                                                                            |
 
-- **Keyboard.** ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 open River, Lunations,
+- **Keyboard.** With the chart focused: ←/→ previous or next night, ↑/↓ a week, T tonight, 1–4 open River, Lunations,
   Calendar and Docs respectively, 5 opens Dark Weekends, Esc
   collapses an expanded River/Lunations night or Calendar expansion. Enter/Space toggles the selected
   River Month, Calendar Month/Week or Lunations night when the chart has focus. Lunations uses Up/Down for cycles and
   Left/Right for displayed nights. The chart and minimap retain a visible focus outline.
-  River and Lunations' selected-night summaries include the local zone, full windows and usable duration;
+  All three charts' selected-night summaries include the local zone, full windows and usable duration;
   pointer previews do not update that live announcement. Site dialogs contain their keyboard
   navigation and return focus to their opener on closing. Muted date/control text keeps
   readable contrast in each palette, with additional forced-color focus/boundary cues.
+  Single-character shortcuts are scoped to chart focus so speech input and document reading cannot
+  inadvertently switch views. Assistive-technology button activation opens the selected timeline
+  (or the selected Calendar Year month) without requiring pointer coordinates.
+- **Reading a night.** More → Read night opens a dialog with an evening-date field,
+  Previous/Next buttons and headings and paragraphs covering usable windows, astronomical darkness, Moon phase,
+  thresholds and Sun/Moon crossings. It reads the existing computed night; selecting a date also
+  selects it in the chart. It includes local dates, elapsed window durations and UTC offsets on
+  clock-change nights, and distinguishes missing crossings from missing astronomical darkness.
+  Moon-event coverage is limited to the calculated night span. A concise live summary announces a
+  changed date; full event facts remain available for deliberate reading and heading navigation.
+  The underlying chart's live region stays quiet while the dialog is open. Focus-only shortcuts bypass the header and
+  open the reader directly, without taking space from the chart. Dialog controls remain in place
+  when the selected night changes, and focus returns to the opener on close.
+- **Text on sky colors.** `inkOn` chooses dark ink or white by contrast, using black when neither
+  reaches 4.5:1. Usable-window time labels have an opaque dark-sky backing in every chart so even
+  the brightest accepted-moonlight wash cannot reduce their contrast. River's hover-time badge
+  also chooses its ink against the selection color. Window brackets, durations,
+  labeled event times and the text reader provide information beyond sky hue.
 
 ## Why River is the default
 

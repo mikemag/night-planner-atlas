@@ -31,7 +31,8 @@ import { initBrowserData } from './browser-data';
 import { initAppMenu } from './app-menu';
 import { initPlanningPanel } from './planning-panel';
 import { initChartLegend } from './chart-legend';
-import { closeDocs, docsOpen } from './guide';
+import { docsOpen } from './guide';
+import { initNightReader } from './night-reader';
 import { dropdownOptions } from './dropdown';
 
 const VIEW_KEYS: ViewId[] = ['river', 'lunations', 'calendar', 'notes', 'weekends'];
@@ -45,6 +46,10 @@ export function initControls(): void {
   initSiteEditor();
   initBrowserData();
   initRiverMinimap();
+  initNightReader();
+  el('skipChart').addEventListener('click', () => {
+    (S.view === 'weekends' ? el('tripsTitle') : cv).focus({ preventScroll: true });
+  });
   void prepareTimeZones().catch(() => {
     /* Manual zone entry remains available. */
   });
@@ -85,6 +90,10 @@ export function initControls(): void {
 }
 
 function initCanvasPointer(): void {
+  // Assistive technology invokes a button with a click, without pointer coordinates.
+  cv.addEventListener('click', (event) => {
+    if (event.detail === 0) activateSelectedNight();
+  });
   let dragMini = false;
   let tap: {
     x: number;
@@ -183,23 +192,22 @@ function initCanvasPointer(): void {
   cv.addEventListener('lostpointercapture', endMiniDrag);
 }
 
+function activateSelectedNight(): void {
+  if (!viewReady()) return;
+  if (S.view === 'calendar') {
+    if (S.calZoom === 'year') {
+      const n = data.range?.nights[S.sel];
+      if (n) openCalendarMonth(`${n.y}-${String(n.m).padStart(2, '0')}`, S.sel);
+    } else toggleCalendarNight();
+  } else if (S.view === 'lunations') toggleLunationsNight();
+  else if (S.view === 'river' && S.riverZoom === 'month') toggleRiverNight();
+}
+
 function initKeyboard(): void {
   const steps: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
   window.addEventListener('keydown', (e) => {
     const target = e.target as HTMLElement | null;
-    if (docsOpen()) {
-      if (
-        !e.altKey &&
-        !e.ctrlKey &&
-        !e.metaKey &&
-        !document.querySelector('.dropdown-menu.show') &&
-        /^[1235]$/.test(e.key)
-      ) {
-        closeDocs();
-        setView(VIEW_KEYS[+e.key - 1]);
-      }
-      return;
-    }
+    if (docsOpen()) return;
     if (
       e.defaultPrevented ||
       document.querySelector('.modal.show, .dropdown-menu.show') ||
@@ -220,20 +228,18 @@ function initKeyboard(): void {
       (S.view === 'calendar' ||
         S.view === 'lunations' ||
         (S.view === 'river' && S.riverZoom === 'month')) &&
-      (target === cv || target === document.body)
+      target === cv
     ) {
       e.preventDefault();
-      if (S.view === 'calendar') {
-        if (S.calZoom === 'year') {
-          const n = data.range.nights[S.sel];
-          if (n) openCalendarMonth(`${n.y}-${String(n.m).padStart(2, '0')}`, S.sel);
-        } else toggleCalendarNight();
-      } else if (S.view === 'lunations') toggleLunationsNight();
-      else toggleRiverNight();
+      activateSelectedNight();
       return;
     }
     const step = steps[e.key];
-    if (step && canvasView()) {
+    if (
+      step &&
+      canvasView() &&
+      (target === cv || target?.closest('#riverDetail, #lunationsDetail, #calendarDetail'))
+    ) {
       e.preventDefault();
       if (target?.closest('#riverDetail, #lunationsDetail, #calendarDetail'))
         cv.focus({ preventScroll: true });
@@ -244,10 +250,11 @@ function initKeyboard(): void {
           : Math.max(0, Math.min(nights.length - 1, (S.sel < 0 ? tonightIdx : S.sel) + step)),
         true,
       );
-    } else if (e.key === 't' || e.key === 'T') {
+    } else if (target === cv && (e.key === 't' || e.key === 'T')) {
       goTonight();
-    } else if (/^[1-5]$/.test(e.key)) {
+    } else if (target === cv && /^[1-5]$/.test(e.key)) {
       setView(VIEW_KEYS[+e.key - 1]);
+      if (S.view === 'weekends') el('tripsTitle').focus({ preventScroll: true });
     } else if (e.key === 'Escape') {
       const total =
         S.view === 'lunations'
