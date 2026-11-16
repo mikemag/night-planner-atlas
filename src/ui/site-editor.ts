@@ -1,6 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { personal, EditConflict, type PersonalData, type SaveResult } from '../app/personal-data';
-import { siteRecord, type Favorite } from '../app/site-book';
+import { insertSite, moveSite, siteRecord, type Favorite } from '../app/site-book';
 import { applySite } from '../app/shell';
 import { S } from '../app/state';
 import type { Site } from '../model/night';
@@ -8,59 +8,86 @@ import { isSite, parseSiteInput, type Coordinates } from '../model/site-input';
 import { el } from './dom';
 import { bindSiteZone } from './site-zone';
 
-/** Pick saved sites directly; management edits stay in a draft until Save & use. */
-export function initSiteEditor(): void {
+export interface SiteManager {
+  suspend: (open: () => void) => void;
+  resume: (focus: HTMLElement) => void;
+}
+
+/** List operations save independently; the form owns one isolated, conflict-checked draft. */
+export function initSiteEditor(): SiteManager {
   const picker = el<HTMLSelectElement>('siteSel');
   const dialog = el('sitePop');
   const modal = new Modal(dialog, { backdrop: 'static' });
   const form = el<HTMLFormElement>('siteForm');
-  const favorites = el<HTMLSelectElement>('siteFavorite');
+  const list = el('siteList');
+  const body = dialog.querySelector<HTMLElement>('.modal-body')!;
+  const scrollArea = () =>
+    getComputedStyle(body).overflowY === 'visible'
+      ? dialog.querySelector<HTMLElement>('.modal-content')!
+      : body;
+  let listScroll = 0;
+  let choiceAttempt = 0;
   const name = el<HTMLInputElement>('siteName');
   const location = el<HTMLInputElement>('siteLocation');
   const elevation = el<HTMLInputElement>('siteElevation');
   const zone = el<HTMLInputElement>('siteTz');
   const status = el('siteZoneStatus');
-  const save = el<HTMLButtonElement>('siteApply');
+  const save = el<HTMLButtonElement>('siteSave');
+  const use = el<HTMLButtonElement>('siteApply');
   const errors = new Map<HTMLInputElement, HTMLElement>([
     [location, el('siteLocationErr')],
     [elevation, el('siteElevationErr')],
     [zone, el('siteTzErr')],
   ]);
   let book = personal.snapshot();
+  let currentId: string | null = 'id' in book.active ? book.active.id : null;
   let editingBase: Favorite | null = null;
   let editingId: string | null = null;
+  let duplicateSource: string | null = null;
   let point: Coordinates | null = null;
   let coordinateError = '';
   let saveAttempt = 0;
-  let opener: HTMLElement = picker;
+  let initialFields = '';
+  let committing = false;
+  let suspended = false;
+  let allowClose = false;
+  let onShown: (() => void) | null = null;
+  let leave: (() => void) | null = null;
+  let leaveFocus: HTMLElement | null = null;
+  let editOpener: HTMLElement | null = null;
+  let removing: Favorite | null = null;
+  let removeOpener: HTMLElement | null = null;
+  const rows = new Map<string, HTMLElement>();
+  const fields = () => JSON.stringify([name.value, location.value, elevation.value, zone.value]);
+  const dirty = () => !form.hidden && fields() !== initialFields;
   const matchesCurrent = (site: Site) =>
     JSON.stringify(siteRecord(site)) === JSON.stringify(siteRecord(S.site));
   const activeFavorite = () => {
     const active = book.active;
     return (
+      book.sites.find((site) => site.id === currentId && matchesCurrent(site)) ??
       ('id' in active
         ? book.sites.find((site) => site.id === active.id && matchesCurrent(site))
-        : undefined) ?? book.sites.find(matchesCurrent)
+        : undefined) ??
+      book.sites.find(matchesCurrent)
     );
   };
-  const siteCaption = (site: Site) =>
-    `${site.name} · ${Math.abs(site.lat).toFixed(2)}°${site.lat >= 0 ? 'N' : 'S'} ${Math.abs(site.lon).toFixed(2)}°${site.lon >= 0 ? 'E' : 'W'}${site.elevation == null ? '' : ` · ${site.elevation} m`}`;
-  const refreshPicker = () => {
-    book = personal.snapshot();
-    const active = activeFavorite();
-    picker.replaceChildren();
-    if (!active) picker.appendChild(new Option(S.site.name, 'current'));
-    for (const site of book.sites) {
-      const duplicateName = book.sites.some(
-        (other) => other.id !== site.id && other.name === site.name,
-      );
-      picker.appendChild(
-        new Option(duplicateName ? siteCaption(site) : site.name, `site:${site.id}`),
-      );
-    }
-    picker.appendChild(new Option('Manage sites…', 'manage'));
-    picker.value = active ? `site:${active.id}` : 'current';
-    picker.title = siteCaption(S.site);
+  const coordinatesCaption = (site: Site) =>
+    `${Math.abs(site.lat).toFixed(3)}°${site.lat >= 0 ? 'N' : 'S'} ${Math.abs(site.lon).toFixed(3)}°${site.lon >= 0 ? 'E' : 'W'}${site.elevation == null ? '' : ` · ${site.elevation} m`}`;
+  const siteCaption = (site: Site) => `${site.name} · ${coordinatesCaption(site)} · ${site.tz}`;
+  const focus = (target: HTMLElement | null) => {
+    (target?.isConnected && target.getClientRects().length ? target : el('siteAdd')).focus();
+  };
+  const showResult = (result?: SaveResult) => {
+    const message = result?.message ?? personal.status();
+    el('siteStorageNotice').textContent = message ?? '';
+    el('siteStorageNotice').hidden = !message;
+    el('siteStorage').textContent =
+      message ?? 'Sites and preferences stay in this browser. No account is needed.';
+  };
+  const checkDraft = (draft: PersonalData, base: Favorite | null) => {
+    if (base && JSON.stringify(draft.sites.find((s) => s.id === base.id)) !== JSON.stringify(base))
+      throw new EditConflict();
   };
   const lookup = bindSiteZone(
     () => point,
@@ -68,29 +95,14 @@ export function initSiteEditor(): void {
     status,
     el<HTMLDataListElement>('siteZoneChoices'),
   );
-  const showResult = (result?: SaveResult) => {
-    const message = result?.message ?? personal.status();
-    el('siteStorageNotice').textContent = message ?? '';
-    el('siteStorageNotice').hidden = !message;
-    el('siteStorage').textContent =
-      message ?? 'Favorites and preferences stay in this browser. No account is needed.';
-  };
-  const persist = async (edit: (draft: PersonalData) => void) => {
-    const result = await personal.update(edit);
-    showResult(result);
-    refreshPicker();
-    return result;
-  };
-  const checkDraft = (draft: PersonalData, base: Favorite | null) => {
-    if (base && JSON.stringify(draft.sites.find((s) => s.id === base.id)) !== JSON.stringify(base))
-      throw new EditConflict();
-  };
-  const setSaving = (saving: boolean) => {
-    save.disabled = saving;
-    save.textContent = saving ? 'Finding time zone…' : 'Save & use site';
+  const setSaving = (finding: boolean) => {
+    save.disabled = finding;
+    use.disabled = finding;
+    save.textContent = finding ? 'Finding time zone…' : 'Save changes';
   };
   const cancelSave = () => {
     saveAttempt++;
+    lookup.cancel();
     setSaving(false);
   };
   const clearError = (field: HTMLInputElement) => {
@@ -115,11 +127,63 @@ export function initSiteEditor(): void {
       ? `Coordinates from link: latitude ${fromLink.lat}°, longitude ${fromLink.lon}°`
       : '';
   };
-  const fill = (site: Site | null, id: string | null) => {
-    lookup.cancel();
+  const requestLeave = (action: () => void) => {
+    if (committing) return;
+    if (!dirty()) {
+      action();
+      return;
+    }
     cancelSave();
+    leave = action;
+    leaveFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    el('siteDiscard').hidden = false;
+    el('siteKeepEditing').focus();
+  };
+  const finishEdit = () => {
+    cancelSave();
+    form.hidden = true;
+    dialog.classList.remove('site-editing');
+    scrollArea().scrollTop = listScroll;
+    editingId = null;
+    editingBase = null;
+    duplicateSource = null;
+    el('siteDiscard').hidden = true;
+    leave = null;
+  };
+  const updateConflict = () => {
+    const latest = book.sites.find((site) => site.id === editingId);
+    const changed =
+      !form.hidden &&
+      editingBase !== null &&
+      JSON.stringify(latest) !== JSON.stringify(editingBase);
+    el('siteDraftConflict').hidden = !changed;
+    el('siteReload').hidden = !latest;
+    el('siteDraftMessage').textContent = latest
+      ? 'This saved site changed since you opened it. Your draft is kept. Reload the saved site or keep your draft as a new site.'
+      : 'This saved site was removed since you opened it. Your draft is kept. You can keep it as a new site.';
+  };
+  const fill = (
+    site: Site | null,
+    id: string | null,
+    source: HTMLElement,
+    afterId: string | null = null,
+  ) => {
+    cancelSave();
+    if (form.hidden) listScroll = scrollArea().scrollTop;
+    // A discard prompt may have remained open while another tab changed the target.
+    const latest = id ? personal.snapshot().sites.find((favorite) => favorite.id === id) : null;
+    if (id && !latest) {
+      finishEdit();
+      el('siteActionStatus').textContent =
+        'That site was removed in another tab. The saved list is up to date.';
+      focus(el('siteAdd'));
+      return;
+    }
+    if (latest) site = latest;
+    editOpener = source;
     editingId = id;
-    editingBase = structuredClone(book.sites.find((site) => site.id === id) ?? null);
+    editingBase = structuredClone(latest ?? null);
+    duplicateSource = afterId;
     name.value = site?.name ?? '';
     location.value = site ? `${site.lat}, ${site.lon}` : '';
     elevation.value = site?.elevation == null ? '' : String(site.elevation);
@@ -128,106 +192,274 @@ export function initSiteEditor(): void {
     coordinateError = '';
     for (const field of errors.keys()) clearError(field);
     el('siteRemoval').hidden = true;
+    el('siteDraftConflict').hidden = true;
     status.textContent = site
       ? 'Clear this field to find the zone from these coordinates when saving, or enter an IANA zone to override it.'
       : 'Leave blank to find the zone from your coordinates. You can enter an IANA zone to override it.';
-    favorites.replaceChildren();
-    if (id === null) favorites.appendChild(new Option(site ? 'Unsaved site' : 'New site', ''));
-    for (const favorite of book.sites) {
-      const duplicateName = book.sites.some(
-        (other) => other.id !== favorite.id && other.name === favorite.name,
-      );
-      favorites.appendChild(
-        new Option(
-          duplicateName
-            ? `${favorite.name} · ${favorite.lat.toFixed(3)}, ${favorite.lon.toFixed(3)}`
-            : favorite.name,
-          favorite.id,
-        ),
-      );
-    }
-    favorites.value = id ?? '';
-    el('siteEditTarget').textContent = id
-      ? `Editing ${book.sites.find((site) => site.id === id)!.name}`
-      : 'New favorite';
-    el<HTMLButtonElement>('siteRemove').disabled = id === null;
+    el('siteEditTarget').textContent = id ? `Editing ${site!.name}` : 'New site';
+    initialFields = fields();
+    form.hidden = false;
+    dialog.classList.add('site-editing');
     preview();
     showResult();
+    (site ? name : location).focus();
   };
-  const openEditor = (source: HTMLElement) => {
-    opener = source;
-    refreshPicker();
-    fill(S.site, activeFavorite()?.id ?? null);
-    modal.show();
-  };
-  picker.addEventListener('change', async () => {
-    if (picker.value === 'manage') {
-      openEditor(picker);
-      return;
+  const refresh = () => {
+    book = personal.snapshot();
+    const active = activeFavorite();
+    if (active) currentId = active.id;
+    picker.replaceChildren();
+    if (!active) picker.appendChild(new Option(`${S.site.name} (current, unsaved)`, 'current'));
+    for (const site of book.sites) {
+      const duplicateName = book.sites.some(
+        (other) => other.id !== site.id && other.name === site.name,
+      );
+      picker.appendChild(
+        new Option(duplicateName ? siteCaption(site) : site.name, `site:${site.id}`),
+      );
     }
-    const favorite = book.sites.find((site) => `site:${site.id}` === picker.value);
-    if (!favorite) return;
-    applySite(siteRecord(favorite));
-    await persist((draft) => {
+    picker.append(document.createElement('hr'), new Option('Manage sites…', 'manage'));
+    picker.value = active ? `site:${active.id}` : 'current';
+    picker.title = siteCaption(S.site);
+    const focused = list.contains(document.activeElement)
+      ? (document.activeElement as HTMLElement)
+      : null;
+    const ids = new Set(book.sites.map((site) => site.id));
+    for (const [id, row] of rows)
+      if (!ids.has(id)) {
+        row.remove();
+        rows.delete(id);
+      }
+    book.sites.forEach((site, index) => {
+      let row = rows.get(site.id);
+      if (!row) {
+        row = document.createElement('li');
+        row.className = 'site-row';
+        row.dataset.siteId = site.id;
+        row.innerHTML = `<div class="site-row-info"><strong class="site-row-name"></strong><span class="site-current" hidden>Currently using</span><span class="site-row-location"></span><span class="site-row-zone"></span></div>
+          <div class="site-row-actions"><button type="button" class="btn btn-outline-secondary" data-action="edit">Edit</button><button type="button" class="btn btn-outline-secondary" data-action="use">Use site</button><button type="button" class="btn btn-outline-secondary site-move" data-action="up">↑</button><button type="button" class="btn btn-outline-secondary site-move" data-action="down">↓</button><details class="site-row-more"><summary>More</summary><div class="dialog-actions"><button type="button" class="btn btn-outline-secondary" data-action="duplicate">Duplicate</button><button type="button" class="btn btn-outline-secondary" data-action="remove">Remove…</button></div></details></div>`;
+        rows.set(site.id, row);
+      }
+      row.querySelector('.site-row-name')!.textContent = site.name;
+      row.querySelector('.site-row-location')!.textContent = coordinatesCaption(site);
+      row.querySelector('.site-row-zone')!.textContent = site.tz;
+      row.querySelector<HTMLElement>('.site-current')!.hidden = site.id !== active?.id;
+      row.querySelector<HTMLElement>('[data-action="use"]')!.hidden = site.id === active?.id;
+      row.querySelector('summary')!.setAttribute('aria-label', `More actions for ${site.name}`);
+      for (const button of row.querySelectorAll<HTMLElement>('[data-action]')) {
+        const action = button.dataset.action!;
+        const label =
+          action === 'up' || action === 'down'
+            ? `Move ${site.name} ${action}`
+            : `${action === 'use' ? 'Use' : action[0].toUpperCase() + action.slice(1)} ${site.name}`;
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        if (action === 'up' || action === 'down')
+          button.setAttribute(
+            'aria-disabled',
+            String(action === 'up' ? index === 0 : index === book.sites.length - 1),
+          );
+      }
+      // Only move DOM nodes when order actually changes; preserve focused controls and open actions.
+      if (list.children[index] !== row) list.insertBefore(row, list.children[index] ?? null);
+    });
+    if (focused) focus(focused);
+    el('siteEmpty').hidden = book.sites.length !== 0;
+    el('siteUnsaved').hidden = !!active;
+    el('siteUnsavedName').textContent =
+      `Currently using ${S.site.name}. This site is not in your saved list.`;
+    updateConflict();
+  };
+  const persist = async (edit: (draft: PersonalData) => void) => {
+    const result = await personal.update(edit);
+    refresh();
+    showResult(result);
+    return result;
+  };
+  const chooseSite = async (favorite: Favorite, close = false) => {
+    const attempt = ++choiceAttempt;
+    const result = await persist((draft) => {
       checkDraft(draft, favorite);
       draft.active = { id: favorite.id };
     });
+    if (result.conflict || attempt !== choiceAttempt) return;
+    currentId = favorite.id;
+    applySite(siteRecord(favorite));
+    if (close) {
+      finishEdit();
+      modal.hide();
+    }
+  };
+  picker.addEventListener('change', () => {
+    if (picker.value === 'manage') {
+      refresh();
+      finishEdit();
+      el('siteActionStatus').textContent = '';
+      el('siteRemoval').hidden = true;
+      modal.show();
+    } else {
+      const favorite = book.sites.find((site) => `site:${site.id}` === picker.value);
+      if (favorite) void chooseSite(favorite);
+    }
   });
-  window.addEventListener('npa-site-change', refreshPicker);
+  window.addEventListener('npa-site-change', () => {
+    choiceAttempt++;
+    // Explicit site changes may select an otherwise identical saved record.
+    const latest = personal.snapshot();
+    currentId = 'id' in latest.active ? latest.active.id : null;
+    refresh();
+  });
   personal.subscribe(() => {
-    refreshPicker();
+    refresh();
     showResult();
   });
+  refresh();
   showResult();
-  refreshPicker();
-  for (const id of ['siteCancel', 'siteClose'])
-    el(id).addEventListener('click', () => modal.hide());
-  dialog.addEventListener('shown.bs.modal', () => favorites.focus());
-  dialog.addEventListener('hide.bs.modal', () => {
-    lookup.cancel();
+  for (const id of ['siteDone', 'siteClose']) el(id).addEventListener('click', () => modal.hide());
+  el('siteCancel').addEventListener('click', () =>
+    requestLeave(() => {
+      finishEdit();
+      focus(editOpener);
+    }),
+  );
+  el('siteKeepEditing').addEventListener('click', () => {
+    leave = null;
+    el('siteDiscard').hidden = true;
+    focus(leaveFocus);
+  });
+  el('siteDiscardChanges').addEventListener('click', () => {
+    const action = leave;
+    leave = null;
+    el('siteDiscard').hidden = true;
+    action?.();
+  });
+  dialog.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Escape' && !el('siteDiscard').hidden) {
+        event.stopImmediatePropagation();
+        el('siteKeepEditing').click();
+      } else if (event.key === 'Escape' && !el('siteRemoval').hidden) {
+        event.stopImmediatePropagation();
+        el('siteKeep').click();
+      }
+    },
+    true,
+  );
+  dialog.addEventListener('shown.bs.modal', () => {
+    if (onShown) {
+      const callback = onShown;
+      onShown = null;
+      callback();
+    } else el('siteAdd').focus();
+  });
+  dialog.addEventListener('hide.bs.modal', (event) => {
+    if (committing) {
+      event.preventDefault();
+      return;
+    }
+    if (!suspended && !allowClose && dirty()) {
+      event.preventDefault();
+      requestLeave(() => {
+        allowClose = true;
+        modal.hide();
+      });
+      return;
+    }
     cancelSave();
   });
   dialog.addEventListener('hidden.bs.modal', () => {
-    opener.focus({ preventScroll: true });
+    allowClose = false;
+    if (!suspended) {
+      finishEdit();
+      picker.focus({ preventScroll: true });
+    }
   });
-  favorites.addEventListener('change', () => {
-    const favorite = book.sites.find((site) => site.id === favorites.value);
-    if (favorite) fill(favorite, favorite.id);
-  });
-  el('siteAdd').addEventListener('click', () => {
-    fill(null, null);
-    location.focus();
-  });
-  el('siteDuplicate').addEventListener('click', () => {
-    const original = book.sites.find((site) => site.id === editingId) ?? S.site;
-    fill({ ...original, name: `${original.name} copy` }, null);
+  el('siteAdd').addEventListener('click', () =>
+    requestLeave(() => fill(null, null, el('siteAdd'))),
+  );
+  el('siteSaveCurrent').addEventListener('click', () =>
+    requestLeave(() => fill(S.site, null, el('siteSaveCurrent'))),
+  );
+  el('siteReload').addEventListener('click', () =>
+    requestLeave(() => {
+      const latest = book.sites.find((site) => site.id === editingId);
+      if (latest) fill(latest, latest.id, editOpener ?? el('siteAdd'));
+    }),
+  );
+  el('siteDraftCopy').addEventListener('click', () => {
+    cancelSave();
+    editingId = null;
+    editingBase = null;
+    duplicateSource = null;
+    el('siteEditTarget').textContent = 'New site';
+    el('siteDraftConflict').hidden = true;
     name.focus();
-    name.select();
   });
-  el('siteRemove').addEventListener('click', () => {
-    const favorite = book.sites.find((site) => site.id === editingId);
+  list.addEventListener('click', async (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>('button[data-action]');
+    if (!button || committing || button.getAttribute('aria-disabled') === 'true') return;
+    const id = button.closest<HTMLElement>('[data-site-id]')!.dataset.siteId!;
+    const favorite = book.sites.find((site) => site.id === id);
     if (!favorite) return;
-    el('siteRemoveName').textContent = favorite.name;
-    el('siteRemoval').hidden = false;
-    el('siteKeep').focus();
+    const action = button.dataset.action;
+    if (action === 'edit') requestLeave(() => fill(favorite, id, button));
+    else if (action === 'use')
+      requestLeave(() => {
+        void chooseSite(favorite, true);
+      });
+    else if (action === 'duplicate')
+      requestLeave(() => {
+        fill({ ...favorite, name: `${favorite.name} copy` }, null, button, id);
+        name.select();
+      });
+    else if (action === 'remove') {
+      const confirm = () => {
+        removing = structuredClone(favorite);
+        removeOpener = button;
+        el('siteRemoveName').textContent = favorite.name;
+        el('siteRemoval').hidden = false;
+        el('siteKeep').focus();
+      };
+      if (editingId === id)
+        requestLeave(() => {
+          finishEdit();
+          confirm();
+        });
+      else confirm();
+    } else {
+      const result = await persist((draft) => {
+        if (!draft.sites.some((site) => site.id === id)) throw new EditConflict();
+        moveSite(draft.sites, id, action === 'up' ? -1 : 1);
+      });
+      if (!result.conflict)
+        el('siteActionStatus').textContent =
+          `${favorite.name} moved to position ${book.sites.findIndex((site) => site.id === id) + 1} of ${book.sites.length}.${result.saved ? '' : ' This order applies only to this visit.'}`;
+    }
   });
   el('siteKeep').addEventListener('click', () => {
+    removing = null;
     el('siteRemoval').hidden = true;
-    el('siteRemove').focus();
+    focus(removeOpener);
   });
   el('siteConfirmRemove').addEventListener('click', async () => {
-    const base = editingBase;
-    if (!base) return;
+    const base = removing;
+    if (!base || committing) return;
+    committing = true;
     const result = await persist((draft) => {
       checkDraft(draft, base);
       draft.sites = draft.sites.filter((site) => site.id !== base.id);
       if ('id' in draft.active && draft.active.id === base.id)
         draft.active = { site: siteRecord(base) };
     });
+    committing = false;
     if (result.conflict) return;
-    const next = book.sites[0];
-    fill(next ?? S.site, next?.id ?? null);
-    favorites.focus();
+    removing = null;
+    el('siteRemoval').hidden = true;
+    if (editingId === base.id) finishEdit();
+    el('siteActionStatus').textContent =
+      `${base.name} removed from ${result.saved ? 'saved sites' : 'this visit’s list'}. Your current plan stays open.`;
+    focus(el('siteAdd'));
   });
   location.addEventListener('input', () => {
     clearError(zone);
@@ -245,12 +477,16 @@ export function initSiteEditor(): void {
     if (location.value.trim() && coordinateError) fail(location, coordinateError);
   });
   form.addEventListener('input', (event) => {
-    cancelSave();
+    // Do not cancel the coordinate field's newly scheduled inference here.
+    saveAttempt++;
+    setSaving(false);
     const field = event.target as HTMLInputElement;
     if (errors.has(field)) clearError(field);
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (committing) return;
+    const activate = event.submitter === use;
     const attempt = ++saveAttempt;
     for (const field of errors.keys()) clearError(field);
     let coordinates: Coordinates;
@@ -277,7 +513,6 @@ export function initSiteEditor(): void {
       setSaving(true);
       try {
         const inferred = await lookup.inferNow();
-        // Editing, closing or changing favorites cancels this save, even during lookup.
         if (attempt !== saveAttempt || !dialog.classList.contains('show')) return;
         if (!inferred) {
           fail(zone, status.textContent!);
@@ -301,21 +536,44 @@ export function initSiteEditor(): void {
     }
     const id = editingId ?? crypto.randomUUID();
     const base = editingBase;
-    save.disabled = true;
-    picker.disabled = true;
+    const afterId = duplicateSource;
+    const updatesCurrent = base !== null && activeFavorite()?.id === base.id;
+    committing = true;
+    save.disabled = use.disabled = true;
     const result = await persist((draft) => {
+      if (attempt !== saveAttempt) throw new EditConflict();
       checkDraft(draft, base);
       if (base)
         draft.sites = draft.sites.map((favorite) =>
           favorite.id === id ? { ...site, id } : favorite,
         );
-      else draft.sites.push({ ...site, id });
-      draft.active = { id };
+      else insertSite(draft.sites, { ...site, id }, afterId);
+      if (activate) draft.active = { id };
     });
-    save.disabled = false;
-    picker.disabled = false;
+    committing = false;
+    save.disabled = use.disabled = false;
     if (result.conflict) return;
-    modal.hide();
-    applySite(site);
+    finishEdit();
+    if (activate || updatesCurrent) {
+      currentId = id;
+      applySite(site);
+    }
+    el('siteActionStatus').textContent =
+      `${site.name} ${result.saved ? 'saved' : 'kept for this visit'}.`;
+    if (activate) modal.hide();
+    else focus(rows.get(id)?.querySelector<HTMLElement>('[data-action="edit"]') ?? null);
   });
+  return {
+    suspend(open) {
+      if (committing) return;
+      suspended = true;
+      dialog.addEventListener('hidden.bs.modal', open, { once: true });
+      modal.hide();
+    },
+    resume(target) {
+      suspended = false;
+      onShown = () => focus(target);
+      modal.show();
+    },
+  };
 }

@@ -464,6 +464,6 @@ Opening/transaction deadlines keep unavailable storage from holding up calculati
 New writes are scheduled after the ready range publishes, and a cache-clear epoch prevents an
 in-flight calculation from repopulating an explicitly cleared cache.
 
-`Manage sites… → Browser data…` reports cache size/count and clears calculations independently
+`More → Browser data… → Maintenance` reports cache size/count and clears calculations independently
 of sites/preferences and their recovery copy. No cache keys or coordinates enter URLs or logs.
 Cache operations require no network access.

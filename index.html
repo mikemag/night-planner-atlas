@@ -244,6 +244,10 @@
                 Export to calendar…
               </button>
               <div class="dropdown-divider" role="separator"></div>
+              <button class="dropdown-item" id="browserDataOpen" role="menuitem">
+                Browser data…
+              </button>
+              <div class="dropdown-divider" role="separator"></div>
               <div id="themeMenu" role="group" aria-labelledby="themeMenuLabel">
                 <h2 class="dropdown-header" id="themeMenuLabel">Theme</h2>
                 <button
@@ -513,14 +517,14 @@
       </div>
     </div>
     <div
-      class="modal site-dialog"
+      class="modal site-dialog site-manager"
       id="sitePop"
       tabindex="-1"
       aria-labelledby="siteTitle"
       aria-hidden="true"
     >
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <form class="modal-content" id="siteForm" novalidate>
+        <div class="modal-content">
           <div class="modal-header">
             <h2 class="modal-title fs-5" id="siteTitle">Observing sites</h2>
             <button
@@ -530,127 +534,187 @@
               aria-label="Close site manager"
             ></button>
           </div>
-          <div class="modal-body">
-            <label for="siteFavorite" class="form-label"
-              >Saved sites<span class="site-select"
-                ><select id="siteFavorite" class="form-select"></select></span
-            ></label>
-            <div class="dialog-actions" role="group" aria-label="Site actions">
-              <button class="btn btn-outline-secondary" type="button" id="siteAdd">Add site</button>
-              <button class="btn btn-outline-secondary" type="button" id="siteDuplicate">
-                Duplicate
-              </button>
-              <button class="btn btn-outline-secondary" type="button" id="siteRemove">
-                Remove…
-              </button>
+          <div class="site-prompts">
+            <div id="siteDiscard" class="removal-confirm" hidden>
+              <p>
+                Discard your unsaved site changes? Moves and other changes already saved will be
+                kept.
+              </p>
+              <div class="dialog-actions">
+                <button class="btn btn-primary" id="siteKeepEditing" type="button">
+                  Keep editing
+                </button>
+                <button class="btn btn-outline-secondary" id="siteDiscardChanges" type="button">
+                  Discard changes
+                </button>
+              </div>
             </div>
             <div id="siteRemoval" class="removal-confirm" hidden>
               <p>
-                Remove <strong id="siteRemoveName"></strong> from favorites? Your current night plan
-                stays open.
+                Remove <strong id="siteRemoveName"></strong> from saved sites? Your current night
+                plan stays open.
               </p>
               <div class="dialog-actions">
                 <button class="btn btn-outline-secondary" id="siteKeep" type="button">
                   Keep site
                 </button>
                 <button class="btn btn-outline-secondary" id="siteConfirmRemove" type="button">
-                  Remove favorite
+                  Remove site
                 </button>
               </div>
             </div>
-            <p class="site-edit-target" id="siteEditTarget"></p>
-            <label for="siteName" class="form-label"
-              >Name<input id="siteName" autocomplete="off" maxlength="100" class="form-control"
-            /></label>
-            <div class="site-field">
-              <label for="siteLocation" class="form-label"
-                >Coordinates or full Google Maps link
-                <input
-                  id="siteLocation"
-                  autocomplete="off"
-                  spellcheck="false"
-                  placeholder="47.60621, -122.34253"
-                  aria-describedby="siteLocationHint siteCoordinates siteLocationErr"
-                  class="form-control"
-                />
-              </label>
-              <p class="field-error invalid-feedback" id="siteLocationErr" role="alert" hidden></p>
-              <output id="siteCoordinates" for="siteLocation" hidden></output>
-              <p id="siteLocationHint" class="form-text">
-                Use decimal degrees: latitude first, then longitude.
+          </div>
+          <div class="modal-body site-manager-body">
+            <section class="site-library" aria-labelledby="siteListTitle">
+              <div class="site-list-heading">
+                <h3 id="siteListTitle">Saved sites</h3>
+                <button class="btn btn-primary" type="button" id="siteAdd">Add site</button>
+              </div>
+              <p>Move sites into your preferred order. Moves save immediately.</p>
+              <div id="siteUnsaved" class="site-unsaved" hidden>
+                <p id="siteUnsavedName"></p>
+                <button class="btn btn-outline-secondary" id="siteSaveCurrent" type="button">
+                  Save current site…
+                </button>
+              </div>
+              <ol id="siteList" class="site-list" aria-label="Saved sites"></ol>
+              <p id="siteEmpty" hidden>
+                No saved sites yet. Add a site or save the one you are using.
               </p>
-              <details class="coordinate-help">
-                <summary>Get coordinates from Google Maps</summary>
-                <p>
-                  If a Maps link doesn’t work, open it in Google Maps and find your intended
-                  location. Copy the point’s coordinates, then paste them in the field above:
-                </p>
-                <ul>
-                  <li>
-                    Computer: right-click the point, then click the latitude/longitude at the top of
-                    the menu to copy it.
-                  </li>
-                  <li>
-                    Phone: touch and hold an unlabeled point to drop a pin. On Android, copy the
-                    coordinates from the search box; on iPhone, find them in the pin’s place
-                    details.
-                  </li>
-                </ul>
-                <p>
-                  Full search links containing <code>query=latitude,longitude</code> or
-                  <code>q=latitude,longitude</code> also work. A short link or the center of a map
-                  does not give us a reliable point. Pasted links are read locally and never opened
-                  by the planner.
-                </p>
-              </details>
-            </div>
-            <div class="site-field">
-              <label for="siteElevation" class="form-label"
-                >Elevation (m above sea level, optional)
-                <input
-                  id="siteElevation"
-                  type="number"
-                  inputmode="decimal"
-                  min="-500"
-                  max="10000"
-                  step="any"
-                  aria-describedby="siteElevationHint siteElevationErr"
-                  class="form-control"
-                />
-              </label>
-              <p class="field-error invalid-feedback" id="siteElevationErr" role="alert" hidden></p>
-              <p id="siteElevationHint" class="form-text">
-                Blank uses sea level. A level horizon is assumed; no terrain lookup.
-              </p>
-            </div>
-            <div class="site-field">
-              <label for="siteTz" class="form-label"
-                >Time zone (IANA, optional override)<input
-                  id="siteTz"
-                  list="siteZoneChoices"
-                  autocomplete="off"
-                  placeholder="Automatic from coordinates"
-                  aria-describedby="siteZoneStatus siteTzErr"
-                  class="form-control"
+            </section>
+            <form id="siteForm" class="site-editor-pane" novalidate hidden>
+              <h3 class="site-edit-target" id="siteEditTarget"></h3>
+              <div id="siteDraftConflict" class="removal-confirm" hidden>
+                <p id="siteDraftMessage"></p>
+                <div class="dialog-actions">
+                  <button class="btn btn-outline-secondary" type="button" id="siteReload">
+                    Reload saved site
+                  </button>
+                  <button class="btn btn-outline-secondary" type="button" id="siteDraftCopy">
+                    Keep as a new site
+                  </button>
+                </div>
+              </div>
+              <label for="siteName" class="form-label"
+                >Name<input id="siteName" autocomplete="off" maxlength="100" class="form-control"
               /></label>
-              <p class="field-error invalid-feedback" id="siteTzErr" role="alert" hidden></p>
-              <datalist id="siteZoneChoices"></datalist>
-              <p id="siteZoneStatus" role="status" class="form-text"></p>
-            </div>
-            <p id="siteStorage" class="form-text"></p>
-            <div class="dialog-actions">
-              <button class="btn btn-outline-secondary" type="button" id="browserDataOpen">
-                Browser data…
-              </button>
-            </div>
+              <div class="site-field">
+                <label for="siteLocation" class="form-label"
+                  >Coordinates or full Google Maps link
+                  <input
+                    id="siteLocation"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="47.60621, -122.34253"
+                    aria-describedby="siteLocationHint siteCoordinates siteLocationErr"
+                    class="form-control"
+                  />
+                </label>
+                <p
+                  class="field-error invalid-feedback"
+                  id="siteLocationErr"
+                  role="alert"
+                  hidden
+                ></p>
+                <output id="siteCoordinates" for="siteLocation" hidden></output>
+                <p id="siteLocationHint" class="form-text">
+                  Use decimal degrees: latitude first, then longitude.
+                </p>
+                <details class="coordinate-help">
+                  <summary>Get coordinates from Google Maps</summary>
+                  <p>
+                    If a Maps link doesn’t work, open it in Google Maps and find your intended
+                    location. Copy the point’s coordinates, then paste them in the field above:
+                  </p>
+                  <ul>
+                    <li>
+                      Computer: right-click the point, then click the latitude/longitude at the top
+                      of the menu to copy it.
+                    </li>
+                    <li>
+                      Phone: touch and hold an unlabeled point to drop a pin. On Android, copy the
+                      coordinates from the search box; on iPhone, find them in the pin’s place
+                      details.
+                    </li>
+                  </ul>
+                  <p>
+                    Full search links containing <code>query=latitude,longitude</code> or
+                    <code>q=latitude,longitude</code> also work. A short link or the center of a map
+                    does not give us a reliable point. Pasted links are read locally and never
+                    opened by the planner.
+                  </p>
+                </details>
+              </div>
+              <div class="site-field">
+                <label for="siteElevation" class="form-label"
+                  >Elevation (m above sea level, optional)
+                  <input
+                    id="siteElevation"
+                    type="number"
+                    inputmode="decimal"
+                    min="-500"
+                    max="10000"
+                    step="any"
+                    aria-describedby="siteElevationHint siteElevationErr"
+                    class="form-control"
+                  />
+                </label>
+                <p
+                  class="field-error invalid-feedback"
+                  id="siteElevationErr"
+                  role="alert"
+                  hidden
+                ></p>
+                <p id="siteElevationHint" class="form-text">
+                  Blank uses sea level. A level horizon is assumed; no terrain lookup.
+                </p>
+              </div>
+              <div class="site-field">
+                <label for="siteTz" class="form-label"
+                  >Time zone (IANA, optional override)<input
+                    id="siteTz"
+                    list="siteZoneChoices"
+                    autocomplete="off"
+                    placeholder="Automatic from coordinates"
+                    aria-describedby="siteZoneStatus siteTzErr"
+                    class="form-control"
+                /></label>
+                <p class="field-error invalid-feedback" id="siteTzErr" role="alert" hidden></p>
+                <datalist id="siteZoneChoices"></datalist>
+                <p id="siteZoneStatus" role="status" class="form-text"></p>
+              </div>
+              <div class="dialog-actions site-edit-actions">
+                <button class="btn btn-outline-secondary" type="button" id="siteCancel">
+                  Cancel edit
+                </button>
+                <button class="btn btn-primary" type="submit" id="siteSave">Save changes</button>
+                <button class="btn btn-outline-secondary" type="submit" id="siteApply">
+                  Save &amp; use site
+                </button>
+              </div>
+            </form>
           </div>
-          <div class="modal-footer">
-            <button class="btn btn-outline-secondary" type="button" id="siteCancel">Cancel</button>
-            <button class="btn btn-primary" type="submit" id="siteApply">
-              Save &amp; use site
-            </button>
+          <div class="site-manager-status">
+            <p id="siteStorage" role="status"></p>
+            <p id="siteActionStatus" role="status"></p>
           </div>
-        </form>
+          <div class="modal-footer site-manager-footer">
+            <div class="site-backup-actions">
+              <p>
+                Backup files contain all sites, their order and preferences, including coordinates.
+              </p>
+              <div class="dialog-actions">
+                <button class="btn btn-outline-secondary" type="button" id="siteExport">
+                  Export sites and preferences
+                </button>
+                <button class="btn btn-outline-secondary" type="button" id="siteImport">
+                  Import sites and preferences…
+                </button>
+              </div>
+            </div>
+            <button class="btn btn-outline-secondary" type="button" id="siteDone">Done</button>
+          </div>
+        </div>
       </div>
     </div>
     <div
@@ -672,72 +736,103 @@
             ></button>
           </div>
           <div class="modal-body">
-            <p>
-              Sites and preferences stay on this device. Export a copy to keep a backup or move to
-              another browser. The file includes your site coordinates; share it deliberately.
-            </p>
-            <p id="dataSummary" class="form-text"></p>
-            <p id="dataCacheSummary" class="cache-summary form-text">
-              Checking saved calculations…
-            </p>
-            <div class="dialog-actions">
-              <button class="btn btn-outline-secondary" id="dataClearCache" type="button">
-                Clear computed cache
-              </button>
-            </div>
-            <div class="dialog-actions">
-              <button class="btn btn-outline-secondary" id="dataExport" type="button">
-                Export sites and preferences</button
-              ><button class="btn btn-outline-secondary" id="dataImport" type="button">
-                Import…
-              </button>
-            </div>
-            <input
-              id="dataFile"
-              type="file"
-              accept="application/json,.json"
-              aria-label="Personal data file"
-              hidden
-            />
-            <div id="dataReview" class="removal-confirm" hidden>
-              <p id="dataImportSummary"></p>
+            <section class="data-controls" aria-labelledby="dataBackupTitle">
+              <h3 id="dataBackupTitle">Backup and restore</h3>
+              <p>
+                Download all your sites, their order and preferences to keep a backup or move to
+                another browser. The file includes your site coordinates; share it deliberately.
+                Calculated nights are not included.
+              </p>
+              <p id="dataSummary" class="form-text"></p>
+              <p id="dataTemporary" class="form-text" hidden></p>
               <div class="dialog-actions">
-                <button class="btn btn-outline-secondary" id="dataCancelImport" type="button">
-                  Cancel import</button
-                ><button class="btn btn-outline-secondary" id="dataConfirmImport" type="button">
-                  Replace saved sites and preferences
+                <button class="btn btn-outline-secondary" id="dataExport" type="button">
+                  Export sites and preferences
+                </button>
+                <button class="btn btn-outline-secondary" id="dataImport" type="button">
+                  Import sites and preferences…
                 </button>
               </div>
-            </div>
-            <details>
-              <summary>Reset and recovery</summary>
-              <div class="data-controls">
-                <p>
-                  Reset preferences restores the view, planning controls and theme. Your sites are
-                  kept. Restoring starter sites adds missing examples without replacing edited
-                  sites.
-                </p>
+              <p>
+                Import replaces all saved sites, their order, the saved selection and preferences.
+                Review the file before confirming replacement.
+              </p>
+              <input
+                id="dataFile"
+                type="file"
+                accept="application/json,.json"
+                aria-label="Personal data file"
+                hidden
+              />
+              <div id="dataReview" class="removal-confirm" hidden>
+                <p id="dataImportSummary"></p>
                 <div class="dialog-actions">
-                  <button class="btn btn-outline-secondary" id="dataResetPreferences" type="button">
-                    Reset preferences</button
-                  ><button class="btn btn-outline-secondary" id="dataRestoreStarters" type="button">
-                    Restore missing starter sites
+                  <button class="btn btn-outline-secondary" id="dataCancelImport" type="button">
+                    Cancel import
                   </button>
-                </div>
-                <div class="dialog-actions">
-                  <button class="btn btn-outline-secondary" id="dataBackup" type="button">
-                    Export previous saved copy</button
-                  ><button class="btn btn-outline-secondary" id="dataStored" type="button" hidden>
-                    Export unreadable stored data
+                  <button class="btn btn-outline-secondary" id="dataConfirmImport" type="button">
+                    Replace saved sites and preferences
                   </button>
                 </div>
               </div>
-            </details>
+            </section>
+            <section class="data-controls" aria-labelledby="dataRecoveryTitle">
+              <h3 id="dataRecoveryTitle">Recovery copy</h3>
+              <p>
+                Atlas keeps one local copy before importing saved data, resetting preferences or
+                upgrading the saved-data format. The next such operation replaces that copy.
+                Ordinary site edits and moves do not create a history. Clearing browser data removes
+                the copy too.
+              </p>
+              <p id="dataRecoveryStatus"></p>
+              <div class="dialog-actions">
+                <button
+                  class="btn btn-outline-secondary"
+                  id="dataBackup"
+                  type="button"
+                  aria-describedby="dataRecoveryStatus"
+                >
+                  Download recovery copy
+                </button>
+                <button class="btn btn-outline-secondary" id="dataStored" type="button" hidden>
+                  Download original stored data
+                </button>
+              </div>
+              <p>
+                To restore a downloaded copy, use Import sites and preferences above and review the
+                replacement.
+              </p>
+            </section>
+            <section class="data-controls" aria-labelledby="dataMaintenanceTitle">
+              <h3 id="dataMaintenanceTitle">Maintenance</h3>
+              <p id="dataCacheSummary" class="cache-summary form-text">
+                Checking saved calculations…
+              </p>
+              <div class="dialog-actions">
+                <button class="btn btn-outline-secondary" id="dataClearCache" type="button">
+                  Clear computed cache
+                </button>
+              </div>
+              <p>
+                Clearing calculations keeps sites, preferences and the recovery copy. Reset
+                preferences restores the view, planning controls and theme while keeping sites and
+                their order. Restoring starter sites appends missing examples and keeps existing
+                edits.
+              </p>
+              <div class="dialog-actions">
+                <button class="btn btn-outline-secondary" id="dataResetPreferences" type="button">
+                  Reset preferences
+                </button>
+                <button class="btn btn-outline-secondary" id="dataRestoreStarters" type="button">
+                  Restore missing starter sites
+                </button>
+              </div>
+            </section>
             <p id="browserDataStatus" role="status" class="form-text"></p>
           </div>
           <div class="modal-footer">
             <button class="btn btn-outline-secondary" id="browserDataDone" type="button">
-              Back to sites
+              Done
             </button>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { openCurrentSiteEditor } from './site-controls';
 import { seedPersonal } from './storage';
 import { openGuide } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
@@ -90,13 +91,13 @@ test('clicking a night on the canvas selects it', async ({ page }) => {
 
 test('a new site recomputes every night', async ({ page }) => {
   const errors = await open(page);
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await page.locator('#siteName').fill('Edinburgh');
   await page.locator('#siteLocation').fill('55.95, -3.19');
   await page.locator('#siteTz').fill('Europe/London');
   await page.locator('#siteApply').click();
   await expect(page.locator('#siteSel option:checked')).toHaveText('Edinburgh');
-  await expect(page.locator('#siteSel')).toHaveAttribute('title', /55.95°N 3.19°W/);
+  await expect(page.locator('#siteSel')).toHaveAttribute('title', /55.950°N 3.190°W/);
   await expect(page.locator('#riverSelection')).toContainText('Wed Sep 23 → Thu Sep 24');
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   expect(errors).toEqual([]);
@@ -104,7 +105,7 @@ test('a new site recomputes every night', async ({ page }) => {
 
 test('an unknown time zone is refused with a message', async ({ page }) => {
   await open(page);
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await page.locator('#siteTz').fill('Mars/Olympus_Mons');
   await page.locator('#siteApply').click();
   await expect(page.locator('#siteTzErr')).toHaveText(
@@ -142,7 +143,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
     const n = window.__npa!.nights.find((n) => n.id === '2026-10-03')!;
     return { sunset: n.ev.sunset!, sunrise: n.ev.sunrise!, moonRise: n.moonRise! };
   });
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await expect(page.getByLabel('Elevation (m above sea level, optional)')).toHaveValue('');
   await page.locator('#siteElevation').fill('2000');
   await page.locator('#siteApply').click();
@@ -159,7 +160,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
   expect(after.moonRise).toBeGreaterThan(before.moonRise);
   await page.reload();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await expect(page.locator('#siteElevation')).toHaveValue('2000');
   await expect(page.locator('#siteLocation')).toHaveValue('47.60621, -122.34253');
   await page.locator('#siteElevation').fill('');
@@ -176,7 +177,7 @@ test('optional elevation persists, corrects events, and can be cleared without c
 test('elevation validates range, accepts below sea level, and can be cleared', async ({ page }) => {
   const errors = await open(page);
   const initialElevation = await page.evaluate(() => window.__npa!.S.site.elevation);
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   for (const value of ['-501', '10001']) {
     await page.locator('#siteElevation').fill(value);
     await page.locator('#siteApply').click();
@@ -191,7 +192,7 @@ test('elevation validates range, accepts below sea level, and can be cleared', a
   await expect(page.locator('#sitePop')).toBeHidden();
   await expect(page.locator('#loading')).toBeHidden({ timeout: 30_000 });
   await expect(page.locator('#siteSel')).toHaveAttribute('title', /-400 m/);
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await page.locator('#siteElevation').fill('');
   await page.locator('#siteApply').click();
   await expect(page.locator('#sitePop')).toBeHidden();
@@ -208,7 +209,7 @@ test('saved sites without elevation retain their coordinates and use sea level',
   });
   const errors = await open(page);
   await expect(page.locator('#siteSel option:checked')).toContainText('Sea-level site');
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await expect(page.locator('#siteElevation')).toHaveValue('');
   await expect(page.locator('#siteLocation')).toHaveValue('55.95, -3.19');
   expect(errors).toEqual([]);

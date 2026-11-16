@@ -42,8 +42,8 @@ export function initControls(): void {
   initKeyboard();
   initHeader();
   initChartLegend();
-  initSiteEditor();
-  initBrowserData();
+  const sites = initSiteEditor();
+  initBrowserData(sites);
   initRiverMinimap();
   void prepareTimeZones().catch(() => {
     /* Manual zone entry remains available. */

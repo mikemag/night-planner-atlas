@@ -1,3 +1,4 @@
+import { openCurrentSiteEditor } from './site-controls';
 import { chooseTheme, openGuide, openShare } from './header-controls';
 import { expect, test } from '@playwright/test';
 
@@ -147,9 +148,9 @@ test('River keyboard tasks include visible focus, minimap browsing and contained
   await page.keyboard.press('Escape');
   await expect(page.locator('#cv')).toHaveAttribute('aria-expanded', 'false');
   await page.locator('#siteSel').focus();
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await expect(page.getByRole('dialog', { name: 'Observing sites' })).toBeVisible();
-  await page.locator('#siteDuplicate').focus();
+  await page.locator('#siteCancel').focus();
   await page.keyboard.press('ArrowRight');
   expect(await page.evaluate(() => window.__npa!.S.sel)).toBe(selected);
   await page.keyboard.press('Escape');
@@ -174,7 +175,7 @@ for (const width of [320, 390]) {
         );
       expect(targets.every((r) => r.width >= 24 && r.height >= 24)).toBe(true);
     }
-    await page.locator('#siteSel').selectOption('manage');
+    await openCurrentSiteEditor(page);
     await expect(page.locator('#siteApply')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
   });
@@ -195,6 +196,6 @@ test('forced colors and reduced motion retain visible chart focus and readable e
     'solid',
   );
   await expect(page.locator('#riverSelection')).toContainText('usable dark');
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await expect(page.getByLabel('Coordinates or full Google Maps link')).toBeVisible();
 });

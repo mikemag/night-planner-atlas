@@ -1,3 +1,4 @@
+import { openSites, siteAction } from './site-controls';
 import { chooseFocus } from './header-controls';
 import { expect, test } from '@playwright/test';
 
@@ -82,11 +83,10 @@ test('former saved data is ignored without erasing it, and new removals persist'
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#siteSel')).toHaveValue('site:seattle-paramount-park');
-  await page.locator('#siteSel').selectOption('manage');
-  await page.locator('#siteFavorite').selectOption('quito-astronomical-observatory');
-  await page.locator('#siteRemove').click();
+  await openSites(page);
+  await siteAction(page, 'quito-astronomical-observatory', 'remove');
   await page.locator('#siteConfirmRemove').click();
-  await expect(page.locator('#siteFavorite option')).toHaveCount(5);
+  await expect(page.locator('#siteList > li')).toHaveCount(5);
   await page.keyboard.press('Escape');
   await page.reload();
   await expect(page.locator('#loading')).toBeHidden();

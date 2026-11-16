@@ -1,3 +1,5 @@
+import { openAppMenu } from './header-controls';
+import { openCurrentSiteEditor } from './site-controls';
 import { chooseFocus, chooseMoon, shiftPlanningRange } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import { seedPersonal, readPersonal } from './storage';
@@ -180,7 +182,7 @@ test('temporary included sites are not written into the persistent cache', async
   await page.goto('./#npa=' + encodeURIComponent(JSON.stringify(plan)));
   await expect(page.locator('#loading')).toBeHidden();
   expect((await stats(page)).computedNights).toBeGreaterThan(400);
-  await page.locator('#siteSel').selectOption('manage');
+  await openAppMenu(page);
   await page.locator('#browserDataOpen').click();
   await expect(page.locator('#dataCacheSummary')).toContainText('0 cached site-months');
   expect((await readPersonal(page)).sites.some((s) => s.name === site.name)).toBe(false);
@@ -190,7 +192,7 @@ test('clearing only the computed cache preserves the saved personal document', a
   await open(page);
   await cached(page, 14);
   const before = await page.evaluate(() => localStorage.getItem('npa:personal'));
-  await page.locator('#siteSel').selectOption('manage');
+  await openAppMenu(page);
   await page.locator('#browserDataOpen').click();
   await page.locator('#dataClearCache').click();
   await expect(page.locator('#browserDataStatus')).toContainText('cache cleared');
@@ -217,7 +219,7 @@ test('renaming reuses a calculation while elevation and zone variations keep sep
   await open(page);
   await cached(page, 14);
   async function edit(field: string, value: string) {
-    await page.locator('#siteSel').selectOption('manage');
+    await openCurrentSiteEditor(page);
     await page.locator(field).fill(value);
     await page.locator('#siteApply').click();
     await expect(page.locator('#sitePop')).toBeHidden();
@@ -351,7 +353,7 @@ test('clearing during computation prevents a late cache write from repopulating 
   await open(page);
   await cached(page, 14);
   await shiftPlanningRange(page, 'Next');
-  await page.locator('#siteSel').selectOption('manage');
+  await openAppMenu(page);
   await page.locator('#browserDataOpen').click();
   await page.locator('#dataClearCache').click();
   await expect(page.locator('#browserDataStatus')).toContainText('cache cleared');

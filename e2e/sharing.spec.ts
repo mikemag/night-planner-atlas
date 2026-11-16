@@ -1,3 +1,4 @@
+import { openCurrentSiteEditor } from './site-controls';
 import { openAppMenu, openShare, chooseFocus, chooseMoon } from './header-controls';
 import { createShareLink, createSiteLink } from '../src/app/share-state';
 import { seedPersonal, readPersonal, readSite, readPreference } from './storage';
@@ -156,14 +157,14 @@ test('simultaneous invitations create one favorite and Undo preserves a later ed
     expect((await favorites(target.page)).sites).toHaveLength(2);
     const owner = (await target.page.locator('#shareAction').isVisible()) ? target.page : other;
     const editor = owner === other ? target.page : other;
-    await editor.locator('#siteSel').selectOption('manage');
+    await openCurrentSiteEditor(editor);
     await editor.locator('#siteName').fill('My own ridge name');
     await editor.locator('#siteApply').click();
     await expect(editor.locator('#sitePop')).toBeHidden();
     await owner.locator('#shareAction').click();
     await expect(owner.locator('#sharedNoticeText')).toContainText('saved data was kept');
     expect((await favorites(owner)).sites).toHaveLength(2);
-    expect((await favorites(owner)).sites[1].name).toBe('My own ridge name');
+    expect((await favorites(owner)).sites[0].name).toBe('My own ridge name');
   } finally {
     await target.context.close();
   }
@@ -210,7 +211,7 @@ test('an obsolete queued invitation cannot save a site or replace a later link',
     await expect(target.page.locator('#loading')).toBeHidden();
     const saved = await favorites(target.page);
     expect(saved.sites).toHaveLength(2);
-    expect(saved.sites[1].name).toBe(invitationSite.name);
+    expect(saved.sites[0].name).toBe(invitationSite.name);
   } finally {
     await target.context.close();
   }
@@ -318,7 +319,7 @@ test('including a site requires a preview and saving it never replaces existing 
   browser,
 }, info) => {
   await openAuthor(page);
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await page.locator('#siteAdd').click();
   await page.locator('#siteName').fill('Private meadow');
   await page.locator('#siteLocation').fill('47.123, -121.987');
@@ -359,8 +360,8 @@ test('including a site requires a preview and saving it never replaces existing 
     await expect(target.page.locator('#shareAction')).toHaveText('Undo');
     const saved = await favorites(target.page);
     expect(saved.sites).toHaveLength(2);
-    expect(saved.sites[0]).toEqual(ownBook.sites[0]);
-    expect(saved.sites[1]).toMatchObject({
+    expect(saved.sites[1]).toEqual(ownBook.sites[0]);
+    expect(saved.sites[0]).toMatchObject({
       name: 'Private meadow',
       lat: 47.123,
       lon: -121.987,
@@ -513,6 +514,42 @@ test('dismissing a plan offer while its save is pending keeps the offer dismisse
     await expect.poll(async () => (await favorites(target.page)).sites.length).toBe(2);
     await expect(target.page.locator('#loading')).toBeHidden();
     await expect(target.page.locator('#sharedNotice')).toBeHidden();
+  } finally {
+    await target.context.close();
+  }
+});
+
+test('Undo removes a shared addition while retaining another tab’s saved order and edits', async ({
+  browser,
+  baseURL,
+}) => {
+  const target = await receiver(browser);
+  try {
+    await target.page.goto(createSiteLink(baseURL!, invitationSite));
+    await expect(target.page.locator('#loading')).toBeHidden();
+    // Keep Undo available while operating in the other tab.
+    await target.page.locator('#shareAction').focus();
+    const received = (await readPersonal(target.page)).sites[0];
+    expect(received.name).toBe(invitationSite.name);
+    const other = await target.context.newPage();
+    await other.goto(baseURL!);
+    await expect(other.locator('#loading')).toBeHidden();
+    await other.locator('#siteSel').selectOption('manage');
+    await other.locator(`[data-site-id="${received.id}"] [data-action="down"]`).click();
+    await expect(other.locator('#siteActionStatus')).toContainText('moved to position 2');
+    const originalId = ownBook.sites[0].id;
+    await other.locator(`[data-site-id="${originalId}"] [data-action="edit"]`).click();
+    await other.locator('#siteName').fill('My renamed home site');
+    await other.locator('#siteSave').click();
+    await expect(other.locator('#siteForm')).toBeHidden();
+    await target.page.locator('#shareAction').click();
+    await expect(target.page.locator('#sharedNoticeText')).toContainText(
+      'removed from saved sites',
+    );
+    const saved = await readPersonal(target.page);
+    expect(saved.sites).toEqual([{ ...ownBook.sites[0], name: 'My renamed home site' }]);
+    expect(await target.page.evaluate(() => window.__npa!.S.site)).toEqual(invitationSite);
+    await other.close();
   } finally {
     await target.context.close();
   }

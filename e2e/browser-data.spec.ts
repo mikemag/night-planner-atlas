@@ -1,12 +1,13 @@
-import { chooseTheme, chooseFocus } from './header-controls';
+import { openCurrentSiteEditor, openSites, editSite, discardSiteDraft } from './site-controls';
+import { chooseTheme, chooseFocus, openAppMenu } from './header-controls';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { freshPersonalData } from '../src/app/personal-data';
 import { readPersonal, seedPersonal } from './storage';
 
 async function openData(page: Page) {
-  await page.locator('#siteSel').selectOption('manage');
-  await page.getByRole('button', { name: 'Browser data…', exact: true }).click();
+  await openAppMenu(page);
+  await page.getByRole('menuitem', { name: 'Browser data…', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Browser data', exact: true })).toBeVisible();
 }
 for (const width of [1512, 390])
@@ -15,19 +16,20 @@ for (const width of [1512, 390])
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     const before = await readPersonal(page);
-    await page.locator('#siteSel').selectOption('manage');
+    await openCurrentSiteEditor(page);
     await page.locator('#siteName').fill('Keep this unsaved draft');
-    await page.locator('#browserDataOpen').click();
+    await page.locator('#siteImport').click();
     await expect(page.locator('#sitePop')).toBeHidden();
     await expect(page.locator('.modal.show')).toHaveCount(1);
     await expect(page.locator('.modal-backdrop')).toHaveCount(1);
     await page.locator('#browserDataDone').click();
     await expect(page.locator('#sitePop')).toBeVisible();
     await expect(page.locator('#siteName')).toHaveValue('Keep this unsaved draft');
-    await expect(page.locator('#browserDataOpen')).toBeFocused();
+    await expect(page.locator('#siteImport')).toBeFocused();
     await expect(page.locator('.modal.show')).toHaveCount(1);
     await expect(page.locator('.modal-backdrop')).toHaveCount(1);
-    await page.locator('#siteCancel').click();
+    await discardSiteDraft(page);
+    await page.locator('#siteDone').click();
     await expect(page.locator('.modal-backdrop')).toHaveCount(0);
     expect(await readPersonal(page)).toEqual(before);
   });
@@ -77,7 +79,6 @@ for (const width of [1512, 390])
     await page.locator('#dataConfirmImport').click();
     await expect(page.locator('#browserDataStatus')).toContainText('imported');
     expect((await readPersonal(page)).sites).toEqual(imported.sites);
-    await page.getByText('Reset and recovery', { exact: true }).click();
     const previousDownload = page.waitForEvent('download');
     await page.locator('#dataBackup').click();
     const previous = JSON.parse(await readFile((await (await previousDownload).path())!, 'utf8'));
@@ -97,7 +98,8 @@ for (const width of [1512, 390])
     expect((await readPersonal(page)).sites).toHaveLength(7);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     await page.locator('#browserDataClose').click();
-    await expect(page.locator('#browserDataOpen')).toBeFocused();
+    await expect(page.locator('#moreBtn')).toBeFocused();
+    await expect(page.locator('#sitePop')).toBeHidden();
     await page.keyboard.press('Escape');
     await page.reload();
     await expect(page.locator('#loading')).toBeHidden();
@@ -113,10 +115,10 @@ test('tabs preserve unrelated edits and retain a conflicting site draft', async 
   const other = await context.newPage();
   await other.goto('./');
   await expect(other.locator('#loading')).toBeHidden();
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await page.locator('#siteName').fill('First tab draft');
-  await other.locator('#siteSel').selectOption('manage');
-  await other.locator('#siteFavorite').selectOption('edinburgh-royal-observatory');
+  await openSites(other);
+  await editSite(other, 'edinburgh-royal-observatory');
   await other.locator('#siteName').fill('Other Edinburgh');
   await other.locator('#siteApply').click();
   await expect(other.locator('#sitePop')).toBeHidden();
@@ -125,10 +127,10 @@ test('tabs preserve unrelated edits and retain a conflicting site draft', async 
   let sites = (await readPersonal(page)).sites;
   expect(sites[0].name).toBe('First tab draft');
   expect(sites[1].name).toBe('Other Edinburgh');
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await page.locator('#siteName').fill('Keep this draft');
-  await other.locator('#siteSel').selectOption('manage');
-  await other.locator('#siteFavorite').selectOption('seattle-paramount-park');
+  await openSites(other);
+  await editSite(other, 'seattle-paramount-park');
   await other.locator('#siteName').fill('Other Seattle');
   await other.locator('#siteApply').click();
   await expect(other.locator('#sitePop')).toBeHidden();
@@ -155,4 +157,80 @@ test('a newer stored schema is checked again before every write', async ({ page 
   await chooseTheme(page, 'dark');
   await expect(page.locator('#siteStorageNotice')).toContainText('left unchanged');
   expect(await page.evaluate(() => localStorage.getItem('npa:personal'))).toBe(raw);
+});
+
+test('reordering makes an import preview stale without creating recovery history', async ({
+  page,
+  context,
+}) => {
+  await seedPersonal(page);
+  await page.goto('./');
+  await expect(page.locator('#loading')).toBeHidden();
+  const other = await context.newPage();
+  await other.goto('./');
+  await expect(other.locator('#loading')).toBeHidden();
+  await openData(page);
+  await expect(page.locator('#dataBackup')).toBeDisabled();
+  await expect(page.locator('#dataRecoveryStatus')).toHaveText('No recovery copy exists yet.');
+  const imported = freshPersonalData();
+  imported.sites.reverse();
+  await page.locator('#dataFile').setInputFiles({
+    name: 'reordered.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(imported)),
+  });
+  await expect(page.locator('#dataImportSummary')).toContainText('in the file’s order');
+  await openSites(other);
+  await other.locator('[data-site-id="edinburgh-royal-observatory"] [data-action="up"]').click();
+  await expect
+    .poll(async () => (await readPersonal(other)).sites[0].id)
+    .toBe('edinburgh-royal-observatory');
+  const latest = await readPersonal(other);
+  await page.locator('#dataConfirmImport').click();
+  await expect(page.locator('#browserDataStatus')).toContainText('changed in another tab');
+  expect(await readPersonal(page)).toEqual(latest);
+  await expect(page.locator('#dataBackup')).toBeDisabled();
+  await page.locator('#dataFile').setInputFiles({
+    name: 'review-again.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(imported)),
+  });
+  await page.locator('#dataConfirmImport').click();
+  await expect(page.locator('#dataReview')).toBeHidden();
+  expect((await readPersonal(page)).sites).toEqual(imported.sites);
+  await expect(page.locator('#dataBackup')).toBeEnabled();
+  const download = page.waitForEvent('download');
+  await page.locator('#dataBackup').click();
+  expect(JSON.parse(await readFile((await (await download).path())!, 'utf8'))).toEqual(latest);
+  await page.locator('#browserDataDone').click();
+  await expect(page.locator('#moreBtn')).toBeFocused();
+  await expect(page.locator('#sitePop')).toBeHidden();
+  await other.close();
+});
+
+test('import from management keeps a suspended draft and detects replacement of its record', async ({
+  page,
+}) => {
+  await page.goto('./');
+  await expect(page.locator('#loading')).toBeHidden();
+  await openCurrentSiteEditor(page);
+  await page.locator('#siteName').fill('Preserve my draft');
+  await page.locator('#siteImport').click();
+  await expect(page.locator('#browserData')).toBeVisible();
+  const replacement = freshPersonalData();
+  replacement.sites[0].name = 'Name from import';
+  replacement.sites.reverse();
+  await page.locator('#dataFile').setInputFiles({
+    name: 'replacement.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(replacement)),
+  });
+  await page.locator('#dataConfirmImport').click();
+  await expect(page.locator('#dataReview')).toBeHidden();
+  await page.locator('#browserDataDone').click();
+  await expect(page.locator('#siteName')).toHaveValue('Preserve my draft');
+  await expect(page.locator('#siteDraftConflict')).toBeVisible();
+  await page.locator('#siteSave').click();
+  await expect(page.locator('#siteName')).toHaveValue('Preserve my draft');
+  expect((await readPersonal(page)).sites).toEqual(replacement.sites);
 });

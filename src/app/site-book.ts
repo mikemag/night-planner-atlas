@@ -18,6 +18,22 @@ export function siteRecord(site: Site): Site {
   };
 }
 
+/** Insert against the latest list. A removed duplicate source falls back to the top. */
+export function insertSite(sites: Favorite[], site: Favorite, afterId: string | null = null): void {
+  const source = sites.findIndex((favorite) => favorite.id === afterId);
+  sites.splice(source + 1, 0, site);
+}
+
+/** Move only this record, using its neighbors in the latest locked document. */
+export function moveSite(sites: Favorite[], id: string, direction: -1 | 1): boolean {
+  const from = sites.findIndex((site) => site.id === id);
+  const to = from + direction;
+  if (from < 0 || to < 0 || to >= sites.length) return false;
+  const [site] = sites.splice(from, 1);
+  sites.splice(to, 0, site);
+  return true;
+}
+
 /** About a metre of coordinate rounding; names and local favorite IDs are not identity. */
 export function sameLocation(a: Site, b: Site): boolean {
   const longitude = Math.abs(a.lon - b.lon);
@@ -57,7 +73,7 @@ export function keepSharedSite(
       : previousActive.site,
   );
   const favorite = { ...siteRecord(site), id: crypto.randomUUID() };
-  draft.sites.push(favorite);
+  insertSite(draft.sites, favorite);
   draft.active = { id: favorite.id };
   return {
     site: favorite,

@@ -1,3 +1,10 @@
+import {
+  openCurrentSiteEditor,
+  openSites,
+  editSite,
+  siteAction,
+  discardSiteDraft,
+} from './site-controls';
 import { seedPersonal, readPersonal, readSite } from './storage';
 import { expect, test } from '@playwright/test';
 import { DEFAULT_SITES } from '../src/app/default-sites';
@@ -10,7 +17,7 @@ for (const width of [1512, 390]) {
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
     const before = await readPersonal(page);
-    await page.locator('#siteSel').selectOption('manage');
+    await openCurrentSiteEditor(page);
     await page.locator('#siteName').fill('Unsaved draft');
     await page.locator('#siteElevation').fill('1234');
     await page.locator('#sitePop').click({ position: { x: 1, y: 1 } });
@@ -19,6 +26,8 @@ for (const width of [1512, 390]) {
     await expect(page.locator('#siteElevation')).toHaveValue('1234');
     expect(await readPersonal(page)).toEqual(before);
     await page.keyboard.press('Escape');
+    await expect(page.locator('#siteDiscard')).toBeVisible();
+    await page.locator('#siteDiscardChanges').click();
     await expect(page.locator('#sitePop')).toBeHidden();
     await expect(page.locator('#siteSel')).toBeFocused();
     expect(await readPersonal(page)).toEqual(before);
@@ -48,8 +57,8 @@ for (const width of [1512, 390]) {
       await page.screenshot({
         path: `test-results/screenshots/${info.project.name}-starter-sites-${width}.png`,
       });
-    await picker.selectOption('manage');
-    await expect(page.locator('#siteFavorite option')).toHaveCount(6);
+    await openCurrentSiteEditor(page);
+    await expect(page.locator('#siteList > li')).toHaveCount(6);
     await expect(page.locator('#siteName')).toHaveValue('Svalbard, Kjell Henriksen Observatory');
     await expect(page.locator('#siteElevation')).toHaveValue('520');
     if (process.env.SCREENSHOTS)
@@ -75,12 +84,11 @@ for (const width of [1512, 390]) {
     await (await wasm).finished();
     await expect(page.locator('#loading')).toBeHidden();
     await context.setOffline(true);
-    await page.locator('#siteSel').selectOption('manage');
+    await openCurrentSiteEditor(page);
     await expect(page.locator('#sitePop')).not.toContainText('OpenStreetMap');
-    await expect(page.locator('#siteFavorite option:checked')).toHaveText(
-      'Seattle, Paramount Park',
-    );
+    await expect(page.locator('#siteEditTarget')).toHaveText('Editing Seattle, Paramount Park');
     await expect(page.locator('#siteCoordinates')).toBeHidden();
+    await discardSiteDraft(page);
     await page.locator('#siteAdd').click();
     await expect(page.locator('#siteCoordinates')).toBeHidden();
     await page.locator('#siteApply').click();
@@ -133,7 +141,7 @@ for (const width of [1512, 390]) {
       elevation: 1234,
     };
     expect(await page.evaluate(() => window.__npa!.S.site)).toEqual(site);
-    await page.locator('#siteSel').selectOption('manage');
+    await openCurrentSiteEditor(page);
     await page.locator('#siteTz').fill('');
     await page.locator('#siteApply').click();
     await expect(page.locator('#sitePop')).not.toBeVisible();
@@ -185,13 +193,15 @@ for (const width of [1512, 390]) {
       sites,
       active: { id: 'east' },
     });
-    await picker.selectOption('manage');
+    await openCurrentSiteEditor(page);
     await expect(page.getByRole('dialog', { name: 'Observing sites' })).toBeVisible();
     await expect(picker).toHaveValue('site:east');
     await expect(page.locator('#siteLocation')).toHaveValue('55.95, -3.19');
     await expect(page.locator('#siteElevation')).toHaveValue('1234');
     await page.locator('#siteName').fill('Unsaved edit');
     await page.keyboard.press('Escape');
+    await expect(page.locator('#siteDiscard')).toBeVisible();
+    await page.locator('#siteDiscardChanges').click();
     await expect(picker).toBeFocused();
     expect(await page.evaluate(() => localStorage.getItem('npa:personal'))).toBe(stored);
     expect(await page.evaluate(() => window.__npa!.S.site)).toEqual(record);
@@ -234,14 +244,17 @@ for (const width of [1512, 390]) {
     });
     await page.goto('./');
     await expect(page.locator('#loading')).toBeHidden();
-    await page.locator('#siteSel').selectOption('manage');
-    await expect(page.locator('#siteFavorite option')).toHaveCount(7);
+    await openCurrentSiteEditor(page);
+    await expect(page.locator('#siteList > li')).toHaveCount(7);
     await page.locator('#siteName').fill('Unsaved edit');
     await page.keyboard.press('Escape');
+    await expect(page.locator('#siteDiscard')).toBeVisible();
+    await page.locator('#siteDiscardChanges').click();
     await expect(page.locator('#siteSel')).toBeFocused();
     await expect(page.locator('#siteSel option:checked')).toContainText('Saved ridge');
-    await page.locator('#siteSel').selectOption('manage');
+    await openCurrentSiteEditor(page);
     await expect(page.locator('#siteName')).toHaveValue('Saved ridge');
+    await discardSiteDraft(page);
     await page.locator('#siteAdd').click();
     await page
       .locator('#siteLocation')
@@ -270,33 +283,31 @@ for (const width of [1512, 390]) {
     await page.reload();
     await expect(page.locator('#loading')).toBeHidden();
     await expect(page.locator('#siteSel option:checked')).toContainText('Baker ridge');
-    await page.locator('#siteSel').selectOption('manage');
+    await openCurrentSiteEditor(page);
     await expect(page.locator('#siteElevation')).toHaveValue('2000');
-    await page.locator('#siteDuplicate').click();
-    await page.locator('#siteCancel').click();
+    await discardSiteDraft(page);
+    await siteAction(page, (await page.locator('#siteSel').inputValue()).slice(5), 'duplicate');
+    await discardSiteDraft(page);
     expect(
       await page.evaluate(() => JSON.parse(localStorage.getItem('npa:personal')!).sites.length),
     ).toBe(8);
-    await page.locator('#siteSel').selectOption('manage');
-    await page.locator('#siteDuplicate').click();
+    await openCurrentSiteEditor(page);
+    await discardSiteDraft(page);
+    await siteAction(page, (await page.locator('#siteSel').inputValue()).slice(5), 'duplicate');
     await page.locator('#siteName').fill('Baker copy');
     await page.locator('#siteApply').click();
     await expect(page.locator('#sitePop')).toBeHidden();
     await expect(page.locator('#loading')).toBeHidden();
-    await page.locator('#siteSel').selectOption('manage');
-    await page.locator('#siteRemove').click();
+    await openSites(page);
+    await siteAction(page, (await page.locator('#siteSel').inputValue()).slice(5), 'remove');
     await page.locator('#siteKeep').click();
-    await expect(page.locator('#siteFavorite option')).toHaveCount(9);
-    await page.locator('#siteRemove').click();
+    await expect(page.locator('#siteList > li')).toHaveCount(9);
+    await siteAction(page, (await page.locator('#siteSel').inputValue()).slice(5), 'remove');
     await page.locator('#siteConfirmRemove').click();
-    await expect(page.locator('#siteFavorite option')).toHaveCount(8);
+    await expect(page.locator('#siteList > li')).toHaveCount(8);
     // Removing the active favorite leaves the current plan intact until another site is used.
     await expect(page.locator('#siteSel option:checked')).toContainText('Baker copy');
-    const legacyId = await page
-      .locator('#siteFavorite option')
-      .filter({ hasText: 'Saved ridge' })
-      .getAttribute('value');
-    await page.locator('#siteFavorite').selectOption(legacyId!);
+    await editSite(page, 'ridge');
     await expect(page.locator('#siteLocation')).toHaveValue('55.95, -3.19');
     await expect(page.locator('#siteElevation')).toHaveValue('1234');
     await expect(page.locator('#siteTz')).toHaveValue('Europe/London');
@@ -311,7 +322,7 @@ for (const width of [1512, 390]) {
 test('bad pasted links leave the current site unchanged and make no requests', async ({ page }) => {
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   const requests: string[] = [];
   page.on('request', (request) => requests.push(request.url()));
   for (const link of [
@@ -337,7 +348,7 @@ test('failed writes and damaged storage are visible and never erase existing dat
   });
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await expect(page.locator('#siteStorage')).toContainText('left unchanged');
   await page.locator('#siteName').fill('Temporary ridge');
   await page.locator('#siteApply').click();
@@ -356,8 +367,9 @@ test('storage write failure still permits a temporary site', async ({ page }) =>
   });
   await page.goto('./');
   await expect(page.locator('#loading')).toBeHidden();
-  await page.locator('#siteSel').selectOption('manage');
-  await page.locator('#siteDuplicate').click();
+  await openCurrentSiteEditor(page);
+  await discardSiteDraft(page);
+  await siteAction(page, 'seattle-paramount-park', 'duplicate');
   await page.locator('#siteName').fill('Temporary site');
   await page.locator('#siteApply').click();
   await expect(page.locator('#sitePop')).toBeHidden();
@@ -367,6 +379,6 @@ test('storage write failure still permits a temporary site', async ({ page }) =>
   await page.locator('#siteSel').selectOption('site:seattle-paramount-park');
   await expect(page.locator('#loading')).toBeHidden();
   await expect(page.locator('#siteSel option:checked')).toContainText('Seattle');
-  await page.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(page);
   await expect(page.locator('#siteStorage')).toContainText('cannot be kept');
 });

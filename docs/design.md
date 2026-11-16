@@ -342,7 +342,7 @@ Lunations retains its focus window and opens the night detail even if the date f
   The view tabs and More button align with the
   input faces rather than the vertical center of their labeled groups.
   An upper-right, unboxed **More options (⋯)** button with vertically centered dots opens a
-  Bootstrap dropdown with sharing, calendar export and theme controls. System, Light, Dark and Observing
+  Bootstrap dropdown with sharing, calendar export, Browser data and theme controls. System, Light, Dark and Observing
   appear together with a checkmark on the current preference. Choosing a theme dismisses the menu and returns focus
   to More. The “Theme” heading stays unchanged. Arrow keys navigate items, Escape dismisses
   the menu, and clicking outside closes it. Menu keys do not navigate the chart. Share returns
@@ -387,12 +387,12 @@ Lunations retains its focus window and opens the night detail even if the date f
   change the browsed position. Full-size layouts retain the compact key inline when it closes.
 - **Sharing.** More offers Share site and Share plan. A site invitation uses a validated
   `#npa=2` fragment containing just the site. It opens in Around now with the recipient's own
-  settings, automatically saves a new favorite, and offers Undo in a dismissible twelve-second
+  settings, automatically saves a new site at the top of the list, and offers Undo in a dismissible twelve-second
   notice. Its countdown pauses during calculations, in hidden tabs or inactive windows, and
   while the notice has keyboard focus or pointer hover. Returning to the ready, active planner
   resumes the remaining time. Successful invitations leave an
   ordinary URL so reload cannot repeat an addition after Undo. Existing locations are reused
-  within 0.00001° coordinate rounding, preserving the saved name and metadata. Undo removes
+  within 0.00001° coordinate rounding, preserving the saved name, metadata and position. A new site saved from a plan also goes first. Undo removes
   only the unchanged addition and restores saved activation only if that favorite is still active.
   It preserves subsequent edits and selections, including work in another tab.
   Plan links retain the loaded date span, view/zooms/orientation, focus, thresholds, selected
@@ -454,7 +454,15 @@ Lunations retains its focus window and opens the night detail even if the date f
   _Ignore a moon under_ (10–30% lit) is for people who don't mind a thin crescent. Both change
   every number and the weekend picks, not just the drawing.
 - **Site.** A native dropdown switches directly between named local favorites. **Manage sites…**
-  opens the keyboard-accessible editor, with add, edit, duplicate and confirmed removal. The name,
+  follows a native visual separator and opens an ordered management list. Each row shows a name,
+  coordinates, zone, optional elevation and a Currently using marker where applicable. Explicit
+  Edit, Use site and Move up/down buttons work with keyboard and touch; a More disclosure contains
+  Duplicate and Remove. Reordering saves immediately, keeps focus on the moved control and never
+  switches the observing site, starts a zone lookup or resets the edit draft. The list and picker
+  use the same order. New manually added or shared sites go first; duplicates go immediately after
+  their source (or first if the source was removed while editing). Existing shared locations stay
+  in place. No separate pinned/favorite category or drag gesture is needed.
+  The name,
   coordinates, IANA zone and optional elevation are saved together. Unsaved plan sites remain
   visible as the current selection.
   A fresh browser starts with Seattle's Paramount Park selected, plus Edinburgh's Royal
@@ -464,14 +472,21 @@ Lunations retains its focus window and opens the night detail even if the date f
   The versioned personal-data namespace starts with fresh defaults; earlier per-setting storage is
   ignored and left untouched. A separate starter revision records applied additions. Future starter
   revisions add only their own new entries, preserving earlier removals and edits. Restoring missing
-  starters is a deliberate action in **Browser data…**, reached from the site manager.
+  starters appends missing examples in **More → Browser data…**, preserving existing order and selection.
   All latitudes from −90° to +90° are accepted. When sunrise or sunset is absent, every view uses
   a noon-to-noon clock axis. Solar shading follows intervals below each threshold, including stages
   that continue throughout the period and twilight without a sunrise. Clipped noon boundaries do
   not invent rise/set events. The same intervals drive sky-color labels, astronomical darkness totals and
   moonlight in every view. Calendar Week retains the full period for these cases too.
-  In the editor, choosing a favorite fills a draft; Save & use applies its complete record.
-  Cancel and Escape discard form edits and return focus to the opener.
+  Edit opens an independent form beside the list on desktop and in place of it on phones.
+  Save changes returns to the list without activating another site; saving the currently used
+  saved site updates its open plan. Save & use applies the complete site and closes the manager.
+  Done closes management; Cancel edit returns to the list. Leaving a changed draft, including
+  Close or Escape, asks whether to discard it. Already saved moves remain saved. Clicking the
+  backdrop keeps the manager open. Cross-tab edits refresh keyed rows while preserving the form;
+  a changed or removed draft target offers Reload saved site or Keep as a new site. The latter
+  preserves the entered fields and requires an explicit save. Unsaved current sites have their
+  own Save current site action, outside the ordered saved list.
   Removing an active favorite leaves the current plan open until another site is used.
   One field accepts decimal latitude/longitude or documented full coordinate-bearing Google Maps
   search links, parsed entirely locally with a coordinate preview. Camera-only, ambiguous and
@@ -481,8 +496,8 @@ Lunations retains its focus window and opens the night detail even if the date f
   results require a choice. Validation errors sit beside their fields, mark the invalid control
   and focus it on Save. Coordinates parsed from a Maps link appear directly below its input;
   decimal entries do not repeat. Saved-site names use coordinates only to distinguish duplicate
-  names. Both site selectors retain native selection behavior, with consistent
-  closed-control styling. The guide credits the ODbL data and links its matching dataset and full
+  names. The main site picker retains native selection and keyboard behavior; its separator is
+  visual only and Manage sites remains explicitly named. The guide credits the ODbL data and links its matching dataset and full
   notices alongside the other credits.
   Unknown/damaged personal data is left untouched, and unavailable storage is explained.
   Blank elevation uses sea level; existing saved sites keep their coordinates.
@@ -549,11 +564,14 @@ Exactly one preference has a checkmark. Selecting any option, including the curr
 applies it, dismisses the menu and returns focus to More. The heading stays “Theme”.
 System remains checked while its effective Bootstrap light/dark mode follows the device.
 
-Site management, sharing and Browser data use scrollable Bootstrap modals. Browser data replaces
-the site modal while open, then returns to the same draft and its opener. Only one modal and
-backdrop exist at a time. Native fields retain the original validation, IANA lookup, conflict
-checks, draft/save boundaries and browser-only persistence.
-Clicking the site editor's backdrop leaves the draft open; Cancel, Close and Escape dismiss it.
+Site management, sharing and Browser data use scrollable Bootstrap modals. Browser data opened
+from More closes with Done and restores focus to More. The manager has explicit Export sites and
+preferences and Import sites and preferences actions. Export downloads the current list without
+including an open edit draft. Import opens the same Browser data flow, suspending the manager and
+returning to its preserved draft and import trigger on Back to sites. A completed import can make
+that draft stale; ordinary record conflict checks still apply. Modal transitions wait for the
+previous dialog to close, keeping one modal and backdrop at a time. Native fields retain local
+validation, offline IANA lookup and browser-only persistence.
 
 ### View and model choices
 
@@ -586,6 +604,9 @@ Rationale that isn't obvious from the result:
 
 `npa:personal` is the single authoritative localStorage document for favorite sites, the active
 favorite ID (or a complete current unsaved site), and optional planning/view/theme preferences.
+The sites array itself defines display order; reordering requires no schema migration or extra
+rank field. Moves operate by stable ID against the latest locked list. Concurrent operations
+are applied in lock order, retaining unrelated records and their edits.
 Schema version 1 starts fresh and does not import the earlier individual keys. Missing preferences
 retain app/responsive defaults; an explicit focus of zero means Off. The inline theme bootstrap
 reads this same document before CSS paints. Share-link version 1 remains independent.
@@ -602,11 +623,19 @@ schema has no historical migrations. Future releases retain all released schema 
 older writers must recheck the schema before each edit and use temporary state if it is newer.
 There is no automatic downgrade. Starter revisions are separate from schema versions.
 
-**Browser data…** exports/imports the versioned personal document without calculations. Import is
-validated and reviewed before explicit replacement; a changed revision blocks a stale import.
-Import and preference reset preserve the previous saved document for export/recovery. Preference
-reset keeps sites, and starter restoration keeps existing records and selection. Unreadable raw
-data can be exported for recovery. These controls work without reloading the page. Browser-cleared
+**More → Browser data…** separates Backup and restore, Recovery copy and Maintenance.
+Export downloads the current personal document without calculations or an unsaved edit draft;
+when saving is unavailable this includes the explicit tab-only state, with an explanation.
+Import is validated and reviewed before explicit replacement of all sites, order, saved selection
+and preferences. A changed current document blocks a stale import preview, including intervening
+reordering. This is a replacement, not a merge or sites-only import.
+Import, preference reset and format migration preserve one previous saved document at
+`npa:personal:backup`. Download recovery copy has a visible empty/unavailable state. Ordinary
+site edits and moves do not produce history; the next qualifying operation replaces the copy,
+and clearing browser data removes it. The downloaded file can be imported through the same
+validated replacement flow. Preference reset keeps sites and order, and starter restoration
+appends missing records while keeping existing edits and selection. Original stored data can
+be downloaded separately when the app cannot safely save, including unreadable/newer formats. These controls work without reloading the page. Browser-cleared
 storage is outside app migration guarantees; a deliberate export supplies an external backup and
 supports moving between browsers or origins. Data and coordinates never enter diagnostic logs.
 

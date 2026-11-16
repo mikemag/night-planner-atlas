@@ -1,3 +1,4 @@
+import { openCurrentSiteEditor, discardSiteDraft } from './site-controls';
 import { expect, test as base } from '@playwright/test';
 import { preview, type PreviewServer } from 'vite';
 import { openAppMenu, chooseMoon, shiftPlanningRange } from './header-controls';
@@ -70,10 +71,11 @@ test('reopens the planner and direct Docs links offline after online setup', asy
   await fresh.getByRole('button', { name: 'Download .ics' }).click();
   expect((await download).suggestedFilename()).toMatch(/\.ics$/);
   await fresh.keyboard.press('Escape');
-  await fresh.locator('#siteSel').selectOption('manage');
+  await openCurrentSiteEditor(fresh);
   await fresh.locator('#siteLocation').fill('27.7172, 85.3240');
   await expect(fresh.locator('#siteTz')).toHaveValue('Asia/Kathmandu');
-  await fresh.keyboard.press('Escape');
+  await discardSiteDraft(fresh);
+  await fresh.locator('#siteDone').click();
 
   const docs = new URL('index.html?docs=faq#offline', url);
   await fresh.goto(docs.href);
